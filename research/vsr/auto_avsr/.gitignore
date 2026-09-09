@@ -1,0 +1,5 @@
+auto_avsr/
+.venv/
+weights/
+outputs/
+__pycache__/

@@ -1,0 +1,14 @@
+# GPUでの単体推論。CUDA 12.4 wheelを使用する。
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+pytorch-lightning>=2.0
+hydra-core>=1.3
+omegaconf>=2.3
+opencv-python<4.12
+torchmetrics
+numpy<2
+tqdm
+av==13.1.0
+mediapipe==0.10.21
+gdown

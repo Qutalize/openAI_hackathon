@@ -1,0 +1,76 @@
+# Codex / local workspace metadata
+/.agents/
+/.codex/
+
+# Secrets and machine-local configuration
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*.json
+*secrets*.json
+
+# Virtual environments, dependencies, and generated caches
+.venv
+venv
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+dist/
+build/
+coverage/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# Private evaluation data. Only its handling policy is versioned.
+/data/**
+!/data/README.md
+
+# Upstream checkouts (including directories retained under legacy names)
+/research/**/upstream
+/research/vsr/auto_avsr/auto_avsr
+/research/vsr/swinlip/SwinLip
+/research/vsr/vallr/VALLR
+
+# Model artifacts and raw/generated experiment results
+/research/**/weights
+/research/**/checkpoints
+/research/**/outputs
+*.mp4
+*.webm
+*.mov
+*.avi
+*.mkv
+*.wav
+*.flac
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
+*.npy
+*.npz
+*.pkl
+*.pickle
+*.log
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+wandb/
+runs/
