@@ -1,0 +1,20 @@
+# 上流の主要バージョンを維持した単体推論用。学習用サービスは導入しない。
+torch==2.0.1
+torchvision==0.15.2
+numpy==1.26.4
+transformers==4.32.0
+peft==0.7.1
+accelerate==1.4.0
+huggingface-hub==0.24.7
+pytorch-lightning==1.9.5
+torchmetrics==0.11.4
+einops==0.8.1
+einops-exts==0.0.4
+pillow==10.2.0
+sacrebleu==2.2.0
+rouge-score==0.1.2
+omegaconf==2.3.0
+sentencepiece==0.2.0
+av==12.3.0
+setuptools==69.5.1
+opencv-python-headless==4.8.1.78

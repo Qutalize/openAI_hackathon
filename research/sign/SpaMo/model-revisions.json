@@ -1,0 +1,14 @@
+{
+  "clip": {
+    "repo_id": "openai/clip-vit-large-patch14",
+    "revision": "32bd64288804d66eefd0ccbe215aa642df71cc41"
+  },
+  "videomae": {
+    "repo_id": "MCG-NJU/videomae-large",
+    "revision": "12da269a02d3e1fbbb7011e610e591fea8061dca"
+  },
+  "t5": {
+    "repo_id": "google/flan-t5-xl",
+    "revision": "7d6315df2c2fb742f0f5b556879d730926ca9001"
+  }
+}

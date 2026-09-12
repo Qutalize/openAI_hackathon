@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# pronouncing 0.2.0 imports pkg_resources, which was removed in setuptools 81.
+setuptools==80.9.0
+

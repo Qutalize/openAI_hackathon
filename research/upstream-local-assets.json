@@ -1,0 +1,391 @@
+{
+  "schema_version": 1,
+  "description": "上流が追跡していたが集約先のGitから除外するローカル資材。ファイルは削除しない。",
+  "assets": [
+    {
+      "path": "research/sign/SpaMo/SpaMo/preprocess/Phoenix14T/dev_info.npy",
+      "source": "research/sign/SpaMo/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "bytes": 279791,
+      "sha256": "1e96cf766185edb07c5e1972b118b00ed70e76f0b3dafb20383ad48349a0da68"
+    },
+    {
+      "path": "research/sign/SpaMo/SpaMo/preprocess/Phoenix14T/dev_info_ml.npy",
+      "source": "research/sign/SpaMo/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "bytes": 442133,
+      "sha256": "0ca4231e2d035e11425dc78ab0361b70a3262e5890bce52bde7de3a1871beb6b"
+    },
+    {
+      "path": "research/sign/SpaMo/SpaMo/preprocess/Phoenix14T/test_info.npy",
+      "source": "research/sign/SpaMo/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "bytes": 336393,
+      "sha256": "ae48440c32cc458333615a06386e286ae7d0e898333bd3fa5371e63b21c9a13b"
+    },
+    {
+      "path": "research/sign/SpaMo/SpaMo/preprocess/Phoenix14T/test_info_ml.npy",
+      "source": "research/sign/SpaMo/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "bytes": 526910,
+      "sha256": "f5db8784ca30f6354ea40d1c0bed5b1239f49e51dfce978eedcfa03c6ef21ce4"
+    },
+    {
+      "path": "research/sign/SpaMo/SpaMo/preprocess/Phoenix14T/train_info.npy",
+      "source": "research/sign/SpaMo/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "bytes": 3965390,
+      "sha256": "b02dfa2c896b1cb1b868fecc622e78ab7772061b6c9348e963cf6c9c8bdb2870"
+    },
+    {
+      "path": "research/sign/SpaMo/SpaMo/preprocess/Phoenix14T/train_info_ml.npy",
+      "source": "research/sign/SpaMo/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "bytes": 6280354,
+      "sha256": "592cd07c4f3fe65733bf716254bbb813ebe3737466f2c40eef6977bda7b89ed3"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/How2Sign/dev_info.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 564193,
+      "sha256": "51caec8b2e6f6e9dba4e59619e44a00704876605abaeba6ddd3d3658cfedbb98"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/How2Sign/dev_info_ml.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 564193,
+      "sha256": "51caec8b2e6f6e9dba4e59619e44a00704876605abaeba6ddd3d3658cfedbb98"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/How2Sign/test_info.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 755170,
+      "sha256": "7945a224a0e4c33b0a6cc98d12168ce765d0d7610a76e268c4b23f9510debf51"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/How2Sign/test_info_ml.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 755170,
+      "sha256": "7945a224a0e4c33b0a6cc98d12168ce765d0d7610a76e268c4b23f9510debf51"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/How2Sign/train_info.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 10620009,
+      "sha256": "9b2ace770d73973b55c3252b1749b12ed174b2f538011d2726a2fae4b86584be"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/How2Sign/train_info_ml.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 10620009,
+      "sha256": "9b2ace770d73973b55c3252b1749b12ed174b2f538011d2726a2fae4b86584be"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/Phoenix14T/dev_info.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 279791,
+      "sha256": "1e96cf766185edb07c5e1972b118b00ed70e76f0b3dafb20383ad48349a0da68"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/Phoenix14T/dev_info_ml.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 442133,
+      "sha256": "0ca4231e2d035e11425dc78ab0361b70a3262e5890bce52bde7de3a1871beb6b"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/Phoenix14T/test_info.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 336393,
+      "sha256": "ae48440c32cc458333615a06386e286ae7d0e898333bd3fa5371e63b21c9a13b"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/Phoenix14T/test_info_ml.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 526910,
+      "sha256": "f5db8784ca30f6354ea40d1c0bed5b1239f49e51dfce978eedcfa03c6ef21ce4"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/Phoenix14T/train_info.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 3965390,
+      "sha256": "b02dfa2c896b1cb1b868fecc622e78ab7772061b6c9348e963cf6c9c8bdb2870"
+    },
+    {
+      "path": "research/sign/SpaMo/upstream/sign-vla/preprocess/Phoenix14T/train_info_ml.npy",
+      "source": "research/sign/SpaMo/upstream/sign-vla",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "bytes": 6280354,
+      "sha256": "592cd07c4f3fe65733bf716254bbb813ebe3737466f2c40eef6977bda7b89ed3"
+    },
+    {
+      "path": "research/sign/ssvp_slt/upstream/examples/sonar/materials/0043626-2023.1.4.gif",
+      "source": "research/sign/ssvp_slt/upstream",
+      "revision": "7ed332b0db35884a36b73019ca29bf0755537def",
+      "bytes": 817840,
+      "sha256": "314f23a3436b9c2d736499fff35887087ce32846cf15252b2ee8135a10ff44e6"
+    },
+    {
+      "path": "research/sign/ssvp_slt/upstream/fairseq-sl/examples/hubert/tests/6313-76958-0021.flac",
+      "source": "research/sign/ssvp_slt/upstream",
+      "revision": "7ed332b0db35884a36b73019ca29bf0755537def",
+      "bytes": 223912,
+      "sha256": "0dd89e2bf8c60e05264bf2539f0ec35bc65efb55cd952b3510fa243de9cc16ff"
+    },
+    {
+      "path": "research/sign/ssvp_slt/upstream/fairseq-sl/examples/hubert/tests/sample.base.L9.npy",
+      "source": "research/sign/ssvp_slt/upstream",
+      "revision": "7ed332b0db35884a36b73019ca29bf0755537def",
+      "bytes": 1831104,
+      "sha256": "b44dc3a0519f6adb670a5da7410c1405f4fdb0e4866e5fc4983b136480212f34"
+    },
+    {
+      "path": "research/sign/ssvp_slt/upstream/fairseq-sl/examples/hubert/tests/sample.large.L20.npy",
+      "source": "research/sign/ssvp_slt/upstream",
+      "revision": "7ed332b0db35884a36b73019ca29bf0755537def",
+      "bytes": 2441408,
+      "sha256": "4c82839134cc2340355eb49b41e7e3517e8e9dfdfaa6fc28f0464cc8ae9569ee"
+    },
+    {
+      "path": "research/sign/ssvp_slt/upstream/fairseq-sl/examples/hubert/tests/sample.xlarge.L30.npy",
+      "source": "research/sign/ssvp_slt/upstream",
+      "revision": "7ed332b0db35884a36b73019ca29bf0755537def",
+      "bytes": 3051712,
+      "sha256": "bbe9f0929ecd4c58786be55215d83f85787ff0d81196bc2e73414f82a8939806"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/CSL_Daily/labels.dev",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 51514,
+      "sha256": "b96b62b7cf2c94f4d25e522fb6a1c40e3dba2579b387a53eee1858362b3c88a5"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/CSL_Daily/labels.test",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 53449,
+      "sha256": "0a5027d102557c2a7c7590de219de7a29d242ce38db4363241f39b6b0b1cf2b3"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/CSL_Daily/labels.train",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 511583,
+      "sha256": "e7fb4bba59a78340a57d80daa3e3d92d9d4d3e2e234a861f77d8d6f710dcec32"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/How2Sign/labels.test",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 94436,
+      "sha256": "3e4c70aa4dd3fcabf1380accad2e4787d1da5d9afe1f86e7518acee01895fad1"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/How2Sign/labels.train",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 1399791,
+      "sha256": "3780dc31ec64f6cb1daff76f6bece88b9f5bf365024e9fd97a49d0244a910828"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/OpenASL/labels.dev",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 54977,
+      "sha256": "d9531a08a9b2e42fa54ce5ad5d398175ea5434bf1a7b377cdcf5d37018b0f69c"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/OpenASL/labels.test",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 56869,
+      "sha256": "90a8fa740d1ddae4bedeecc36a1bacce2103a79432635553a6a7e17abf566953"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/OpenASL/labels.train",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 4878397,
+      "sha256": "3271f91bca264a6f39606cdec180f0d5306f63fa18a31efdf7d274b1ceea8622"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/WLASL/labels-2000.dev",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 43384,
+      "sha256": "804f37c1aa02e506a97e143f0c8ac70abd8882a94b8a21b8b5fed8d8d6534b0f"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/WLASL/labels-2000.test",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 34303,
+      "sha256": "2e413ca4feac1ba3695ea8fd95862b35e98732a77e3c2d6e8a5931dd82ef10ea"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/data/WLASL/labels-2000.train",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 163854,
+      "sha256": "73b280bdc2621332d515f8fab52b38250e25cc363e77ee02ae76d8e7a69c49ba"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/demo/rtmlib-main/demo.jpg",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 77157,
+      "sha256": "43eb2c025e98b0ca2db567b6eac31551063f2cfcdac321330e5fc12bc8819031"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_csl_daily_pose_only/dev_tmp_pres.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 104763,
+      "sha256": "d000c868f2a690ae6f75c45fcafb566ff586474fb63da943e0fcfa486a836411"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_csl_daily_pose_only/dev_tmp_refs.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 111965,
+      "sha256": "cd78b7c4a7504a811b80e833074fce1ad9099ce4666dc082fe9cdfeedab0d19d"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_csl_daily_pose_only/test_tmp_pres.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 115858,
+      "sha256": "bfb2e2631b56d4c1f0e4e7948ec2ee3ba8223dbfb1191ac6f52b0d9b9e3f0aef"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_csl_daily_pose_only/test_tmp_refs.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 123714,
+      "sha256": "042cd94c44f9652f9fa127134565877a7a1cd1c58d2a12776c6698bb65150aab"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_how2sign_pose_only/test_tmp_pres.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 314101,
+      "sha256": "40c0927ec76c3c4d82f9d9bed5b162c6481e629c0525cfea67647c97a13b8110"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_how2sign_pose_only/test_tmp_refs.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 338785,
+      "sha256": "bbb49bc70a9e16e9c11e6cda03b3acb5532cac141194a8f7172dd3c988454cf2"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_openasl_pose_only/dev_tmp_pres.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 133400,
+      "sha256": "e8e5b106638794fb38b59f5ba1cb296fb84d854ead0c0fe549ea94885490cc7d"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_openasl_pose_only/dev_tmp_refs.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 137363,
+      "sha256": "edf6f39696be89f8e6a078944aaa85b33127353438e6001d2278a49d3c52c752"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_openasl_pose_only/test_tmp_pres.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 136080,
+      "sha256": "6bf4dcdc161bbc583a6594085d7689cee8244be29970e20e93ac48f2660451de"
+    },
+    {
+      "path": "research/sign/uni-sign/Uni-Sign/out/eval_openasl_pose_only/test_tmp_refs.txt",
+      "source": "research/sign/uni-sign/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "bytes": 141225,
+      "sha256": "89dc24f55e3f744f614465dae09a68440752b8d41c33b02bf53ea331af71cb82"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/datamodule/babble_noise.wav",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 15054806,
+      "sha256": "cfd33275736a10706e3dcb15e7399c1239207547acd419b4ada9821e817a5e87"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/doc/cropped.gif",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 428019,
+      "sha256": "105e7f8a01370c10ad18601b988c0c96ffd649fbed9d9691d9e9c1cc057e725f"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/preparation/detectors/mediapipe/20words_mean_face.npy",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 1168,
+      "sha256": "dbf68b2044171e1160716df7c53e8bbfaa0ee8c61fb41171d04cb6092bb81422"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/preparation/detectors/retinaface/20words_mean_face.npy",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 1168,
+      "sha256": "dbf68b2044171e1160716df7c53e8bbfaa0ee8c61fb41171d04cb6092bb81422"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/preparation/vox-en.id",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 18880773,
+      "sha256": "ea15be467ebd6dd86b60b2501cee8a380aefdf4ff0c5ae155652119b1956d799"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/spm/input.txt",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 22814075,
+      "sha256": "85434a8415c6211434f510f6c75308e93ac0b3fc6c657be97bac99ee4c6b8566"
+    },
+    {
+      "path": "research/vsr/auto_avsr/auto_avsr/spm/unigram/unigram5000.model",
+      "source": "research/vsr/auto_avsr/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "bytes": 327113,
+      "sha256": "2c1d648ccf5fdce6612ecbea2ffbd1cab5aabc90458781186175c3911c4bdb1e"
+    },
+    {
+      "path": "research/vsr/usr2/upstream/assets/demo.gif",
+      "source": "research/vsr/usr2/upstream",
+      "revision": "df0c78b7a3807e625a0fcdadd14b1cf674d21c91",
+      "bytes": 15645592,
+      "sha256": "8f4979343d402a01cc54bfa12b906e70fa5bdb13f6c34ef6daa6004eb014f880"
+    },
+    {
+      "path": "research/vsr/usr2/upstream/preprocessing/20words_mean_face.npy",
+      "source": "research/vsr/usr2/upstream",
+      "revision": "df0c78b7a3807e625a0fcdadd14b1cf674d21c91",
+      "bytes": 1168,
+      "sha256": "dbf68b2044171e1160716df7c53e8bbfaa0ee8c61fb41171d04cb6092bb81422"
+    },
+    {
+      "path": "research/vsr/usr2/upstream/preprocessing/face_landmarker.task",
+      "source": "research/vsr/usr2/upstream",
+      "revision": "df0c78b7a3807e625a0fcdadd14b1cf674d21c91",
+      "bytes": 3758596,
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
+    }
+  ]
+}

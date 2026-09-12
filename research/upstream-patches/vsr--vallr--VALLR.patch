@@ -1,0 +1,22 @@
+diff --git a/main.py b/main.py
+index 9438ec9..50deeb8 100644
+--- a/main.py
++++ b/main.py
+@@ -5,7 +5,7 @@ from tqdm import tqdm
+ from torch.utils.data import DataLoader
+ from torch.optim.lr_scheduler import ReduceLROnPlateau
+ import torch.nn.utils.rnn as rnn_utils
+-from Models.ML_VALLR import ML_VALLR
++from Models.ML_VALLR import VALLR as ML_VALLR
+ from Models.VALLR import VALLR
+ from Data.dataset import VideoDataset
+ import torch.nn as nn
+@@ -508,7 +508,7 @@ def load_finetuned_model(model_path, device, version, vocab):
+         )
+ 
+     # Load the saved state dict (fine-tuned model weights)
+-    model.load_state_dict(torch.load(model_path, map_location=device))
++    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
+ 
+     # Move the model to the device (CPU or GPU)
+     model.to(device)

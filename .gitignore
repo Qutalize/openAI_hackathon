@@ -1,8 +1,9 @@
-# Codex / local workspace metadata
+# Codex・ローカル作業環境のメタデータ
 /.agents/
 /.codex/
+/.local/
 
-# Secrets and machine-local configuration
+# 秘密情報・マシン固有設定（共有用の雛形は管理する）
 .env
 .env.*
 !.env.example
@@ -13,7 +14,8 @@
 *credentials*.json
 *secrets*.json
 
-# Virtual environments, dependencies, and generated caches
+# 仮想環境・依存パッケージ・生成キャッシュ（依存定義・lockfileは管理する）
+# 末尾の / を付けず、仮想環境へのシンボリックリンクも除外する
 .venv
 venv
 node_modules/
@@ -23,13 +25,15 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .cache/
+*.egg-info/
+.ipynb_checkpoints/
 dist/
 build/
 coverage/
 .coverage
 htmlcov/
 
-# Editors and operating systems
+# エディタ・OSの生成物
 .DS_Store
 Thumbs.db
 .idea/
@@ -37,32 +41,61 @@ Thumbs.db
 *.swp
 *~
 
-# Private evaluation data. Only its handling policy is versioned.
+# 評価データは原則ローカル管理。保存方針とVSRの撮影用原稿のみ共有する
+# 親ディレクトリを再包含してから script.txt だけを管理対象に戻す
 /data/**
 !/data/README.md
+!/data/sign/
+!/data/sign/README.md
+!/data/vsr/
+!/data/vsr/*/
+!/data/vsr/*/script.txt
+# 手話の原稿・撮影メタデータ・正解文・映像は引き続き除外する
 
-# Upstream checkouts (including directories retained under legacy names)
-/research/**/upstream
-/research/vsr/auto_avsr/auto_avsr
-/research/vsr/swinlip/SwinLip
-/research/vsr/vallr/VALLR
+# 上流コードも通常のファイルとしてルートのGitで管理する。
+# 取得元・元revision・取り込み時の差分は research/upstream-sources.json を参照。
 
-# Model artifacts and raw/generated experiment results
+# 重み・前処理結果・実験の生出力（scripts/configs/reports/patchesは管理する）
 /research/**/weights
 /research/**/checkpoints
 /research/**/outputs
-*.mp4
-*.webm
-*.mov
-*.avi
-*.mkv
-*.wav
-*.flac
+/research/**/lightning_logs/
+/research/**/multirun/
+# 上流に同梱されていた学習データ・原稿・実演映像もローカル管理する。
+# dataset/data という名前のPythonパッケージは一括除外しない。
+/research/sign/uni-sign/Uni-Sign/data/
+/research/sign/uni-sign/Uni-Sign/demo/rtmlib-main/demo.jpg
+/research/vsr/auto_avsr/auto_avsr/preparation/vox-en.id
+/research/vsr/auto_avsr/auto_avsr/spm/input.txt
+/research/sign/ssvp_slt/upstream/examples/sonar/materials/0043626-2023.1.4.gif
+/research/vsr/auto_avsr/auto_avsr/doc/cropped.gif
+/research/vsr/usr2/upstream/assets/demo.gif
+# 配置先を問わず映像・音声・モデル・ランドマーク等のバイナリを除外する
+*.[mM][pP]4
+*.[wW][eE][bB][mM]
+*.[mM][oO][vV]
+*.[aA][vV][iI]
+*.[mM][kK][vV]
+*.[mM]4[vV]
+*.[mM][pP][eE][gG]
+*.[mM][pP][gG]
+*.[wW][aA][vV]
+*.[fF][lL][aA][cC]
+*.[mM][pP]3
+*.[mM]4[aA]
+*.[aA][aA][cC]
+*.[oO][gG][gG]
 *.pt
 *.pth
+*.path
 *.ckpt
 *.safetensors
 *.onnx
+*.task
+*.model
+*.bin
+*.h5
+*.hdf5
 *.npy
 *.npz
 *.pkl
@@ -72,5 +105,9 @@ Thumbs.db
 *.tar
 *.tar.gz
 *.tgz
+*.bz2
+*.xz
+*.7z
 wandb/
 runs/
+.hydra/

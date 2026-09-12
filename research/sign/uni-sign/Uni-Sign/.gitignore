@@ -1,0 +1,16 @@
+*.swp
+__pycache__/**
+out/
+core
+core.[0-9]*
+# *.sh
+*.bin
+wandb
+backup
+*.pth
+#*.txt
+log/
+*.xlsx
+*.mp4
+tools/*.jpg
+tools/*.mp4

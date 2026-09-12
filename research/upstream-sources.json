@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "sources": {
+    "research/sign/LiTFic/LiTFiC": {
+      "url": "https://github.com/art-jang/LiTFiC",
+      "revision": "f8cb85e3c9eed29a0a6a222e80b483efa0353d10",
+      "local_patch_at_import": null,
+      "imported_at": "2026-09-12T23:31:13.569994+09:00"
+    },
+    "research/sign/SpaMo/SpaMo": {
+      "url": "https://github.com/eddie-euijun-hwang/SpaMo",
+      "revision": "aee7f8b6ea8201b710690adcce6f46260dd11bba",
+      "local_patch_at_import": null,
+      "imported_at": "2026-09-12T23:31:13.696054+09:00"
+    },
+    "research/sign/SpaMo/upstream/sign-vla": {
+      "url": "https://github.com/HGardner1108/SpaMo-Sign-VLA.git",
+      "revision": "d34bc0b62927a5b1b1b3f4fefcc0828c3f0b9983",
+      "local_patch_at_import": null,
+      "imported_at": "2026-09-12T23:31:13.860634+09:00"
+    },
+    "research/sign/ssvp_slt/upstream": {
+      "url": "https://github.com/facebookresearch/ssvp_slt.git",
+      "revision": "7ed332b0db35884a36b73019ca29bf0755537def",
+      "local_patch_at_import": "research/upstream-patches/sign--ssvp_slt--upstream.patch",
+      "imported_at": "2026-09-12T23:31:15.050124+09:00"
+    },
+    "research/sign/uni-sign/Uni-Sign": {
+      "url": "https://github.com/ZechengLi19/Uni-Sign",
+      "revision": "eed438bcb49e30405cd6ccdfcccca330c134e830",
+      "local_patch_at_import": "research/upstream-patches/sign--uni-sign--Uni-Sign.patch",
+      "imported_at": "2026-09-12T23:31:15.558400+09:00"
+    },
+    "research/vsr/auto_avsr/auto_avsr": {
+      "url": "https://github.com/mpc001/auto_avsr",
+      "revision": "182b62837773ab01052d4ac21ef1d2203ea7d267",
+      "local_patch_at_import": null,
+      "imported_at": "2026-09-12T23:31:16.462545+09:00"
+    },
+    "research/vsr/swinlip/SwinLip": {
+      "url": "https://github.com/park-ing/SwinLip",
+      "revision": "0be70b224e42619f72ad283e85303f5e10544004",
+      "local_patch_at_import": null,
+      "imported_at": "2026-09-12T23:31:16.522492+09:00"
+    },
+    "research/vsr/usr2/upstream": {
+      "url": "https://github.com/ahaliassos/usr2.git",
+      "revision": "df0c78b7a3807e625a0fcdadd14b1cf674d21c91",
+      "local_patch_at_import": null,
+      "imported_at": "2026-09-12T23:31:17.145870+09:00"
+    },
+    "research/vsr/vallr/VALLR": {
+      "url": "https://github.com/MarshallT-99/VALLR.git",
+      "revision": "9793489136bc00293242a5410def05ba2806e16f",
+      "local_patch_at_import": "research/upstream-patches/vsr--vallr--VALLR.patch",
+      "imported_at": "2026-09-12T23:31:17.368715+09:00"
+    }
+  }
+}

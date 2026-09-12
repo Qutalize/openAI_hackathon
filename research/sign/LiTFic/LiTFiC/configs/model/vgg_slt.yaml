@@ -1,0 +1,71 @@
+_target_: src.models.slt_module.SLTLitModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.0001
+  weight_decay: 0.
+
+scheduler:
+  _target_: pl_bolts.optimizers.lr_scheduler.LinearWarmupCosineAnnealingLR
+  _partial_: true
+  warmup_epochs: 5
+  max_epochs: ${trainer.max_epochs}
+  warmup_start_lr: 0
+
+scheduler_options:
+  monitor: val/loss
+  frequency: 1
+  interval: step # epoch
+  divide_step: ${trainer.accumulate_grad_batches}
+
+net:
+  _target_: src.models.components.vgg_slt.VggSLTNet
+  load_features: ${data.dataset_config.load_features}
+  precision: ${trainer.precision}
+  mm_projector_config:
+    mm_hidden_size: 768
+    hidden_size: 4096
+    projector_type: mlp2x_gelu
+    dropout: 0.0
+  llm_config:
+    pretrained_llm: ${paths.llm_root}
+    gradient_checkpointing_enable: True
+    freeze_decoder: False
+    oracle: False
+    lora: True
+    use_pl_w_feats: False
+    mix_in_pls: False
+    mix_in_pls_prob: 0.5
+    mix_in_prev_prob: 0.5
+    mix_in_bg_prob: 0.5
+    bg_desc: False
+    use_rec_prev: False
+    use_bg_words: False
+    drop_bg_sw: False
+    use_gt_prev: False
+    drop_bgw_pct: 0.0
+    drop_pl_pct: 0.0
+    use_spottings: False
+    mix_in_spottings: 0.0
+    dropout: 0.0
+    lora_config:
+      target_modules: ['q_proj', 'v_proj']
+      lora_alpha: 16
+      lora_dropout: 0.05
+      r: 4
+      bias: none
+    tokenizer_config:
+      padding_side: left
+      trust_remote_code: True
+      use_fast: True
+      add_eos_token: True
+    decoder_config:
+      trust_remote_code: True
+      attn_implementation: flash_attention_2
+# compile model for faster training with pytorch 2.0
+compile: false
+output_dir: ${paths.output_dir}
+bleurt_path: ${paths.bleurt_path}
+context_len: 1
+synonyms_pkl: ${paths.synonyms_pkl}

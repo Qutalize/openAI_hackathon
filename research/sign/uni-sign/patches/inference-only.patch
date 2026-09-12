@@ -1,0 +1,27 @@
+diff --git a/utils.py b/utils.py
+--- a/utils.py
++++ b/utils.py
+@@ -26,7 +26,10 @@ import gzip
+ 
+ 
+ # global definition
+-import deepspeed
++# The single-video demo uses PyTorch directly, not DeepSpeed. Its import can
++# require nvcc even though none of its compiled ops are used during the demo.
++if os.environ.get("UNI_SIGN_INFERENCE_ONLY") != "1":
++    import deepspeed
+ 
+ import torch
+ import torch.nn.functional as F
+@@ -34,8 +37,9 @@ from torch import Tensor
+ import argparse
+ import torch.backends.cudnn as cudnn
+ 
+-import deepspeed.comm as dist
+-from deepspeed.accelerator import get_accelerator
++if os.environ.get("UNI_SIGN_INFERENCE_ONLY") != "1":
++    import deepspeed.comm as dist
++    from deepspeed.accelerator import get_accelerator
+ 
+ 
+ class SmoothedValue(object):

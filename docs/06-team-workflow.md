@@ -36,10 +36,13 @@ cd openAI_hackathon
 git switch -c docs/project-foundation
 ```
 
-この作業フォルダのREADME、AGENTS.md、docs、足場ディレクトリをclone先へ取り込む。
-`.git/`、`.agents/`、`.codex/`はコピーしない。既存ファイルがあればdiffを見て統合する。
+この作業フォルダのREADME、AGENTS.md、docs、自作コードと上流コードをclone先へ取り込む。
+`.git/`、`.agents/`、`.codex/`、`.local/`、動画・重み・生出力はコピーしない。既存ファイルがあればdiffを見て統合する。
 秘密・映像・重みが含まれないことを確認して必要ファイルを明示的にstageし、PRにする。
-撮影データ、重み、上流checkout、実行出力、秘密情報は `.gitignore` で除外し、誤ってstageされていないことをcommit前に確認する。
+撮影データ、重み、実行出力、秘密情報は `.gitignore` で除外し、誤ってstageされていないことをcommit前に確認する。
+上流コード・設定・文書はルートのGitで通常のファイルとして管理し、モデル内に独立した `.git` を作らない。
+取得元・元revision・取り込み時の差分は `research/upstream-sources.json` に残す。
+取り込み手順・退避先・除外した上流資材は [Git管理の集約](07-git-consolidation.md) を参照する。
 
 ブランチ例：`research/vallr`、`research/lipcoordnet`、`research/sign-models`、`research/evaluation`。
 mainには再現手順と実行状態を正確に残す。共有ファイルの競合はDを窓口として解消し、モデル別環境のlockfileを分ける。

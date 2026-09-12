@@ -1,0 +1,29 @@
+diff --git a/src/ssvp_slt/modeling/sonar.py b/src/ssvp_slt/modeling/sonar.py
+index 6ce9fcc..accc30e 100644
+--- a/src/ssvp_slt/modeling/sonar.py
++++ b/src/ssvp_slt/modeling/sonar.py
+@@ -19,6 +19,7 @@ from ssvp_slt.util.misc import load_model
+ from torch import Tensor, nn
+ 
+ from sonar.inference_pipelines.text import EmbeddingToTextModelPipeline
++from sonar.models.sonar_text import load_sonar_text_decoder_model
+ 
+ from .sign_t5 import SignT5Config, SignT5Model
+ 
+@@ -134,10 +135,14 @@ class SonarTranslator:
+             self.config, device=self.device, dtype=self.dtype
+         )
+         decoder = EmbeddingToTextModelPipeline(
+-            decoder="text_sonar_basic_decoder",
++            decoder=load_sonar_text_decoder_model(
++                "text_sonar_basic_decoder",
++                device=self.device,
++                dtype=self.dtype,
++                progress=False,
++            ),
+             tokenizer="text_sonar_basic_encoder",
+             device=self.device,
+-            dtype=self.dtype,
+         )
+ 
+         print("Loading translator")

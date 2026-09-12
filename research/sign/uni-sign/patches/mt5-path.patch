@@ -1,0 +1,9 @@
+diff --git a/config.py b/config.py
+--- a/config.py
++++ b/config.py
+@@ -1,4 +1,4 @@
+-mt5_path = "./pretrained_weight/mt5-base"
++mt5_path = "./weights/mt5-base"
+ 
+ # label paths
+ train_label_paths = {
