@@ -9,6 +9,7 @@ VALLRは公開LRS3サンプル1本でV1のCPU推論を確認し、未後処理�
 
 ## 作業場所
 
+- [デモアプリ](demo/README.md)：React／FastAPIによる映像通話・字幕共有・読み上げ。起動手順とモデルの導入方法を掲載。
 - [VSR](research/vsr/README.md)：[VALLR](research/vsr/vallr/README.md)、[LipCoordNet](research/vsr/lipcoordnet/README.md)を個別に検証。
 - [手話](research/sign/README.md)：対象言語と候補を確認し、試すモデルごとにディレクトリを追加。
 - [実験記録テンプレート](research/templates/REPORT_TEMPLATE.md)：まず1本の実行結果と所感を記録。
@@ -22,6 +23,6 @@ VALLRは公開LRS3サンプル1本でV1のCPU推論を確認し、未後処理�
 4. [4人の分担とGit運用](docs/06-team-workflow.md)
 
 エージェント向け指示は [AGENTS.md](AGENTS.md)。[当初の仕様書](docs/無音声認識_is_all_you_need_仕様書.md)は将来の構想として保存しています。
-会議UI、API、字幕共有は後の段階で設計します。必要になった時点で別ディレクトリに追加し、`research/` の配置と単体実行手順を維持します。
+会議UI、API、字幕共有のデモは `demo/` に配置しています。`research/` のモデル検証とは独立した構成で、既存の配置と単体実行手順を維持します。
 
 管理リポジトリ：[Qutalize/openAI_hackathon](https://github.com/Qutalize/openAI_hackathon)。

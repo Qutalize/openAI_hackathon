@@ -1,0 +1,51 @@
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+:focus-visible {
+  outline: 4px solid #e0a52c !important;
+  outline-offset: 4px;
+}
+.mode-card:focus-within {
+  outline: 4px solid #e0a52c;
+  outline-offset: 5px;
+}
+.panel-divider:focus-visible {
+  outline: none !important;
+}
+.panel-divider:focus-visible span {
+  box-shadow: 0 0 0 3px #e0a52c;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media (forced-colors: active) {
+  .mode-card.selected {
+    outline: 4px solid Highlight;
+  }
+  .mode-icons svg {
+    forced-color-adjust: auto;
+  }
+  .input-badge {
+    border: 2px solid CanvasText;
+  }
+  .primary {
+    border: 2px solid ButtonText !important;
+  }
+  .connection-label:before {
+    border: 1px solid CanvasText;
+  }
+}

@@ -1,0 +1,46 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    environment:
+      APP_HOST: ${APP_HOST:?Set the public HTTPS host}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes: ["caddy_data:/data", "caddy_config:/config"]
+    depends_on: [api]
+    restart: unless-stopped
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    environment:
+      APP_ENV: production
+      APP_PUBLIC_ORIGIN: https://${APP_HOST:?Set APP_HOST}
+      APP_SESSION_SECRET: ${APP_SESSION_SECRET:?Set a generated session secret}
+      APP__SECURITY__COOKIE_SECURE: "true"
+      APP__SERVER__ALLOWED_ORIGINS: '["https://${APP_HOST}"]'
+      APP__RTC__TURN_ENABLED: "true"
+      APP_TURN_SHARED_SECRET: ${APP_TURN_SHARED_SECRET:?Set a generated TURN secret}
+      APP_TURN_URLS: ${APP_TURN_URLS:?Set TURN URLs}
+      APP__RTC__STUN_URLS: ${APP_STUN_URLS:-[]}
+    volumes:
+      - ../models:/app/models:ro
+      - ../frontend/public/models/mediapipe:/app/frontend/public/models/mediapipe:ro
+      - room_data:/app/data
+    restart: unless-stopped
+  turn:
+    image: coturn/coturn:4.6.3
+    command: ["-c", "/etc/coturn/turnserver.conf"]
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./certs:/etc/coturn/certs:ro
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "49160-49200:49160-49200/udp"
+    restart: unless-stopped
+volumes:
+  room_data:
+  caddy_data:
+  caddy_config:

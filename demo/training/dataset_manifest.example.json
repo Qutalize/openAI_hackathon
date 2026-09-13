@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "modality": "lipread",
+  "description": "Replace entries with recordings collected at /training. Every subject belongs to exactly one split. Include unknown and every supported class in each split.",
+  "samples": [
+    {"path": "../data/training/lipread-person01-greeting.json", "split": "train"},
+    {"path": "../data/training/lipread-person02-greeting.json", "split": "validation"},
+    {"path": "../data/training/lipread-person03-greeting.json", "split": "test"}
+  ]
+}

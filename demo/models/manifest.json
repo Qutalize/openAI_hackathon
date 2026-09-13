@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "path": "models/speech/whisper-small/model.bin",
+      "sha256": "3e305921506d8872816023e4c273e75d2419fb89b24da97b4fe7bce14170d671",
+      "source": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/model.bin",
+      "revision": "536b0662742c02347bc0e980a01041f333bce120",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/whisper-small/config.json",
+      "sha256": "b55496ac7940a7ae47d2c01eab40edfd8701feec1229d9cce3b40014383fb828",
+      "source": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/config.json",
+      "revision": "536b0662742c02347bc0e980a01041f333bce120",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/whisper-small/tokenizer.json",
+      "sha256": "fb7b63191e9bb045082c79fd742a3106a12c99513ab30df4a0d47fa6cb6fd0ab",
+      "source": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/tokenizer.json",
+      "revision": "536b0662742c02347bc0e980a01041f333bce120",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/whisper-small/vocabulary.txt",
+      "sha256": "34ce3fe1c5041027b3f8d42912270993f986dbc4bb34cf27f951e34a1e453913",
+      "source": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/vocabulary.txt",
+      "revision": "536b0662742c02347bc0e980a01041f333bce120",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/whisper-small/README.md",
+      "sha256": "329373481008c7c38654aff8ecdcf0163c211557cc7ba8e2ef6f2f84b4f75ec8",
+      "source": "https://huggingface.co/Systran/faster-whisper-small/resolve/536b0662742c02347bc0e980a01041f333bce120/README.md",
+      "revision": "536b0662742c02347bc0e980a01041f333bce120",
+      "license": "MIT"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/face_landmarker.task",
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+      "source": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      "revision": "1",
+      "license": "See MediaPipe model distribution terms"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/hand_landmarker.task",
+      "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+      "source": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      "revision": "1",
+      "license": "See MediaPipe model distribution terms"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/pose_landmarker.task",
+      "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a",
+      "source": "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+      "revision": "1",
+      "license": "See MediaPipe model distribution terms"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/wasm/vision_wasm_internal.js",
+      "sha256": "6f6b86509cf9e163ea1cfec7edc8cf53732699c04781e4c21c557c1ba402310e",
+      "source": "npm:@mediapipe/tasks-vision",
+      "revision": "0.10.32",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/wasm/vision_wasm_internal.wasm",
+      "sha256": "cb3ec20026a9aecc2a81a93c25630ceb5389297ddb7a5f0bd61dd09cde606b9b",
+      "source": "npm:@mediapipe/tasks-vision",
+      "revision": "0.10.32",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/wasm/vision_wasm_nosimd_internal.js",
+      "sha256": "9f8fc960e363f0fb2f42f7937b97ae9cf9a5630490f71031fa90caa9bb121938",
+      "source": "npm:@mediapipe/tasks-vision",
+      "revision": "0.10.32",
+      "license": "Apache-2.0"
+    },
+    {
+      "path": "frontend/public/models/mediapipe/wasm/vision_wasm_nosimd_internal.wasm",
+      "sha256": "924274fcd5ac8985f6570a8573e7971b7bd2d580ba1b8f3beb0ba8f95db6347c",
+      "source": "npm:@mediapipe/tasks-vision",
+      "revision": "0.10.32",
+      "license": "Apache-2.0"
+    }
+  ],
+  "note": "prepare_models.py records pinned revisions and SHA-256 hashes. No trained lipread/sign weights are bundled."
+}

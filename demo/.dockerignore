@@ -1,0 +1,12 @@
+.cache
+**/node_modules
+**/.venv
+**/__pycache__
+frontend/dist
+data
+.env
+deploy/turnserver.conf
+deploy/certs
+models/**/*.bin
+models/**/*.onnx
+models/**/*.pt

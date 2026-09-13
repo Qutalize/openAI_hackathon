@@ -1,0 +1,132 @@
+app:
+  name: "ことばリンク"            # 仮称。title.pngの「アプリ名」に表示
+  locale: ja-JP
+  environment: development
+
+server:
+  host: 127.0.0.1
+  port: 8000
+  workers: 1                      # ルーム状態がプロセスメモリにあるため固定
+  allowed_origins: ["http://localhost:5173", "http://127.0.0.1:5173"]
+  websocket_max_message_bytes: 65536
+  heartbeat_seconds: 15
+  disconnect_timeout_seconds: 45
+
+room:
+  max_participants: 4
+  creation_ttl_seconds: 86400     # 画面から作成したルームは24時間有効
+  session_ttl_seconds: 7200
+  reconnect_grace_seconds: 60
+  event_replay_seconds: 60
+  max_transcript_entries: 500
+  empty_room_cleanup_seconds: 60
+  max_text_chars: 500
+
+security:
+  cookie_name: conversation_session
+  cookie_secure: false            # ローカルHTTPのみ。配信時は必ずtrue
+  cookie_samesite: strict
+  join_attempts_per_minute: 5
+  join_failure_message: "ルームIDまたはパスワードを確認してください"
+
+media:
+  video_width: 1280
+  video_height: 720
+  video_fps: 30
+  audio_sample_rate: 16000        # AI送信用。機器側の実サンプルレートとは別
+  audio_channels: 1
+  audio_chunk_ms: 200
+  echo_cancellation: true
+  noise_suppression: true
+  vision_fps: 20
+  feature_batch_frames: 5
+  camera_off_stops_capture: true
+
+rtc:
+  topology: mesh
+  ice_transport_policy: all
+  stun_urls: []                   # 配信時に管理するSTUNのURLを設定
+  turn_enabled: false            # 端末間の本番デモではtrueにする
+  turn_credential_ttl_seconds: 600
+
+recognition:
+  language: ja
+  max_pending_jobs_per_participant: 2
+  max_pending_jobs_total: 8
+  worker_processes: 1
+  job_timeout_seconds: 10
+  partial_results: false          # 初期版は区間終了後の確定候補のみ
+  speech:
+    enabled: true
+    provider: faster_whisper
+    model_path: models/speech/whisper-small
+    device: cpu
+    compute_type: int8
+    beam_size: 1
+    vad_silence_ms: 600
+    min_segment_ms: 300
+    max_segment_ms: 10000
+  lipread:
+    enabled: true
+    provider: onnx_temporal_classifier
+    model_path: models/lipread/model.onnx
+    metadata_path: models/lipread/metadata.json
+    feature_schema: lip40_v1
+    max_frames: 64
+    min_valid_frame_ratio: 0.8
+    candidate_threshold: 0.80
+    top_k: 3
+    require_confirmation: true
+  sign:
+    enabled: true
+    provider: onnx_temporal_classifier
+    model_path: models/sign/model.onnx
+    metadata_path: models/sign/metadata.json
+    feature_schema: sign100_v1
+    max_frames: 96
+    min_valid_frame_ratio: 0.8
+    candidate_threshold: 0.85
+    top_k: 3
+    require_confirmation: true
+
+output:
+  tts_provider: browser_speech_synthesis
+  tts_lang: ja-JP
+  tts_rate: 1.0
+  tts_queue_limit: 10
+  tts_skip_own_utterances: true
+  tts_skip_replayed_events: true
+  speak_participant_changes_in_vision_mode: true
+
+modes:
+  standard:
+    input: speech
+    allowed_inputs: [speech, lipread, text]
+    output: [audio, text]
+    camera_on: true
+    microphone_on: true
+    layout: talk
+  vision_support:
+    input: speech
+    allowed_inputs: [speech, text]
+    output: [audio]
+    camera_on: true
+    microphone_on: true
+    layout: vision_support
+  hearing_support:
+    input: sign
+    allowed_inputs: [sign, text]
+    output: [text]
+    camera_on: true
+    microphone_on: false
+    layout: talk
+
+storage:
+  room_database: data/rooms.sqlite3
+  persist_transcripts: false
+  persist_media: false
+
+observability:
+  log_level: INFO
+  log_transcript_text: false
+  metrics_enabled: true
