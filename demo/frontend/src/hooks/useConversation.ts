@@ -11,7 +11,7 @@ import type {
   StreamInfo,
   Utterance,
 } from '../types/protocol';
-import { api } from '../services/api';
+import { api, uploadRecognitionVideo } from '../services/api';
 import { ControlSocket } from '../services/controlSocket';
 import { MediaSocket } from '../services/mediaSocket';
 import { Peers } from '../services/peers';
@@ -20,6 +20,7 @@ import { VisionCapture } from '../services/visionCapture';
 import { SpeechOutput } from '../services/speechOutput';
 import { useDevices } from './useDevices';
 import { LocalRecording } from '../services/localRecording';
+import { VideoClipCapture } from '../services/videoClipCapture';
 import { initialPlayback, outputPreferences } from '../services/playback';
 
 export function useConversation(config: PublicConfig, session: Session, onLeave: (message: string) => void) {
@@ -51,6 +52,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     peers: null as Peers | null,
     audio: new AudioCapture(),
     vision: new VisionCapture(),
+    videoClip: new VideoClipCapture(),
     tts: null as SpeechOutput | null,
     participants: [] as Participant[],
     input: session.input,
@@ -98,6 +100,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     r.captureGeneration++;
     clearTimeout(r.captureTimer);
     r.vision.stop();
+    r.videoClip.cancel();
     r.segment = null;
     setCapturing(false);
   }, [r]);
@@ -108,6 +111,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     r.peers?.close();
     void r.audio.stop();
     r.vision.stop();
+    r.videoClip.cancel();
     r.tts?.cancel();
     void r.recording?.finish();
     clearTimeout(r.captureTimer);
@@ -398,11 +402,26 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
   async function endCapture() {
     const id = r.segment;
     if (!id) return;
-    stopCapture();
+    const kind = r.input === 'lipread' ? 'lipread' : 'sign';
+    const videoTransport = kind === 'lipread' && config.capabilities.lipread.transport === 'video';
+    const lastMediaSeq = r.media!.seq;
+    r.captureGeneration++;
+    clearTimeout(r.captureTimer);
+    r.vision.stop();
+    r.segment = null;
+    setCapturing(false);
     setProcessing(true);
     try {
-      await r.control!.request('segment.end', { segment_id: id, last_media_seq: r.media!.seq });
+      if (videoTransport) {
+        const video = await r.videoClip.finish();
+        await uploadRecognitionVideo(session.room_id, 'lipread', id, session.csrf_token, video);
+      } else {
+        r.videoClip.cancel();
+      }
+      await r.control!.request('segment.end', { segment_id: id, last_media_seq: lastMediaSeq });
     } catch (e) {
+      r.videoClip.cancel();
+      await r.control?.request('segment.cancel', {}).catch(() => {});
       setError((e as Error).message);
       setProcessing(false);
     }
@@ -417,33 +436,38 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       if (!devices.streamRef.current.getVideoTracks().length) throw new Error('カメラをONにしてください');
       if (r.input !== 'lipread' && r.input !== 'sign') return;
       const kind = r.input,
-        max = config.recognition[kind].max_frames;
-      await r.vision.start(
-        devices.streamRef.current,
-        kind,
-        (features, timestamp) => {
-          if (!r.segment) return;
-          try {
-            const floats = new Float32Array(features.flat());
-            r.media?.send(
-              'vision.features',
-              floats.buffer,
-              {
-                segment_id: r.segment,
-                schema: kind === 'lipread' ? 'lip40_v1' : 'sign100_v1',
-                shape: [1, features.length, 4],
-                frame_timestamps_ms: [timestamp],
-              },
-              timestamp,
-            );
-            if (++r.frames >= max) void endCapture();
-          } catch (e) {
-            setError((e as Error).message);
-            void cancelRecognition();
-          }
-        },
-        setError,
-      );
+        max = config.recognition[kind].max_frames,
+        videoTransport = kind === 'lipread' && config.capabilities.lipread.transport === 'video';
+      if (videoTransport) {
+        await r.videoClip.start(devices.streamRef.current);
+      } else {
+        await r.vision.start(
+          devices.streamRef.current,
+          kind,
+          (features, timestamp) => {
+            if (!r.segment) return;
+            try {
+              const floats = new Float32Array(features.flat());
+              r.media?.send(
+                'vision.features',
+                floats.buffer,
+                {
+                  segment_id: r.segment,
+                  schema: kind === 'lipread' ? 'lip40_v1' : 'sign100_v1',
+                  shape: [1, features.length, 4],
+                  frame_timestamps_ms: [timestamp],
+                },
+                timestamp,
+              );
+              if (++r.frames >= max) void endCapture();
+            } catch (e) {
+              setError((e as Error).message);
+              void cancelRecognition();
+            }
+          },
+          setError,
+        );
+      }
       const id = crypto.randomUUID();
       if (generation !== r.captureGeneration || r.closed) return;
       await r.control!.request('segment.start', { segment_id: id });

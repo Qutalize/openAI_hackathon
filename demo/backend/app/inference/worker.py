@@ -32,22 +32,37 @@ def process_main(root_string, config, incoming, outgoing):
     vocabulary = json.loads((root / "config/vocabulary.ja.json").read_text(encoding="utf-8"))
     for kind in ("speech", "lipread", "sign"):
         c = config[kind]
-        capabilities[kind] = {"available": False, "reason": "モデル未導入", "vocabulary": []}
+        capabilities[kind] = {
+            "available": False,
+            "reason": "モデル未導入",
+            "vocabulary": [],
+            "transport": "features",
+        }
         if not c["enabled"]:
             capabilities[kind]["reason"] = "設定で無効になっています"
             continue
-        path = root / c["model_path"]
-        if not path.exists():
-            continue
         try:
             if kind == "speech":
+                path = root / c["model_path"]
+                if not path.exists():
+                    continue
                 from app.inference.speech import SpeechRecognizer
 
                 verify_assets(
                     root, [path / x for x in ("model.bin", "config.json", "tokenizer.json", "vocabulary.txt")]
                 )
                 model = SpeechRecognizer(path, c)
+            elif c["provider"] == "auto_avsr_cli":
+                if kind != "lipread":
+                    raise ValueError("Auto-AVSR is only available for lipread input")
+                from app.inference.auto_avsr import AutoAvsrRecognizer
+
+                model = AutoAvsrRecognizer(root, c)
+                capabilities[kind]["transport"] = "video"
             else:
+                path = root / c["model_path"]
+                if not path.exists():
+                    continue
                 from app.inference.lipread import TemporalRecognizer
 
                 meta = root / c["metadata_path"]
@@ -67,6 +82,7 @@ def process_main(root_string, config, incoming, outgoing):
                 "available": True,
                 "reason": "利用可能",
                 "vocabulary": [x for x in vocabulary["items"] if kind in x["modalities"]],
+                "transport": "video" if c["provider"] == "auto_avsr_cli" else "features",
             }
         except Exception as exc:
             capabilities[kind]["reason"] = f"モデルを初期化できません ({type(exc).__name__})"
@@ -93,7 +109,7 @@ class InferenceService:
         self.settings = settings
         self.config = settings.recognition
         self.capabilities = {
-            k: {"available": False, "reason": "モデル準備中", "vocabulary": []}
+            k: {"available": False, "reason": "モデル準備中", "vocabulary": [], "transport": "features"}
             for k in ("speech", "lipread", "sign")
         }
         self.queues = OrderedDict()
@@ -123,7 +139,12 @@ class InferenceService:
         except queue.Empty:
             self.stop_process()
             self.capabilities = {
-                k: {"available": False, "reason": "モデル初期化がタイムアウトしました", "vocabulary": []}
+                k: {
+                    "available": False,
+                    "reason": "モデル初期化がタイムアウトしました",
+                    "vocabulary": [],
+                    "transport": "features",
+                }
                 for k in self.capabilities
             }
 

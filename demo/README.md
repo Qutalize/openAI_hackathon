@@ -136,6 +136,12 @@ Viteが表示する `http://127.0.0.1:5173` でも同じ操作ができます。
 ## 設定
 
 - `config/app.yaml` が基本設定です。ローカルの上書きは `config/app.local.yaml` に置きます。
+- g29でkaiさんのAuto-AVSRを使う場合は、`config/app.g29.example.yaml`を
+  `config/app.local.yaml`へコピーします。読唇の手動撮影ではブラウザが短い動画クリップを送り、
+  バックエンドが25fps・無音声MP4へ変換して、別環境の
+  `research/vsr/auto_avsr/scripts/run_vsr.sh`を呼び出します。Auto-AVSRの環境・重み・補助資材が
+  READMEどおり準備されていない場合、読唇は「モデル未導入」と表示されます。現在取り込まれている
+  事前学習済みAuto-AVSRは英語モデルなので、日本語の読唇精度を示すものではありません。
 - `room.creation_ttl_seconds` は画面で作成するルームの有効期間です（既定86400秒）。作成回数はIP単位で `security.join_attempts_per_minute` と同じ上限を設け、IDを変えても上限は共通です。
 - 環境変数は `APP__SERVER__PORT` のように階層を `__` で区切ります。未知の設定は起動時にエラーとなります。
 - `.env.example` から `.env` を作る場合は `APP_SESSION_SECRET` をランダム値に置き換えてください。開発時に未設定ならプロセスごとに生成します。

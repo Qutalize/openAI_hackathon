@@ -1,0 +1,9 @@
+# Copy this file to app.local.yaml on g29. It keeps the app and Auto-AVSR
+# Python environments isolated and calls kai's verified CLI as a subprocess.
+recognition:
+  job_timeout_seconds: 180
+  lipread:
+    provider: auto_avsr_cli
+    runner_path: ../research/vsr/auto_avsr/scripts/run_vsr.sh
+    model_version: auto-avsr-182b628
+    max_upload_bytes: 8388608
