@@ -1208,6 +1208,94 @@ button.name-button {
   color: #a12835;
   font-size: 13px;
 }
+@media (min-width: 761px) and (max-height: 900px) {
+  .join-page {
+    position: relative;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .page-language {
+    position: absolute;
+    top: 12px;
+    right: 32px;
+    margin: 0;
+  }
+  .join-heading .eyebrow {
+    margin-bottom: 2px;
+    font-size: 14px;
+  }
+  .join-heading h1 {
+    font-size: clamp(30px, 3vw, 40px);
+  }
+  .join-heading > p:last-child {
+    margin: 4px 0 10px;
+    font-size: 14px;
+  }
+  .room-actions {
+    margin-bottom: 10px;
+  }
+  .room-actions button {
+    min-height: 40px;
+    padding: 8px 18px;
+    font-size: 16px;
+  }
+  .mode-grid {
+    gap: 14px;
+  }
+  .mode-card {
+    gap: 6px 10px;
+    padding: 12px 16px;
+  }
+  .mode-title {
+    margin-bottom: 2px;
+    font-size: 20px;
+  }
+  .mode-caption {
+    font-size: 13px;
+  }
+  .mode-description {
+    font-size: 14px;
+  }
+  .join-profile {
+    gap: 12px 24px;
+    margin: 8px 0;
+  }
+  .join-options {
+    margin: 6px 0;
+  }
+  .availability {
+    margin: 6px 0;
+    padding: 8px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .credentials {
+    margin-top: 8px;
+  }
+  .credentials label > span {
+    padding: 5px 12px;
+    font-size: 15px;
+  }
+  .credentials input[name] {
+    min-height: 42px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    font-size: 16px;
+  }
+  .show-password {
+    margin: 4px 0;
+  }
+  .join-button {
+    min-height: 44px;
+    margin: 8px auto 4px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: 16px;
+  }
+  .join-footnote {
+    margin: 4px 0;
+  }
+}
 button,
 .control-select,
 .room-brand,
