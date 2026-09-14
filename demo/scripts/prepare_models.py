@@ -53,6 +53,11 @@ def main():
     parser.add_argument("--vision-assets", action="store_true")
     parser.add_argument("--register", choices=["lipread", "sign"])
     parser.add_argument("--verify", action="store_true")
+    parser.add_argument(
+        "--verify-speech",
+        action="store_true",
+        help="音声モデル資産だけをmanifestのSHA-256で検証",
+    )
     args = parser.parse_args()
     manifest_path = ROOT / "models/manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -116,12 +121,18 @@ def main():
     manifest_path.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
-    if args.verify:
+    if args.verify or args.verify_speech:
         sys.path.insert(0, str(ROOT / "backend"))
         from app.inference.worker import verify_assets
 
-        verify_assets(ROOT, [ROOT / a["path"] for a in manifest["assets"]])
-        print(f"Verified {len(manifest['assets'])} assets")
+        assets = manifest["assets"]
+        if args.verify_speech and not args.verify:
+            assets = [a for a in assets if a["path"].startswith("models/speech/")]
+            if not assets:
+                parser.error("manifestに音声モデル資産がありません")
+        verify_assets(ROOT, [ROOT / a["path"] for a in assets])
+        scope = "speech " if args.verify_speech and not args.verify else ""
+        print(f"Verified {len(assets)} {scope}assets")
     if not any(vars(args).values()):
         parser.print_help()
 

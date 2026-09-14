@@ -2,6 +2,16 @@
 # Python environments isolated and calls kai's verified CLI as a subprocess.
 recognition:
   job_timeout_seconds: 180
+  speech:
+    enabled: true
+    provider: faster_whisper
+    model_path: models/speech/whisper-small
+    device: cpu
+    compute_type: int8
+    beam_size: 1
+    vad_silence_ms: 600
+    min_segment_ms: 300
+    max_segment_ms: 10000
   lipread:
     provider: auto_avsr_cli
     runner_path: ../research/vsr/auto_avsr/scripts/run_vsr.sh

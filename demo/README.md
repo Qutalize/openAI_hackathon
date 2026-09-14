@@ -142,12 +142,46 @@ Viteが表示する `http://127.0.0.1:5173` でも同じ操作ができます。
   `research/vsr/auto_avsr/scripts/run_vsr.sh`を呼び出します。Auto-AVSRの環境・重み・補助資材が
   READMEどおり準備されていない場合、読唇は「モデル未導入」と表示されます。現在取り込まれている
   事前学習済みAuto-AVSRは英語モデルなので、日本語の読唇精度を示すものではありません。
+- g29で音声入力とAuto-AVSRを同時に有効化する場合も同じ設定例を使います。アプリ用環境には
+  `faster-whisper`、Auto-AVSRは別の専用環境に置き、アプリからCLIを呼び出します。
 - `room.creation_ttl_seconds` は画面で作成するルームの有効期間です（既定86400秒）。作成回数はIP単位で `security.join_attempts_per_minute` と同じ上限を設け、IDを変えても上限は共通です。
 - 環境変数は `APP__SERVER__PORT` のように階層を `__` で区切ります。未知の設定は起動時にエラーとなります。
 - `.env.example` から `.env` を作る場合は `APP_SESSION_SECRET` をランダム値に置き換えてください。開発時に未設定ならプロセスごとに生成します。
 - config内の相対パスは起動場所にかかわらず `demo/` を基準に解決します。
 - セッションと字幕はメモリ内です。再起動で失われます。最後の参加者が退出して60秒後に会話履歴を破棄します。
 - サーバーは音声・映像・特徴点・字幕本文をログやファイルへ保存しません。端末では自分のカメラ映像を会話中に録画し、会話終了時に保存します。学習画面の特徴点の明示保存は別扱いです。
+
+### g29で音声入力と読唇入力を有効化
+
+`demo`をカレントディレクトリにし、アプリ用環境へ推論依存を導入します。Whisper Smallは
+固定revisionから取得され、モデル本体はGitには追加されません。
+
+```bash
+uv sync --project backend --extra inference --cache-dir .cache/uv
+backend/.venv/bin/python scripts/prepare_models.py --speech --verify-speech
+cp config/app.g29.example.yaml config/app.local.yaml
+```
+
+すでに`backend/.venv`があるもののg29で`uv`がPATHにない場合は、system pipからその環境を指定できます。
+
+```bash
+pip3 --python backend/.venv/bin/python install -e "./backend[inference]"
+```
+
+Auto-AVSRは`research/vsr/auto_avsr/README.md`に従って別環境へ準備します。サーバー起動前に、
+音声と読唇がともに`available: true`になることを確認します。
+
+```bash
+MPLCONFIGDIR=/tmp/kotoba-link-matplotlib \
+  backend/.venv/bin/python scripts/check_capabilities.py
+```
+
+既知の音声ファイルを使った実推論は次のコマンドで確認できます。出力が1件以上なければ終了コード1です。
+
+```bash
+MPLCONFIGDIR=/tmp/kotoba-link-matplotlib \
+  backend/.venv/bin/python scripts/check_speech.py /path/to/japanese-audio.wav
+```
 
 ## 読唇・日本手話モデルを作る
 
