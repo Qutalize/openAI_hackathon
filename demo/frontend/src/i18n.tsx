@@ -157,6 +157,9 @@ const english: Record<string, string> = {
   読唇の撮影を開始: 'Capture lip reading',
   手話の撮影を開始: 'Capture sign language',
   対応する登録表現: 'Supported phrases',
+  対象言語と制約: 'Language and limitations',
+  'ASL（米国手話）の動画を英語字幕へ変換する検証版です。日本手話には対応していません。':
+    'Experimental ASL (American Sign Language) video-to-English captions. Japanese Sign Language is not supported.',
   '候補の期限が切れました。文字入力として送信できます。':
     'This suggestion expired. You can still send it as text.',
   候補を確認して送信してください: 'Review the suggestion before sending',

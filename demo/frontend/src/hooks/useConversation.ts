@@ -403,7 +403,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     const id = r.segment;
     if (!id) return;
     const kind = r.input === 'lipread' ? 'lipread' : 'sign';
-    const videoTransport = kind === 'lipread' && config.capabilities.lipread.transport === 'video';
+    const videoTransport = config.capabilities[kind].transport === 'video';
     const lastMediaSeq = r.media!.seq;
     r.captureGeneration++;
     clearTimeout(r.captureTimer);
@@ -414,7 +414,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     try {
       if (videoTransport) {
         const video = await r.videoClip.finish();
-        await uploadRecognitionVideo(session.room_id, 'lipread', id, session.csrf_token, video);
+        await uploadRecognitionVideo(session.room_id, kind, id, session.csrf_token, video);
       } else {
         r.videoClip.cancel();
       }
@@ -437,7 +437,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       if (r.input !== 'lipread' && r.input !== 'sign') return;
       const kind = r.input,
         max = config.recognition[kind].max_frames,
-        videoTransport = kind === 'lipread' && config.capabilities.lipread.transport === 'video';
+        videoTransport = config.capabilities[kind].transport === 'video';
       if (videoTransport) {
         await r.videoClip.start(devices.streamRef.current);
       } else {

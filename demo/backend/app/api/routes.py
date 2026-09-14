@@ -172,10 +172,11 @@ async def upload_recognition_video(room_id: str, kind: str, segment_id: str, req
     check_origin(request)
     s, cfg = session_for(request), request.app.state.settings
     check_csrf(request, s)
-    if s.room_id != room_id or kind != "lipread" or s.input != kind:
+    if s.room_id != room_id or kind not in {"lipread", "sign"} or s.input != kind:
         raise HTTPException(403, "この認識入力は利用できません")
     recognition = getattr(cfg.recognition, kind)
-    if recognition.provider != "auto_avsr_cli":
+    expected_provider = "auto_avsr_cli" if kind == "lipread" else "uni_sign_cli"
+    if recognition.provider != expected_provider:
         raise HTTPException(409, "このモデルは動画アップロード方式ではありません")
     if not s.devices["camera"] or not s.segment or s.segment["id"] != segment_id:
         raise HTTPException(409, "撮影区間が見つかりません")

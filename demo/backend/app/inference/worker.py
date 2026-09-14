@@ -52,12 +52,19 @@ def process_main(root_string, config, incoming, outgoing):
                     root, [path / x for x in ("model.bin", "config.json", "tokenizer.json", "vocabulary.txt")]
                 )
                 model = SpeechRecognizer(path, c)
-            elif c["provider"] == "auto_avsr_cli":
-                if kind != "lipread":
-                    raise ValueError("Auto-AVSR is only available for lipread input")
-                from app.inference.auto_avsr import AutoAvsrRecognizer
+            elif c["provider"] in {"auto_avsr_cli", "uni_sign_cli"}:
+                if c["provider"] == "auto_avsr_cli":
+                    if kind != "lipread":
+                        raise ValueError("Auto-AVSR is only available for lipread input")
+                    from app.inference.auto_avsr import AutoAvsrRecognizer
 
-                model = AutoAvsrRecognizer(root, c)
+                    model = AutoAvsrRecognizer(root, c)
+                else:
+                    if kind != "sign":
+                        raise ValueError("Uni-Sign is only available for sign input")
+                    from app.inference.uni_sign import UniSignRecognizer
+
+                    model = UniSignRecognizer(root, c)
                 capabilities[kind]["transport"] = "video"
             else:
                 path = root / c["model_path"]
@@ -81,8 +88,15 @@ def process_main(root_string, config, incoming, outgoing):
             capabilities[kind] = {
                 "available": True,
                 "reason": "利用可能",
-                "vocabulary": [x for x in vocabulary["items"] if kind in x["modalities"]],
-                "transport": "video" if c["provider"] == "auto_avsr_cli" else "features",
+                "vocabulary": (
+                    []
+                    if c["provider"] == "uni_sign_cli"
+                    else [x for x in vocabulary["items"] if kind in x["modalities"]]
+                ),
+                "transport": (
+                    "video" if c["provider"] in {"auto_avsr_cli", "uni_sign_cli"} else "features"
+                ),
+                "language_note": getattr(model, "language_note", ""),
             }
         except Exception as exc:
             capabilities[kind]["reason"] = f"モデルを初期化できません ({type(exc).__name__})"

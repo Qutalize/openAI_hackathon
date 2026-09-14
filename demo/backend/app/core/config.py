@@ -92,14 +92,17 @@ class SpeechConfig(StrictModel):
 
 class VisionConfig(StrictModel):
     enabled: bool = True
-    provider: Literal["onnx_temporal_classifier", "auto_avsr_cli"] = "onnx_temporal_classifier"
+    provider: Literal["onnx_temporal_classifier", "auto_avsr_cli", "uni_sign_cli"] = (
+        "onnx_temporal_classifier"
+    )
     model_path: str
     metadata_path: str
     runner_path: str = ""
+    python_path: str = ""
     max_upload_bytes: int = Field(8 * 1024 * 1024, ge=1024, le=32 * 1024 * 1024)
     model_version: str = ""
     feature_schema: Literal["lip40_v1", "sign100_v1"]
-    max_frames: int = Field(64, ge=20, le=96)
+    max_frames: int = Field(64, ge=20, le=256)
     min_valid_frame_ratio: float = Field(0.8, ge=0, le=1)
     candidate_threshold: float = Field(0.8, ge=0, le=1)
     top_k: int = Field(3, ge=1, le=3)

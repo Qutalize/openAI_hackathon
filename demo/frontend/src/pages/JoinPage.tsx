@@ -185,9 +185,15 @@ export default function JoinPage({
         )}
         {(input === 'lipread' || input === 'sign') && (
           <p className="availability">
-            {t('登録表現のみ対応：')}
-            {config.capabilities[input].vocabulary.map((x) => x.text).join('、')}
-            {t('。認識候補を確認して送信します。')}
+            {config.capabilities[input].language_note ? (
+              <>{t(config.capabilities[input].language_note)}</>
+            ) : (
+              <>
+                {t('登録表現のみ対応：')}
+                {config.capabilities[input].vocabulary.map((x) => x.text).join('、')}
+                {t('。認識候補を確認して送信します。')}
+              </>
+            )}
           </p>
         )}
         <div className="credentials">
