@@ -82,6 +82,7 @@ export interface PublicConfig {
       reason: string;
       vocabulary: { id: string; text: string }[];
       transport?: 'features' | 'video';
+      language_note?: string;
     }
   >;
   media: {

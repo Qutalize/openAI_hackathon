@@ -17,3 +17,10 @@ recognition:
     runner_path: ../research/vsr/auto_avsr/scripts/run_vsr.sh
     model_version: auto-avsr-182b628
     max_upload_bytes: 8388608
+  sign:
+    provider: uni_sign_cli
+    runner_path: ../research/sign/uni-sign/scripts/run_online.py
+    python_path: /home/kosaki/anaconda3/envs/Uni-Sign/bin/python
+    model_version: uni-sign-how2sign-pose-only
+    max_upload_bytes: 8388608
+    max_frames: 200

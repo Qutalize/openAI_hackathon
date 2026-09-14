@@ -18,7 +18,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export async function uploadRecognitionVideo(
   roomId: string,
-  kind: 'lipread',
+  kind: 'lipread' | 'sign',
   segmentId: string,
   csrfToken: string,
   video: Blob,

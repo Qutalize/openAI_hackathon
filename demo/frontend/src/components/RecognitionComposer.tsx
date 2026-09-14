@@ -81,8 +81,14 @@ export default function RecognitionComposer({
             </button>
           )}
           <details>
-            <summary>{t('対応する登録表現')}</summary>
-            <p>{config.capabilities[input].vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}</p>
+            <summary>
+              {t(config.capabilities[input].language_note ? '対象言語と制約' : '対応する登録表現')}
+            </summary>
+            <p>
+              {config.capabilities[input].language_note
+                ? t(config.capabilities[input].language_note)
+                : config.capabilities[input].vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}
+            </p>
           </details>
         </div>
       )}

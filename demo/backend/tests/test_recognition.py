@@ -96,17 +96,29 @@ def test_silero_silent_audio_produces_no_segment():
         assert completed == [] and not active
 
 
-def test_video_recognition_upload_requires_active_matching_segment(tmp_path):
+@pytest.mark.parametrize(
+    ("kind", "provider", "mode"),
+    [
+        ("lipread", "auto_avsr_cli", "standard"),
+        ("sign", "uni_sign_cli", "hearing_support"),
+    ],
+)
+def test_video_recognition_upload_requires_active_matching_segment(tmp_path, kind, provider, mode):
     class VideoModels:
         capabilities = {
             "speech": {"available": False, "reason": "モデル未導入", "vocabulary": []},
             "lipread": {
-                "available": True,
+                "available": kind == "lipread",
                 "reason": "利用可能",
                 "vocabulary": [],
                 "transport": "video",
             },
-            "sign": {"available": False, "reason": "モデル未導入", "vocabulary": []},
+            "sign": {
+                "available": kind == "sign",
+                "reason": "利用可能",
+                "vocabulary": [],
+                "transport": "video",
+            },
         }
         metrics = {}
         pending = {}
@@ -120,18 +132,18 @@ def test_video_recognition_upload_requires_active_matching_segment(tmp_path):
     cfg = load_settings()
     cfg.storage.room_database = str(tmp_path / "rooms.sqlite3")
     cfg.app.environment = "test"
-    cfg.recognition.lipread.provider = "auto_avsr_cli"
+    getattr(cfg.recognition, kind).provider = provider
     application = create_app(cfg, VideoModels())
     with TestClient(application, headers={"origin": "http://localhost:5173"}) as client:
         application.state.rooms.repo.create("demo-room", "test-password")
         joined = client.post(
             "/api/rooms/demo-room/join",
-            json={"password": "test-password", "mode": "standard", "input": "lipread"},
+            json={"password": "test-password", "mode": mode, "input": kind},
         ).json()
         session = next(iter(application.state.rooms.sessions.values()))
         session.devices["camera"] = True
         session.segment = {"id": "clip", "started_at": 0, "frames": [], "timestamps": []}
-        url = "/api/rooms/demo-room/recognition/video?kind=lipread&segment_id=clip"
+        url = f"/api/rooms/demo-room/recognition/video?kind={kind}&segment_id=clip"
         assert client.post(url, content=b"video", headers={"content-type": "video/webm"}).status_code == 403
         response = client.post(
             url,

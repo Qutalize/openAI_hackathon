@@ -151,7 +151,7 @@ Viteが表示する `http://127.0.0.1:5173` でも同じ操作ができます。
 - セッションと字幕はメモリ内です。再起動で失われます。最後の参加者が退出して60秒後に会話履歴を破棄します。
 - サーバーは音声・映像・特徴点・字幕本文をログやファイルへ保存しません。端末では自分のカメラ映像を会話中に録画し、会話終了時に保存します。学習画面の特徴点の明示保存は別扱いです。
 
-### g29で音声入力と読唇入力を有効化
+### g29で音声・読唇・手話入力を有効化
 
 `demo`をカレントディレクトリにし、アプリ用環境へ推論依存を導入します。Whisper Smallは
 固定revisionから取得され、モデル本体はGitには追加されません。
@@ -169,7 +169,14 @@ pip3 --python backend/.venv/bin/python install -e "./backend[inference]"
 ```
 
 Auto-AVSRは`research/vsr/auto_avsr/README.md`に従って別環境へ準備します。サーバー起動前に、
-音声と読唇がともに`available: true`になることを確認します。
+Uni-Signは`research/sign/uni-sign/README.md`に従って、ASL用の環境と重みを準備します。
+設定例の`python_path`はg29の共有環境を指すため、別マシンでは自分のUni-Sign環境へ変更してください。
+
+Uni-SignはHow2Signで学習された**ASL（米国手話）の動画から英文を生成する検証モデル**です。
+日本手話には対応せず、翻訳精度も保証されません。手話入力を選ぶ画面にも同じ制約を表示します。
+
+サーバー起動前に、3方式が`available: true`になることを確認します。Uni-Signの起動確認では
+重み・mT5・姿勢推定ONNX・CUDAを検査しますが、起動時に約3.7GBの重みを読み込む処理は行いません。
 
 ```bash
 MPLCONFIGDIR=/tmp/kotoba-link-matplotlib \
@@ -181,6 +188,15 @@ MPLCONFIGDIR=/tmp/kotoba-link-matplotlib \
 ```bash
 MPLCONFIGDIR=/tmp/kotoba-link-matplotlib \
   backend/.venv/bin/python scripts/check_speech.py /path/to/japanese-audio.wav
+```
+
+既知のASL動画による単体確認は、プロジェクトルートから次のように実行します。`prediction.txt`の
+英文は未補正のモデル出力で、意味の正しさは入力ごとに別途確認します。
+
+```bash
+/home/kosaki/anaconda3/envs/Uni-Sign/bin/python -B \
+  research/sign/uni-sign/scripts/run_online.py \
+  data/sign/01_whats_your_name/original.mp4
 ```
 
 ## 読唇・日本手話モデルを作る
