@@ -30,9 +30,9 @@ security:
   join_failure_message: "ルームIDまたはパスワードを確認してください"
 
 media:
-  video_width: 1280
-  video_height: 720
-  video_fps: 30
+  video_width: 640
+  video_height: 360
+  video_fps: 15
   audio_sample_rate: 16000        # AI送信用。機器側の実サンプルレートとは別
   audio_channels: 1
   audio_chunk_ms: 200
