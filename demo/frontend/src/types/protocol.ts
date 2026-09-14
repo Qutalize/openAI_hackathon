@@ -77,7 +77,12 @@ export interface PublicConfig {
   >;
   capabilities: Record<
     'speech' | 'lipread' | 'sign',
-    { available: boolean; reason: string; vocabulary: { id: string; text: string }[] }
+    {
+      available: boolean;
+      reason: string;
+      vocabulary: { id: string; text: string }[];
+      transport?: 'features' | 'video';
+    }
   >;
   media: {
     video_width: number;

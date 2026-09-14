@@ -22,6 +22,13 @@ def check_origin(request):
         raise HTTPException(403, "許可されていない接続元です")
 
 
+def check_csrf(request, session):
+    cfg = request.app.state.settings
+    actual = digest(cfg.session_secret, request.headers.get("x-csrf-token", ""))
+    if not hmac.compare_digest(actual, session.csrf_digest):
+        raise HTTPException(403, "操作トークンが一致しません。画面を再読み込みしてください")
+
+
 @router.get("/api/config")
 async def public_config(request: Request):
     cfg = request.app.state.settings
@@ -130,10 +137,8 @@ async def session(request: Request):
 @router.patch("/api/session")
 async def rename(body: RenameRequest, request: Request):
     check_origin(request)
-    s, cfg = session_for(request), request.app.state.settings
-    actual = digest(cfg.session_secret, request.headers.get("x-csrf-token", ""))
-    if not hmac.compare_digest(actual, s.csrf_digest):
-        raise HTTPException(403, "操作トークンが一致しません。画面を再読み込みしてください")
+    s = session_for(request)
+    check_csrf(request, s)
     await request.app.state.rooms.rename(s, body.display_name)
     return {"display_name": s.display_name}
 
@@ -148,9 +153,7 @@ async def leave(request: Request):
         if exc.status_code != 401:
             raise
     else:
-        actual = digest(cfg.session_secret, request.headers.get("x-csrf-token", ""))
-        if not hmac.compare_digest(actual, s.csrf_digest):
-            raise HTTPException(403, "退出トークンが一致しません。画面を再読み込みしてください")
+        check_csrf(request, s)
         await request.app.state.rooms.remove(s)
     response = Response(status_code=204)
     response.delete_cookie(
@@ -161,6 +164,35 @@ async def leave(request: Request):
         samesite="strict",
     )
     return response
+
+
+@router.post("/api/rooms/{room_id}/recognition/video", status_code=204)
+async def upload_recognition_video(room_id: str, kind: str, segment_id: str, request: Request):
+    """Attach a short camera clip to an active manual-recognition segment."""
+    check_origin(request)
+    s, cfg = session_for(request), request.app.state.settings
+    check_csrf(request, s)
+    if s.room_id != room_id or kind != "lipread" or s.input != kind:
+        raise HTTPException(403, "この認識入力は利用できません")
+    recognition = getattr(cfg.recognition, kind)
+    if recognition.provider != "auto_avsr_cli":
+        raise HTTPException(409, "このモデルは動画アップロード方式ではありません")
+    if not s.devices["camera"] or not s.segment or s.segment["id"] != segment_id:
+        raise HTTPException(409, "撮影区間が見つかりません")
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].lower()
+    if content_type not in {"video/webm", "video/mp4", "video/quicktime"}:
+        raise HTTPException(415, "WebMまたはMP4動画を送信してください")
+    chunks, size = [], 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > recognition.max_upload_bytes:
+            raise HTTPException(413, "撮影動画のサイズが上限を超えています")
+        chunks.append(chunk)
+    if not size:
+        raise HTTPException(422, "撮影動画が空です")
+    s.segment["video"] = b"".join(chunks)
+    s.segment["content_type"] = content_type
+    return Response(status_code=204)
 
 
 @router.get("/api/rooms/{room_id}/snapshot")

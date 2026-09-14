@@ -16,6 +16,32 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
+export async function uploadRecognitionVideo(
+  roomId: string,
+  kind: 'lipread',
+  segmentId: string,
+  csrfToken: string,
+  video: Blob,
+) {
+  const query = new URLSearchParams({ kind, segment_id: segmentId });
+  const response = await fetch(
+    `/api/rooms/${encodeURIComponent(roomId)}/recognition/video?${query.toString()}`,
+    {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': video.type || 'video/webm',
+        'X-CSRF-Token': csrfToken,
+      },
+      body: video,
+    },
+  );
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(typeof body.detail === 'string' ? body.detail : '撮影動画を送信できませんでした');
+  }
+}
+
 export function wsURL(path: string) {
   return `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}${path}`;
 }
