@@ -113,6 +113,7 @@ export default function TalkPage({
           <SpeakerStage
             speaker={main}
             stream={main ? c.streams[main.id] : undefined}
+            status={main ? c.videoStatus[main.id] : undefined}
             self={session.participant_id}
             pinned={!!pinned}
             onUnpin={() => setPinned(null)}
@@ -120,6 +121,7 @@ export default function TalkPage({
             <ParticipantStrip
               participants={c.participants}
               streams={c.streams}
+              statuses={c.videoStatus}
               self={session.participant_id}
               pinned={pinned}
               onPin={(id) => setPinned(pinned === id ? null : id)}

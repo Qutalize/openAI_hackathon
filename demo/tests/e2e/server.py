@@ -20,7 +20,7 @@ if __name__ == "__main__":
         cfg.storage.room_database = str(Path(directory) / "rooms.sqlite3")
         cfg.security.join_attempts_per_minute = 100
         repository = RoomRepository(Path(cfg.storage.room_database))
-        for room_id in ("e2e-room", "mobile-room", "voice-room", "four-room", "reconnect-room"):
+        for room_id in ("e2e-room", "mobile-room", "voice-room", "four-room", "reconnect-room", "status-room"):
             repository.create(room_id, "e2e-password", ttl=3600)
         # Full real server and real adapters; unavailable models remain unavailable.
         uvicorn.run(create_app(cfg), host="127.0.0.1", port=8000, access_log=False)

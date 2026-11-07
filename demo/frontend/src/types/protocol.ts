@@ -44,6 +44,8 @@ export interface Participant {
   connection_state: string;
   connection_id?: string;
 }
+/** What a participant's video area can show. */
+export type VideoStatus = 'off' | 'live' | 'connecting' | 'reconnecting' | 'failed';
 export interface Utterance {
   utterance_id: string;
   participant_id: string;
