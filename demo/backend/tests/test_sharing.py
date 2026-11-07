@@ -75,28 +75,33 @@ def test_https_join_sets_secure_host_only_cookie(shared_app):
 
 
 def test_https_websocket_caption_flow(shared_app):
-    with TestClient(shared_app, base_url=ORIGIN, headers={"origin": ORIGIN}) as first:
-        second = TestClient(shared_app, base_url=ORIGIN, headers={"origin": ORIGIN})
-        try:
-            first.post("/api/rooms", json={"room_id": "shared-room", "password": "test-password"})
-            body = {"password": "test-password", "mode": "standard", "input": "text"}
-            for client in (first, second):
-                assert client.post("/api/rooms/shared-room/join", json=body).status_code == 200
-            with first.websocket_connect(f"{WS_ORIGIN}/ws/rooms/shared-room") as wa:
-                receive_type(wa, "participant.joined")
-                with second.websocket_connect(f"{WS_ORIGIN}/ws/rooms/shared-room") as wb:
-                    receive_type(wb, "participant.joined")
-                    send(wa, "utterance.submit", {"text": "HTTPS経由で会話"})
-                    assert receive_type(wb, "utterance.final")["payload"]["text"] == "HTTPS経由で会話"
-            assert first.get("/rooms/shared-room").status_code == 200
-            session = first.get("/api/session").json()
-            assert (
-                first.delete("/api/session", headers={"x-csrf-token": session["csrf_token"]}).status_code
-                == 204
-            )
-            assert first.get("/api/session").status_code == 401
-        finally:
-            second.close()
+    # One TestClient keeps both sockets on the app's event loop; a second client runs its own loop
+    # and cross-loop broadcasts can hang.
+    with TestClient(shared_app, base_url=ORIGIN, headers={"origin": ORIGIN}) as client:
+        client.post("/api/rooms", json={"room_id": "shared-room", "password": "test-password"})
+        body = {"password": "test-password", "mode": "standard", "input": "text"}
+        cookies = []
+        for _ in range(2):
+            client.cookies.clear()
+            assert client.post("/api/rooms/shared-room/join", json=body).status_code == 200
+            cookies.append(dict(client.cookies))
+        first, second = cookies
+        client.cookies.clear()
+        client.cookies.update(first)
+        with client.websocket_connect(f"{WS_ORIGIN}/ws/rooms/shared-room") as wa:
+            receive_type(wa, "participant.joined")
+            client.cookies.clear()
+            client.cookies.update(second)
+            with client.websocket_connect(f"{WS_ORIGIN}/ws/rooms/shared-room") as wb:
+                receive_type(wb, "participant.joined")
+                send(wa, "utterance.submit", {"text": "HTTPS経由で会話"})
+                assert receive_type(wb, "utterance.final")["payload"]["text"] == "HTTPS経由で会話"
+        client.cookies.clear()
+        client.cookies.update(first)
+        assert client.get("/rooms/shared-room").status_code == 200
+        session = client.get("/api/session").json()
+        assert client.delete("/api/session", headers={"x-csrf-token": session["csrf_token"]}).status_code == 204
+        assert client.get("/api/session").status_code == 401
 
 
 def test_shared_origin_is_exact_and_ws_requires_session(shared_app):
