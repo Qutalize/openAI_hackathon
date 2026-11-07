@@ -405,7 +405,17 @@ class RoomService:
             signal = p.get("description") if kind != "rtc.ice" else p.get("candidate")
             if not isinstance(signal, dict):
                 raise ValueError("シグナリングデータが不正です")
-            await self.private(target, kind, {**p, "from_id": s.participant_id})
+            expected = p.get("target_connection_id")
+            if expected is not None and expected != target.connection_id:
+                # The sender's RTCPeerConnection belongs to a control connection that was replaced.
+                result = {"delivered": False}
+            else:
+                await self.private(
+                    target,
+                    kind,
+                    {**p, "from_id": s.participant_id, "from_connection_id": s.connection_id},
+                )
+                result = {"delivered": True}
         elif kind == "segment.start":
             if s.input not in ("lipread", "sign") or not s.devices["camera"] or not s.media:
                 raise ValueError("カメラと認識接続を確認してください")

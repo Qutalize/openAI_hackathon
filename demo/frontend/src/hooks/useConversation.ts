@@ -104,11 +104,18 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     r.segment = null;
     setCapturing(false);
   }, [r]);
+  const dropPeers = useCallback(() => {
+    // Signals that arrive before the next Peers instance exists are queued, never sent to a closed one.
+    r.peers?.close();
+    r.peers = null;
+    r.signals = [];
+    setRemoteStreams({});
+  }, [r]);
   const stopResources = useCallback(() => {
     r.closed = true;
     r.control?.close();
     r.media?.close();
-    r.peers?.close();
+    dropPeers();
     void r.audio.stop();
     r.vision.stop();
     r.videoClip.cancel();
@@ -117,7 +124,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     clearTimeout(r.captureTimer);
     clearTimeout(r.iceTimer);
     devices.streamRef.current.getTracks().forEach((t) => t.stop());
-  }, [r, devices.streamRef]);
+  }, [r, devices.streamRef, dropPeers]);
   useEffect(() => () => stopResources(), [stopResources]);
 
   async function startAudio() {
@@ -191,7 +198,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       setSpeaker(snap.speaker_id);
       for (const part of snap.participants)
         if (part.id !== session.participant_id && part.connection_state === 'connected')
-          r.peers?.ensure(part.id);
+          r.peers?.ensure(part.id, part.connection_id ?? null);
     } else if (e.type === 'participant.activity') {
       if (p.replayed) return;
       r.participants = r.participants.map((part) =>
@@ -213,7 +220,8 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       setUtterances((list) =>
         list.map((u) => (u.participant_id === p.id ? { ...u, display_name: p.display_name } : u)),
       );
-      if (p.id !== session.participant_id && p.connection_state === 'connected') r.peers?.ensure(p.id);
+      if (p.id !== session.participant_id && p.connection_state === 'connected')
+        r.peers?.ensure(p.id, p.connection_id ?? null);
       if (p.connection_state !== 'connected') r.peers?.remove(p.id);
       if (!exists && p.id !== session.participant_id && r.speechNotifications && !p.replayed)
         r.tts?.speak(`${p.display_name}が参加しました`);
@@ -289,6 +297,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
             setParticipants([...r.participants]);
             r.tts?.cancel();
             r.media?.close();
+            dropPeers();
             void r.audio.stop();
             stopCapture();
             setProcessing(false);
@@ -298,6 +307,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
         async () => {
           r.media?.close();
           r.peers?.close();
+          r.peers = null;
           const media = (r.media = new MediaSocket(session.room_id, () => {
             if (!r.closed) {
               setError('認識接続が切れました。再接続します');
@@ -322,7 +332,8 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
             devices.streamRef.current,
           );
           for (const p of r.participants)
-            if (p.id !== session.participant_id && p.connection_state === 'connected') r.peers.ensure(p.id);
+            if (p.id !== session.participant_id && p.connection_state === 'connected')
+              r.peers.ensure(p.id, p.connection_id ?? null);
           for (const e of r.signals.splice(0)) await r.peers.receive(e.type, e.payload);
           await updateDevices();
           await control.request('preferences.update', { output: outputPreferences(r.playback) });
