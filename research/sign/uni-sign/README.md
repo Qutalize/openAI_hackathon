@@ -17,6 +17,8 @@
 
 ## 既存環境で動かす
 
+> 2026-11-07追記：以前の共有conda環境 `/home/kosaki/anaconda3/envs/Uni-Sign/` はg29から削除されています。現在は「[uvで構築する](#uvで構築する)」で `research/sign/uni-sign/.venv` に環境を作り、下記の `conda run --no-capture-output -n Uni-Sign python` を `research/sign/uni-sign/.venv/bin/python` に置き換えて実行します。重みはNASの共有フォルダに残っています。
+
 以下は**プロジェクトルート**で実行します。別の場所へcloneした場合、最初の `cd` だけ自分の配置へ変更してください。
 
 ```bash
@@ -112,6 +114,20 @@ research/sign/uni-sign/
 | pip / setuptools / wheel | 26.0.1 / 80.9.0 / 0.45.1 |
 
 この推論経路はCUDAとBF16を使います。CPUのみ、Windows、macOS、別GPUでの動作はこの手順では検証していません。短動画2本の別途比較ではGPUメモリの観測ピークが13.17 GiBでしたが、必要VRAMの厳密な下限ではありません。[計測条件](../reports/2026-09-12-pro-three-model-comparison.md)を参照してください。
+
+### uvで構築する
+
+condaを使わず、下記1・2と同じ固定バージョンを入れるスクリプトです。プロジェクトルートから実行します。
+
+```bash
+UV_BIN=~/.local/bin/uv bash research/sign/uni-sign/scripts/setup_uv.sh
+```
+
+環境は `research/sign/uni-sign/.venv` にできます（Git対象外）。別の場所に置く場合は `UNI_SIGN_VENV` を指定すると、その場所へのリンクが `.venv` に作られます。
+
+重みはNASの共有フォルダ `/mnt/kiso-qnap5/activities/260915_codex_hackathon/research/sign/uni-sign/Uni-Sign/weights` にあります。新しくcloneした場所では、`Uni-Sign/weights` をこのフォルダへのシンボリックリンクにすれば、再ダウンロードは不要です。
+
+2026-11-07にg29で同じ内容を実行し、CUDAとBF16が有効になり、ORT 1.18.0でCUDAExecutionProviderが使えることを確認しました。`data/sign/01_whats_your_name/original.mp4` の推論は成功しましたが、出力は "We're going to choose a smaller weight strainer." で内容は正しくありません。重みの読み込みを含めて約74秒かかりました。
 
 ### 1. 専用環境を作り、PyTorchを先に入れる
 

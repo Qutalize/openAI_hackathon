@@ -170,7 +170,8 @@ pip3 --python backend/.venv/bin/python install -e "./backend[inference]"
 
 Auto-AVSRは`research/vsr/auto_avsr/README.md`に従って別環境へ準備します。サーバー起動前に、
 Uni-Signは`research/sign/uni-sign/README.md`に従って、ASL用の環境と重みを準備します。
-設定例の`python_path`はg29の共有環境を指すため、別マシンでは自分のUni-Sign環境へ変更してください。
+Uni-Signの環境は`research/sign/uni-sign/scripts/setup_uv.sh`で`research/sign/uni-sign/.venv`に作ります。
+設定例の`python_path`はこの場所を相対パスで指します。
 
 Uni-SignはHow2Signで学習された**ASL（米国手話）の動画から英文を生成する検証モデル**です。
 日本手話には対応せず、翻訳精度も保証されません。手話入力を選ぶ画面にも同じ制約を表示します。
@@ -194,7 +195,7 @@ MPLCONFIGDIR=/tmp/kotoba-link-matplotlib \
 英文は未補正のモデル出力で、意味の正しさは入力ごとに別途確認します。
 
 ```bash
-/home/kosaki/anaconda3/envs/Uni-Sign/bin/python -B \
+research/sign/uni-sign/.venv/bin/python -B \
   research/sign/uni-sign/scripts/run_online.py \
   data/sign/01_whats_your_name/original.mp4
 ```
