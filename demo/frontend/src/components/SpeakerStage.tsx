@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import type { Participant } from '../types/protocol';
+import type { Participant, VideoStatus } from '../types/protocol';
 import { useI18n } from '../i18n';
 import Video from './Video';
 import ControlIcon from './ControlIcon';
 import UserAvatar from './UserAvatar';
 import ParticipantActivity from './ParticipantActivity';
 
+export const VIDEO_MESSAGES: Record<VideoStatus, string> = {
+  off: 'カメラはOFFです',
+  live: 'カメラはOFFです',
+  connecting: '映像を接続しています',
+  reconnecting: '映像を再接続しています',
+  failed: '映像を受信できません。通信環境を確認してください',
+};
+
 export default function SpeakerStage({
   speaker,
   stream,
+  status = 'off',
   self,
   pinned,
   onUnpin,
@@ -16,6 +25,7 @@ export default function SpeakerStage({
 }: {
   speaker?: Participant;
   stream?: MediaStream;
+  status?: VideoStatus;
   self: string;
   pinned: boolean;
   onUnpin: () => void;
@@ -84,7 +94,7 @@ export default function SpeakerStage({
         <span />
       </div>
       <div className="main-video">
-        {speaker?.devices.camera && stream ? (
+        {speaker && status === 'live' && stream ? (
           <Video
             stream={stream}
             local={speaker.id === self}
@@ -96,7 +106,9 @@ export default function SpeakerStage({
               <UserAvatar avatar={speaker?.avatar} name={speaker?.display_name} size={64} />
             </span>
             <p>{speaker ? speaker.display_name : t('会話の準備ができました')}</p>
-            <small>{t(speaker ? 'カメラはOFFです' : '参加者を待っています')}</small>
+            <small className={status === 'failed' ? 'video-problem' : undefined}>
+              {t(speaker ? VIDEO_MESSAGES[status] : '参加者を待っています')}
+            </small>
           </div>
         )}
       </div>
