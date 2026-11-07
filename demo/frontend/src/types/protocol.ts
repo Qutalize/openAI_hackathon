@@ -42,6 +42,7 @@ export interface Participant {
   input: InputKind;
   devices: { microphone: boolean; camera: boolean };
   connection_state: string;
+  connection_id?: string;
 }
 export interface Utterance {
   utterance_id: string;

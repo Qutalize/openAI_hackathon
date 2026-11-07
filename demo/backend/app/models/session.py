@@ -18,6 +18,8 @@ class Session:
     csrf_digest: str
     expires_at: float
     avatar: str = ""
+    # Changes on every control WebSocket so peers can discard stale RTCPeerConnections.
+    connection_id: str = ""
     input_epoch: int = 0
     stream_id: str = field(default_factory=uid)
     devices: dict = field(default_factory=lambda: {"microphone": False, "camera": False})
@@ -47,6 +49,7 @@ class Session:
             "speaking": self.active_since is not None,
             "recognizing": self.recognition_jobs > 0,
             "connection_state": "connected" if self.control else "reconnecting",
+            "connection_id": self.connection_id,
         }
 
     def stream(self):
