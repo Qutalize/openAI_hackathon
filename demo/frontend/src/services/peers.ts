@@ -18,6 +18,7 @@ export class Peers {
     private onStream: (id: string, stream: MediaStream | null) => void,
     private onError: (message: string) => void,
     private local: MediaStream,
+    private onState: (id: string, state: RTCPeerConnectionState | null) => void = () => {},
   ) {}
 
   /**
@@ -45,6 +46,7 @@ export class Peers {
       remoteConnection,
     };
     this.peers.set(id, peer);
+    this.onState(id, pc.connectionState);
     // Only the initial offerer creates m-lines. The answerer reuses the offered
     // transceivers; preallocating on both sides creates duplicate send-only tracks.
     if (this.self < id)
@@ -62,6 +64,7 @@ export class Peers {
     };
     pc.onconnectionstatechange = () => {
       if (this.peers.get(id) !== peer) return;
+      this.onState(id, pc.connectionState);
       if (pc.connectionState === 'failed') {
         this.onError('映像・音声の再接続を試みています。字幕は利用できます');
         pc.restartIce();
@@ -155,6 +158,7 @@ export class Peers {
     }
     this.peers.delete(id);
     this.onStream(id, null);
+    this.onState(id, null);
   }
   close() {
     this.closed = true;

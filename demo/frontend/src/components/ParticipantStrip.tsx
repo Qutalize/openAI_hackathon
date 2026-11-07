@@ -1,4 +1,5 @@
-import type { Participant } from '../types/protocol';
+import type { Participant, VideoStatus } from '../types/protocol';
+import { VIDEO_MESSAGES } from './SpeakerStage';
 import { useI18n } from '../i18n';
 import Video from './Video';
 import ControlIcon from './ControlIcon';
@@ -8,12 +9,14 @@ import ParticipantActivity from './ParticipantActivity';
 export default function ParticipantStrip({
   participants,
   streams,
+  statuses,
   self,
   pinned,
   onPin,
 }: {
   participants: Participant[];
   streams: Record<string, MediaStream>;
+  statuses: Record<string, VideoStatus>;
   self: string;
   pinned: string | null;
   onPin: (id: string) => void;
@@ -37,7 +40,7 @@ export default function ParticipantStrip({
             </span>
           </span>
           <div className="tile-video">
-            {p.devices.camera && streams[p.id] ? (
+            {statuses[p.id] === 'live' && streams[p.id] ? (
               <Video
                 stream={streams[p.id]}
                 local={p.id === self}
@@ -46,6 +49,11 @@ export default function ParticipantStrip({
             ) : (
               <div className="tile-placeholder">
                 <UserAvatar avatar={p.avatar} name={p.display_name} size={36} />
+                {statuses[p.id] && statuses[p.id] !== 'off' && (
+                  <small className={statuses[p.id] === 'failed' ? 'video-problem' : undefined}>
+                    {t(VIDEO_MESSAGES[statuses[p.id]])}
+                  </small>
+                )}
               </div>
             )}
           </div>

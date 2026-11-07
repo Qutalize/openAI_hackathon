@@ -10,6 +10,7 @@ import type {
   Snapshot,
   StreamInfo,
   Utterance,
+  VideoStatus,
 } from '../types/protocol';
 import { api, uploadRecognitionVideo } from '../services/api';
 import { ControlSocket } from '../services/controlSocket';
@@ -30,6 +31,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
   const [participants, setParticipants] = useState<Participant[]>([]),
     [utterances, setUtterances] = useState<Utterance[]>([]);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({}),
+    [peerStates, setPeerStates] = useState<Record<string, RTCPeerConnectionState>>({}),
     [speaker, setSpeaker] = useState<string | null>(null);
   const [input, setInput] = useState<InputKind>(session.input);
   const [playback, setPlayback] = useState<PlaybackMode>(() => initialPlayback(session.mode));
@@ -110,6 +112,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     r.peers = null;
     r.signals = [];
     setRemoteStreams({});
+    setPeerStates({});
   }, [r]);
   const stopResources = useCallback(() => {
     r.closed = true;
@@ -330,6 +333,13 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
               }),
             setError,
             devices.streamRef.current,
+            (id, peerState) =>
+              setPeerStates((old) => {
+                const next = { ...old };
+                if (peerState) next[id] = peerState;
+                else delete next[id];
+                return next;
+              }),
           );
           for (const p of r.participants)
             if (p.id !== session.participant_id && p.connection_state === 'connected')
@@ -589,6 +599,16 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     operating,
     devices,
     streams: { ...remoteStreams, [session.participant_id]: devices.stream },
+    videoStatus: Object.fromEntries(
+      participants.map((p): [string, VideoStatus] => {
+        if (!p.devices.camera) return [p.id, 'off'];
+        if (p.id === session.participant_id) return [p.id, 'live'];
+        const peerState = peerStates[p.id];
+        if (peerState === 'failed') return [p.id, 'failed'];
+        if (peerState === 'disconnected') return [p.id, 'reconnecting'];
+        return [p.id, remoteStreams[p.id] ? 'live' : 'connecting'];
+      }),
+    ),
     startConversation,
     toggleDevice,
     changeInput,

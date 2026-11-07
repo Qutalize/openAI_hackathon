@@ -153,6 +153,9 @@
   border-radius: 8px 0 0 8px;
   padding: 8px 14px;
   font-size: 16px;
+  /* Keep "パスワード" on one line; the input shrinks instead. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .credentials small {
   font-size: 11px;
@@ -1392,4 +1395,20 @@ button,
   .stage-placeholder {
     display: none;
   }
+}
+
+/* Video connection feedback: distinguish "camera off" from "video not arriving". */
+.tile-placeholder {
+  grid-auto-flow: row;
+  align-content: center;
+  gap: 4px;
+}
+.tile-placeholder small {
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  padding: 0 6px;
+}
+.video-problem {
+  color: #ffb4a8 !important;
 }
