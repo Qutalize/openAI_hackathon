@@ -153,6 +153,9 @@
   border-radius: 8px 0 0 8px;
   padding: 8px 14px;
   font-size: 16px;
+  /* Keep "パスワード" on one line; the input shrinks instead. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .credentials small {
   font-size: 11px;
