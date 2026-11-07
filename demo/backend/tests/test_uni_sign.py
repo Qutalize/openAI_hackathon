@@ -60,3 +60,29 @@ def test_uni_sign_adapter_accepts_webm_and_returns_candidate(tmp_path, monkeypat
     inference = next(call for call in calls if "--output-dir" in call)
     assert inference[0:3] == [str(python), "-B", str(runner)]
     assert inference[3].endswith(".webm")
+
+
+def test_relative_python_path_keeps_venv_symlinks(tmp_path):
+    root = tmp_path / "demo"
+    model = tmp_path / "research/sign/uni-sign"
+    runner = model / "scripts/run_online.py"
+    base_python = tmp_path / "uv/python3.9"
+    venv = tmp_path / "envs/uni-sign"
+    for path in (runner, base_python):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+    # Like uv and venv: .venv links to the environment, whose bin/python links to the base interpreter.
+    (venv / "bin").mkdir(parents=True)
+    (venv / "bin/python").symlink_to(base_python)
+    (model / ".venv").symlink_to(venv)
+
+    recognizer = UniSignRecognizer(
+        root,
+        {
+            "runner_path": "../research/sign/uni-sign/scripts/run_online.py",
+            "python_path": "../research/sign/uni-sign/.venv/bin/python",
+        },
+    )
+
+    assert recognizer.python == model / ".venv/bin/python"
+    assert recognizer.runner == runner

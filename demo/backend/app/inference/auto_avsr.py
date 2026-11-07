@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -26,7 +27,9 @@ class AutoAvsrRecognizer(Recognizer):
 
     def _resolve(self, value: str) -> Path:
         path = Path(value)
-        return path if path.is_absolute() else (self.root / path).resolve()
+        # normpath drops ".." without following symlinks: a venv's bin/python is a symlink, and
+        # resolving it would run the base interpreter outside the venv.
+        return path if path.is_absolute() else Path(os.path.normpath(self.root / path))
 
     def _resolve_ffmpeg(self) -> Path:
         result = subprocess.run(
