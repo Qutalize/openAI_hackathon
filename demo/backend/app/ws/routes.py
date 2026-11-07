@@ -5,6 +5,7 @@ import time
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
+from app.models.session import uid
 from app.schemas.protocol import ClientEvent, parse_media
 from app.services.rooms import Connection
 
@@ -34,6 +35,7 @@ async def control(ws: WebSocket, room_id: str):
     if s.control:
         await s.control.close(4001)
     s.control = connection
+    s.connection_id = uid()
     s.disconnected_at = None
     s.last_seen = time.time()
     await service.publish(room_id, "participant.joined", s.public(), s.participant_id)

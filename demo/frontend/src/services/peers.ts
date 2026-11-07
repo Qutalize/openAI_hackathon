@@ -4,6 +4,8 @@ interface Peer {
   ignoreOffer: boolean;
   settingAnswer: boolean;
   candidates: RTCIceCandidateInit[];
+  /** The remote participant's control connection this RTCPeerConnection was negotiated with. */
+  remoteConnection: string | null;
 }
 
 export class Peers {
@@ -18,10 +20,30 @@ export class Peers {
     private local: MediaStream,
   ) {}
 
-  ensure(id: string) {
-    if (this.peers.has(id)) return this.peers.get(id)!;
+  /**
+   * Returns the connection for a participant. When the participant's control connection changed
+   * (reload or WebSocket reconnect), the remote side has discarded its RTCPeerConnection, so the
+   * stale one is replaced instead of renegotiated.
+   */
+  ensure(id: string, remoteConnection: string | null = null) {
+    const existing = this.peers.get(id);
+    if (existing) {
+      if (!remoteConnection || existing.remoteConnection === remoteConnection) {
+        existing.remoteConnection ??= remoteConnection;
+        return existing;
+      }
+      this.remove(id);
+    }
+    if (this.closed) throw new Error('映像接続は終了しています');
     const pc = new RTCPeerConnection(this.config);
-    const peer: Peer = { pc, makingOffer: false, ignoreOffer: false, settingAnswer: false, candidates: [] };
+    const peer: Peer = {
+      pc,
+      makingOffer: false,
+      ignoreOffer: false,
+      settingAnswer: false,
+      candidates: [],
+      remoteConnection,
+    };
     this.peers.set(id, peer);
     // Only the initial offerer creates m-lines. The answerer reuses the offered
     // transceivers; preallocating on both sides creates duplicate send-only tracks.
@@ -36,9 +58,10 @@ export class Peers {
     };
     pc.onicecandidate = (event) => {
       if (event.candidate)
-        this.signal('rtc.ice', { target_id: id, candidate: event.candidate.toJSON() }).catch(() => {});
+        this.send(peer, id, 'rtc.ice', { candidate: event.candidate.toJSON() }).catch(() => {});
     };
     pc.onconnectionstatechange = () => {
+      if (this.peers.get(id) !== peer) return;
       if (pc.connectionState === 'failed') {
         this.onError('映像・音声の再接続を試みています。字幕は利用できます');
         pc.restartIce();
@@ -50,12 +73,11 @@ export class Peers {
       try {
         peer.makingOffer = true;
         await pc.setLocalDescription();
-        await this.signal(`rtc.${pc.localDescription!.type}`, {
-          target_id: id,
+        await this.send(peer, id, `rtc.${pc.localDescription!.type}`, {
           description: pc.localDescription!.toJSON(),
         });
       } catch {
-        if (!this.closed) this.onError('映像接続を確立できませんでした');
+        if (!this.closed && this.peers.get(id) === peer) this.onError('映像接続を確立できませんでした');
       } finally {
         peer.makingOffer = false;
       }
@@ -63,11 +85,19 @@ export class Peers {
     return peer;
   }
 
+  private send(peer: Peer, id: string, type: string, payload: object) {
+    return this.signal(type, {
+      ...payload,
+      target_id: id,
+      ...(peer.remoteConnection ? { target_connection_id: peer.remoteConnection } : {}),
+    });
+  }
+
   async receive(type: string, payload: any) {
     if (this.closed) return;
     const id = payload.from_id;
     if (!id || id === this.self) return;
-    const peer = this.ensure(id),
+    const peer = this.ensure(id, payload.from_connection_id ?? null),
       pc = peer.pc;
     try {
       if (type === 'rtc.ice') {
@@ -92,11 +122,12 @@ export class Peers {
             );
           }
           await pc.setLocalDescription();
-          await this.signal('rtc.answer', { target_id: id, description: pc.localDescription!.toJSON() });
+          await this.send(peer, id, 'rtc.answer', { description: pc.localDescription!.toJSON() });
         }
       }
     } catch {
-      if (!peer.ignoreOffer && !this.closed) this.onError('映像接続が不安定です。接続を確認してください');
+      if (!peer.ignoreOffer && !this.closed && this.peers.get(id) === peer)
+        this.onError('映像接続が不安定です。接続を確認してください');
     }
   }
 
@@ -116,7 +147,12 @@ export class Peers {
     for (const { pc } of this.peers.values()) pc.setConfiguration(config);
   }
   remove(id: string) {
-    this.peers.get(id)?.pc.close();
+    const peer = this.peers.get(id);
+    if (peer) {
+      peer.pc.onconnectionstatechange = null;
+      peer.pc.onnegotiationneeded = null;
+      peer.pc.close();
+    }
     this.peers.delete(id);
     this.onStream(id, null);
   }
