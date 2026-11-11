@@ -284,10 +284,11 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       r.tts!.setMode(r.playback);
       if (r.playback !== 'captions' && !(await r.tts!.prepare()))
         setTtsStatus('日本語の読み上げ音声がありません。文字表示をご利用ください');
+      // Turn on the device the chosen input needs, so the main button works from the initial all-off state.
       if (r.input === 'speech' && !devices.streamRef.current.getAudioTracks().length)
-        throw new Error('発声入力にはマイクが必要です。マイクをONにするか文字入力で参加してください');
+        await devices.update('audio', true);
       if (['lipread', 'sign'].includes(r.input) && !devices.streamRef.current.getVideoTracks().length)
-        throw new Error('選択した入力にはカメラが必要です');
+        await devices.update('video', true);
       r.closed = false;
       if (r.speechNotifications) r.tts!.speak('会話に参加します');
       const control = (r.control = new ControlSocket(
