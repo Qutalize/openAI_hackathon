@@ -7,6 +7,7 @@ import hashlib
 import json
 import multiprocessing as mp
 import queue
+import sys
 import time
 from collections import OrderedDict, deque
 from pathlib import Path
@@ -24,6 +25,16 @@ def verify_assets(root: Path, paths: list[Path]):
             actual = hashlib.file_digest(f, "sha256").hexdigest()
         if actual != record["sha256"]:
             raise ValueError("model checksum mismatch")
+
+
+def failure_log(kind: str, exc: Exception) -> str:
+    """Describe a failed job for the server log; the client only ever gets a generic message."""
+    detail = getattr(exc, "stderr", None)
+    if isinstance(detail, bytes):
+        detail = detail.decode(errors="replace")
+    # A model CLI's traceback ends with the actual cause, so keep the tail.
+    tail = f"\n{detail.strip()[-2000:]}" if detail and detail.strip() else ""
+    return f"recognition failed ({kind}): {exc!r}{tail}"
 
 
 def process_main(root_string, config, incoming, outgoing):
@@ -109,6 +120,7 @@ def process_main(root_string, config, incoming, outgoing):
             result = models[job["kind"]].recognize(job["segment"])
             outgoing.put({"result": result})
         except Exception as exc:
+            print(failure_log(job["kind"], exc), file=sys.stderr, flush=True)
             outgoing.put({"error": type(exc).__name__})
     for model in models.values():
         model.close()
