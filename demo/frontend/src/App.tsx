@@ -53,14 +53,18 @@ export default function App() {
   if (loading)
     return (
       <main className="loading" role="status">
-        <LanguageSelect />
+        <div className="page-language">
+          <LanguageSelect />
+        </div>
         {t('会話の準備をしています…')}
       </main>
     );
   if (error || !config)
     return (
       <main className="loading">
-        <LanguageSelect />
+        <div className="page-language">
+          <LanguageSelect />
+        </div>
         <h1>{t('サーバーに接続できません')}</h1>
         <p role="alert">{t(error)}</p>
         <button className="primary" onClick={() => location.reload()}>
