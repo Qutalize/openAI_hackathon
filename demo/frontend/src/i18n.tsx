@@ -207,9 +207,6 @@ const english: Record<string, string> = {
   ルームが満員です: 'This room is full',
   '選択したモデルは未導入です。文字入力を選択してください':
     'The selected model is not installed. Choose text input.',
-  '発声入力にはマイクが必要です。マイクをONにするか文字入力で参加してください':
-    'Speech input requires a microphone. Turn it on or join with text.',
-  選択した入力にはカメラが必要です: 'The selected input requires a camera',
   カメラをONにしてください: 'Turn your camera on',
   '権限が許可されていません。ブラウザ設定を確認するか、文字入力をご利用ください':
     'Permission was denied. Check browser settings or use text input.',
