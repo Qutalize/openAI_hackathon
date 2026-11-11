@@ -153,3 +153,18 @@ def test_video_recognition_upload_requires_active_matching_segment(tmp_path, kin
         assert response.status_code == 204
         assert session.segment["video"] == b"video"
         assert session.segment["content_type"] == "video/webm"
+
+
+def test_failure_log_keeps_the_end_of_a_model_cli_error():
+    import subprocess
+
+    from app.inference.worker import failure_log
+
+    stderr = b"x" * 5000 + b"\nRuntimeError: CUDA error: no kernel image is available"
+    message = failure_log("lipread", subprocess.CalledProcessError(1, ["run_vsr.sh"], stderr=stderr))
+    assert message.startswith("recognition failed (lipread): CalledProcessError")
+    assert message.endswith("RuntimeError: CUDA error: no kernel image is available")
+    assert len(message) < 2200
+    assert failure_log("sign", ValueError("video clip is missing")) == (
+        "recognition failed (sign): ValueError('video clip is missing')"
+    )
