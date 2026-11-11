@@ -1,4 +1,5 @@
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  // fetch rejects with a browser-specific English message when the server is unreachable.
   const response = await fetch(path, {
     ...init,
     credentials: 'same-origin',
@@ -6,6 +7,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       'Content-Type': 'application/json',
       ...init.headers,
     },
+  }).catch(() => {
+    throw new Error('通信環境を確認して、もう一度お試しください');
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
