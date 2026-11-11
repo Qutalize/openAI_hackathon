@@ -205,6 +205,7 @@ const english: Record<string, string> = {
   'このルームIDは既に使われています。別のIDで作成するか、既存ルームに参加してください':
     'This room ID is already in use. Choose another ID or join the existing room.',
   ルームが満員です: 'This room is full',
+  '通信環境を確認して、もう一度お試しください': 'Check your connection and try again',
   '選択したモデルは未導入です。文字入力を選択してください':
     'The selected model is not installed. Choose text input.',
   カメラをONにしてください: 'Turn your camera on',
