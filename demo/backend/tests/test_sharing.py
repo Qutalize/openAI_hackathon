@@ -200,3 +200,76 @@ def test_partial_turn_config_fails_preflight():
     cfg.turn_username = "user"
     with pytest.raises(ValidationError, match="TURN requires"):
         shared_settings(ORIGIN, 8765, cfg)
+
+
+@pytest.mark.parametrize("reachable", [True, False])
+def test_cloudflare_turn_hands_out_short_lived_relay_credentials(shared_app, monkeypatch, reachable):
+    import httpx
+
+    from app.core import cloudflare_turn
+
+    requests = []
+
+    def cloudflare(request):
+        requests.append(request)
+        if not reachable:
+            return httpx.Response(500)
+        return httpx.Response(
+            201,
+            json={
+                "iceServers": [
+                    {"urls": ["stun:stun.cloudflare.com:3478"]},
+                    {
+                        "urls": ["turn:turn.cloudflare.com:3478?transport=udp"],
+                        "username": "short-lived-user",
+                        "credential": "short-lived-credential",
+                    },
+                ]
+            },
+        )
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        cloudflare_turn.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(cloudflare), **kwargs),
+    )
+    data = shared_app.state.settings.model_dump()
+    data.update(turn_cloudflare_key_id="key-id", turn_cloudflare_api_token="key-api-token")
+    data["rtc"]["turn_enabled"] = True
+    shared_app.state.settings = Settings.model_validate(data)
+    with TestClient(shared_app, base_url=ORIGIN, headers={"origin": ORIGIN}) as client:
+        assert "key-api-token" not in client.get("/api/config").text
+        client.post("/api/rooms", json={"room_id": "relay-room", "password": "test-password"})
+        client.post(
+            "/api/rooms/relay-room/join",
+            json={"password": "test-password", "mode": "standard", "input": "text"},
+        )
+        result = client.get("/api/rtc-config").json()
+        again = client.get("/api/rtc-config").json()
+    assert "key-api-token" not in str(result)
+    assert result["expires_at"] > 0
+    if reachable:
+        assert result["iceServers"][-1] == {
+            "urls": ["turn:turn.cloudflare.com:3478?transport=udp"],
+            "username": "short-lived-user",
+            "credential": "short-lived-credential",
+        }
+        assert again == result and len(requests) == 1
+        assert requests[0].url.path.endswith("/keys/key-id/credentials/generate-ice-servers")
+        assert requests[0].headers["authorization"] == "Bearer key-api-token"
+    else:
+        # Without a relay the app still answers with STUN so same-network calls keep working.
+        assert all("username" not in server for server in result["iceServers"])
+
+
+def test_cloudflare_turn_cannot_be_combined_with_another_turn_server(shared_app):
+    data = shared_app.state.settings.model_dump()
+    data.update(
+        turn_cloudflare_key_id="key-id",
+        turn_cloudflare_api_token="key-api-token",
+        turn_urls=["turns:relay.example:443?transport=tcp"],
+    )
+    data["rtc"]["turn_enabled"] = True
+    with pytest.raises(ValidationError, match="Cloudflare"):
+        Settings.model_validate(data)

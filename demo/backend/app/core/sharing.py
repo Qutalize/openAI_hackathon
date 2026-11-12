@@ -33,6 +33,12 @@ def shared_settings(origin: str, port: int, settings: Settings | None = None) ->
     data["storage"]["room_database"] = "data/shared-rooms.sqlite3"
     if not data["rtc"]["stun_urls"]:
         data["rtc"]["stun_urls"] = ["stun:stun.l.google.com:19302"]
-    if data["turn_urls"] or data["turn_secret"] or data["turn_username"] or data["turn_password"]:
+    if (
+        data["turn_urls"]
+        or data["turn_secret"]
+        or data["turn_username"]
+        or data["turn_password"]
+        or (data["turn_cloudflare_key_id"] and data["turn_cloudflare_api_token"])
+    ):
         data["rtc"]["turn_enabled"] = True
     return Settings.model_validate(data)
