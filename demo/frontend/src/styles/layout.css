@@ -647,6 +647,13 @@ button.name-button {
   border-color: #dce8fc;
   border-radius: 12px 3px 12px 12px;
 }
+.utterance.partial .message-bubble {
+  border-style: dashed;
+  padding-bottom: 10px;
+}
+.utterance.partial p {
+  color: var(--muted);
+}
 .utterance p {
   font-size: 18px;
   margin: 0;

@@ -117,6 +117,8 @@ async def media(ws: WebSocket, room_id: str):
                         await service.activity(s, active)
                     for pcm in completed:
                         service.launch_recognition(s, "speech", {"pcm": pcm})
+                    if active and cfg.recognition.partial_results:
+                        service.launch_partial(s)
                 else:
                     if s.input not in ("lipread", "sign") or not s.devices["camera"] or not s.segment:
                         raise ValueError("撮影を開始してください")

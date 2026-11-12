@@ -88,6 +88,7 @@ class SpeechConfig(StrictModel):
     vad_silence_ms: int = Field(600, ge=200)
     min_segment_ms: int = Field(300, ge=100)
     max_segment_ms: int = Field(10000, ge=1000, le=10000)
+    partial_interval_ms: int = Field(800, ge=200)
 
 
 class VisionConfig(StrictModel):
@@ -115,7 +116,7 @@ class RecognitionConfig(StrictModel):
     max_pending_jobs_total: int = Field(8, ge=1, le=32)
     worker_processes: Literal[1] = 1
     job_timeout_seconds: int = Field(10, ge=1, le=300)
-    partial_results: Literal[False] = False
+    partial_results: bool = False
     speech: SpeechConfig
     lipread: VisionConfig
     sign: VisionConfig

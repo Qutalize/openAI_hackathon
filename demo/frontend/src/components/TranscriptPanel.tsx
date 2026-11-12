@@ -5,6 +5,7 @@ import UserAvatar from './UserAvatar';
 
 export default function TranscriptPanel({
   utterances,
+  partials = {},
   self,
   onCorrect,
   children,
@@ -13,6 +14,7 @@ export default function TranscriptPanel({
   readingId = null,
 }: {
   utterances: Utterance[];
+  partials?: Record<string, { display_name: string; text: string }>;
   self: string;
   onCorrect: (u: Utterance, text: string) => Promise<void>;
   children?: ReactNode;
@@ -30,7 +32,7 @@ export default function TranscriptPanel({
   useEffect(() => {
     if (follow.current && scroll.current) scroll.current.scrollTop = scroll.current.scrollHeight;
     else setUnread(true);
-  }, [utterances]);
+  }, [utterances, partials]);
   return (
     <aside className="transcript-panel" id="transcript-panel" aria-label={t('文字おこし')}>
       <h2>{t('文字おこし')}</h2>
@@ -47,7 +49,7 @@ export default function TranscriptPanel({
             if (follow.current) setUnread(false);
           }}
         >
-          {!utterances.length && (
+          {!utterances.length && !Object.keys(partials).length && (
             <p className="empty-transcript">
               {t(
                 enabled
@@ -132,6 +134,18 @@ export default function TranscriptPanel({
                     </button>
                   )}
                 </footer>
+              </div>
+            </article>
+          ))}
+          {Object.entries(partials).map(([id, partial]) => (
+            <article key={id} className={'utterance partial ' + (id === self ? 'own' : 'other')}>
+              <header>
+                <UserAvatar avatar={avatars[id]} name={partial.display_name} size={26} />
+                <b>{partial.display_name}</b>
+                <span>{t('話しています…')}</span>
+              </header>
+              <div className="message-bubble">
+                <p>{partial.text}</p>
               </div>
             </article>
           ))}

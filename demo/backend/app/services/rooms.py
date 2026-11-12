@@ -155,6 +155,56 @@ class RoomService:
         state.replay = state.replay[-2000:]
         await asyncio.gather(*(s.control.send(event) for s in list(state.participants.values()) if s.control))
 
+    async def transient(self, room_id, kind, payload):
+        """Send an event that is only meaningful right now: it is not numbered or replayed on reconnect."""
+        state = self.rooms.get(room_id)
+        if state:
+            event = {"version": 1, "type": kind, "room_id": room_id, "payload": payload}
+            await asyncio.gather(
+                *(s.control.send(event) for s in list(state.participants.values()) if s.control),
+                return_exceptions=True,
+            )
+
+    async def clear_partial(self, s):
+        if self.settings.recognition.partial_results:
+            await self.transient(s.room_id, "utterance.partial", {"participant_id": s.participant_id, "text": ""})
+
+    def launch_partial(self, s):
+        """Caption speech still in progress: recognize what has been said so far, one request at a time."""
+        now = time.monotonic()
+        if s.partial_busy or now - s.partial_at < self.settings.recognition.speech.partial_interval_ms / 1000:
+            return
+        heard = s.segmenter.snapshot() if s.segmenter else None
+        if not heard:
+            return
+        serial, pcm = heard
+        s.partial_busy, s.partial_at = True, now
+        epoch = s.input_epoch
+
+        async def run():
+            try:
+                result = await self.inference.recognize(s.participant_id, "speech", {"pcm": pcm})
+                # Drop the result if that stretch of speech has already ended and been sent as final.
+                current = s.segmenter and s.segmenter.serial == serial and s.input_epoch == epoch
+                if current and result.get("text"):
+                    await self.transient(
+                        s.room_id,
+                        "utterance.partial",
+                        {
+                            "participant_id": s.participant_id,
+                            "display_name": s.display_name,
+                            "text": result["text"][: self.settings.room.max_text_chars],
+                        },
+                    )
+            except (InferenceBusy, asyncio.CancelledError, ValueError, TimeoutError, RuntimeError):
+                pass
+            finally:
+                s.partial_busy = False
+
+        task = asyncio.create_task(run())
+        s.tasks.add(task)
+        task.add_done_callback(s.tasks.discard)
+
     async def reset_input(self, s):
         s.input_epoch += 1
         s.stream_id = uid()
@@ -164,6 +214,8 @@ class RoomService:
         for task in list(s.tasks):
             task.cancel()
         s.recognition_jobs = 0
+        s.partial_busy = False
+        await self.clear_partial(s)
         await self.activity(s, False)
         await self.publish_activity(s)
 
@@ -303,6 +355,8 @@ class RoomService:
                             False,
                             result["model_version"],
                         )
+                    else:
+                        await self.clear_partial(s)
                     await self.private(s, "recognition.state", {"state": "idle"})
                 else:
                     candidate_id = uid()

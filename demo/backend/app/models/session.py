@@ -36,6 +36,8 @@ class Session:
     candidates: dict = field(default_factory=dict)
     requests: dict = field(default_factory=dict)
     segmenter: object = None
+    partial_busy: bool = False
+    partial_at: float = 0.0
     tasks: set = field(default_factory=set)
 
     def public(self):

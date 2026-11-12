@@ -30,6 +30,15 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     [started, setStarted] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]),
     [utterances, setUtterances] = useState<Utterance[]>([]);
+  // Captions for speech still in progress, by participant. Replaced by the final utterance.
+  const [partials, setPartials] = useState<Record<string, { display_name: string; text: string }>>({});
+  const dropPartial = (id: string) =>
+    setPartials((old) => {
+      if (!(id in old)) return old;
+      const next = { ...old };
+      delete next[id];
+      return next;
+    });
   const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({}),
     [peerStates, setPeerStates] = useState<Record<string, RTCPeerConnectionState>>({}),
     [speaker, setSpeaker] = useState<string | null>(null);
@@ -231,6 +240,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     } else if (e.type === 'participant.left') {
       r.participants = r.participants.filter((x) => x.id !== p.participant_id);
       setParticipants([...r.participants]);
+      dropPartial(p.participant_id);
       r.peers?.remove(p.participant_id);
       r.tts?.pauseWhileSpeaking(
         r.participants.some((part) => part.speaking && part.connection_state === 'connected'),
@@ -239,7 +249,11 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     } else if (e.type.startsWith('rtc.')) {
       if (r.peers) void r.peers.receive(e.type, p);
       else r.signals.push(e);
+    } else if (e.type === 'utterance.partial') {
+      if (p.text) setPartials((old) => ({ ...old, [p.participant_id]: p }));
+      else dropPartial(p.participant_id);
     } else if (e.type === 'utterance.final' || e.type === 'utterance.corrected') {
+      if (e.type === 'utterance.final') dropPartial(p.participant_id);
       setUtterances((list) => {
         const existing = list.find((x) => x.utterance_id === p.utterance_id);
         if (existing && existing.revision >= p.revision) return list;
@@ -300,6 +314,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
             r.participants = r.participants.map((part) => ({ ...part, speaking: false, recognizing: false }));
             setParticipants([...r.participants]);
             r.tts?.cancel();
+            setPartials({});
             r.media?.close();
             dropPeers();
             void r.audio.stop();
@@ -586,6 +601,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     started,
     participants,
     utterances,
+    partials,
     speaker,
     input,
     playback,

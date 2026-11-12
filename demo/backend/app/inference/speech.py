@@ -63,6 +63,15 @@ class SpeechSegmenter:
         self.silence = 0
         self.voiced = 0
         self.active = False
+        # Changes whenever a segment starts or ends, so a result for an older segment can be told apart.
+        self.serial = getattr(self, "serial", 0) + 1
+
+    def snapshot(self):
+        """The speech heard so far in the segment still being spoken, or None when there is too little."""
+        if not self.active or self.voiced < self.config["min_segment_ms"] * 16:
+            return None
+        samples = np.concatenate(self.segment)
+        return self.serial, (np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes()
 
     def feed(self, pcm: bytes):
         audio = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768
@@ -80,6 +89,7 @@ class SpeechSegmenter:
             voice = float(np.asarray(probability).reshape(-1)[0]) >= 0.5
             if voice and not self.active:
                 self.active = True
+                self.serial += 1
                 self.segment = [self.pre.copy()]
             if self.active:
                 self.segment.append(chunk.copy())
@@ -94,5 +104,6 @@ class SpeechSegmenter:
                         samples = np.concatenate(self.segment)
                         completed.append((np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
                     self.active, self.segment, self.silence, self.voiced = False, [], 0, 0
+                    self.serial += 1
             self.pre = np.concatenate([self.pre, chunk])[-3200:]
         return completed, self.active, activity_before != self.active
