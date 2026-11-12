@@ -86,3 +86,38 @@ def test_relative_python_path_keeps_venv_symlinks(tmp_path):
 
     assert recognizer.python == model / ".venv/bin/python"
     assert recognizer.runner == runner
+
+
+def test_uni_sign_adapter_prefers_the_resident_server(tmp_path, monkeypatch):
+    import os
+    import sys
+
+    root = tmp_path / "demo"
+    model = tmp_path / "research/sign/uni-sign"
+    runner = model / "scripts/run_online.py"
+    python = tmp_path / "env/bin/python"
+    runner.parent.mkdir(parents=True)
+    runner.touch()
+    python.parent.mkdir(parents=True)
+    os.symlink(sys.executable, python)
+    (model / "scripts/serve_online.py").write_text(
+        "import json, sys\n"
+        "print(json.dumps({'ready': True}), flush=True)\n"
+        "for line in sys.stdin:\n"
+        "    print(json.dumps({'prediction': ' FROM SERVER '}), flush=True)\n"
+    )
+    monkeypatch.setattr(UniSignRecognizer, "warmup", lambda self: self.server.start())
+    calls = []
+    monkeypatch.setattr(subprocess, "run", lambda args, **kwargs: calls.append(args))
+    recognizer = UniSignRecognizer(
+        root,
+        {"runner_path": "../research/sign/uni-sign/scripts/run_online.py", "python_path": str(python)},
+    )
+    recognizer.warmup()
+    try:
+        result = recognizer.recognize({"video": b"webm", "content_type": "video/webm"})
+    finally:
+        recognizer.close()
+
+    assert result["candidates"] == [{"label": "uni-sign", "text": "FROM SERVER"}]
+    assert calls == []

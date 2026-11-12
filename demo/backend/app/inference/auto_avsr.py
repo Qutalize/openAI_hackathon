@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from app.inference.base import Recognizer
+from app.inference.resident import ResidentProcess
 
 
 class AutoAvsrRecognizer(Recognizer):
@@ -30,9 +31,15 @@ class AutoAvsrRecognizer(Recognizer):
         self.model_version = config.get("model_version") or "auto-avsr"
         self.ffmpeg = self._resolve_ffmpeg()
         # Optional resident process that keeps the model loaded between requests.
-        self.server_script = self.runner.parent / "serve.py"
-        self.server = None
-        self.server_ready = False
+        script = self.runner.parent / "serve.py"
+        self.server = (
+            ResidentProcess(
+                [str(self.python), str(script)],
+                {**os.environ, "OMP_NUM_THREADS": "8", "OPENBLAS_NUM_THREADS": "8"},
+            )
+            if script.is_file()
+            else None
+        )
 
     def _resolve(self, value: str) -> Path:
         path = Path(value)
@@ -78,54 +85,12 @@ class AutoAvsrRecognizer(Recognizer):
             timeout=60,
         )
         # Loading takes tens of seconds, so start it now and wait for it on the first request.
-        self._start_server()
-
-    def _start_server(self):
-        self._stop_server()
-        if not self.server_script.is_file():
-            return
-        env = {**os.environ, "OMP_NUM_THREADS": "8", "OPENBLAS_NUM_THREADS": "8"}
-        try:
-            self.server = subprocess.Popen(
-                [str(self.python), str(self.server_script)],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                text=True,
-                encoding="utf-8",
-                env=env,
-            )
-        except OSError:
-            self.server = None
-
-    def _stop_server(self):
-        if self.server is not None and self.server.poll() is None:
-            self.server.kill()
-            self.server.wait()
-        self.server, self.server_ready = None, False
-
-    def _ask_server(self, prepared: Path):
-        """Return the transcript from the resident process, or None when it cannot be reached."""
-        if self.server is None or self.server.poll() is not None:
-            self._start_server()
-        if self.server is None:
-            return None
-        try:
-            if not self.server_ready:
-                self.server_ready = bool(json.loads(self.server.stdout.readline()).get("ready"))
-            self.server.stdin.write(json.dumps({"video": str(prepared)}) + "\n")
-            self.server.stdin.flush()
-            reply = json.loads(self.server.stdout.readline())
-        except (OSError, ValueError):
-            # A dead or garbled process: drop it so the next request starts a fresh one.
-            self._stop_server()
-            return None
-        if "error" in reply:
-            # The clip itself was rejected; the one-shot runner would fail the same way.
-            raise ValueError(reply["error"])
-        return reply.get("transcript", "").strip()
+        if self.server:
+            self.server.start()
 
     def close(self):
-        self._stop_server()
+        if self.server:
+            self.server.stop()
 
     def recognize(self, segment):
         video = segment.get("video")
@@ -163,7 +128,8 @@ class AutoAvsrRecognizer(Recognizer):
                 capture_output=True,
                 timeout=45,
             )
-            transcript = self._ask_server(prepared)
+            reply = self.server.ask({"video": str(prepared)}) if self.server else None
+            transcript = reply.get("transcript", "").strip() if reply else None
             if transcript is None:
                 subprocess.run(
                     ["bash", str(self.runner), str(prepared), str(output)],
