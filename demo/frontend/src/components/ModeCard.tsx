@@ -19,13 +19,14 @@ export default function ModeCard({
         {selected ? '✓' : ''}
       </span>
       <span className="mode-title">{t(modeNames[mode])}</span>
-      <span className="mode-caption">{t('入力')}</span>
       <span className="mode-description">
-        {t(mode === 'hearing_support' ? '手話' : mode === 'vision_support' ? '発声' : '発声・読唇')}
-      </span>
-      <span className="mode-caption output-caption">{t('出力')}</span>
-      <span className="mode-description">
-        {t(mode === 'standard' ? '音声・文字' : mode === 'vision_support' ? '音声' : '文字')}
+        {t(
+          mode === 'hearing_support'
+            ? '聞こえにくい方向け。手話で話し、字幕で受け取ります'
+            : mode === 'vision_support'
+              ? '見えにくい方向け。声で話し、音声で受け取ります'
+              : '声や口の動きで話し、音声と字幕で受け取ります',
+        )}
       </span>
     </label>
   );

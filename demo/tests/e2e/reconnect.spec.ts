@@ -26,6 +26,7 @@ async function instrument(page: Page) {
 
 async function join(page: Page, mode: string) {
   await page.goto("/");
+  await page.getByRole("button", { name: "既存ルームに参加" }).click();
   await page
     .locator(`input[name="mode"][value="${mode}"]`)
     .check({ force: true });

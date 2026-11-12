@@ -12,6 +12,7 @@ async function join(page: Page, blockVideo: boolean) {
       };
     });
   await page.goto("/");
+  await page.getByRole("button", { name: "既存ルームに参加" }).click();
   await page.getByLabel("入力方法").selectOption("text");
   await page.getByLabel("ルームID", { exact: true }).fill("status-room");
   await page.getByLabel("パスワード", { exact: true }).fill("e2e-password");

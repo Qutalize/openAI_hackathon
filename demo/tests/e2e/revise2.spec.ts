@@ -60,6 +60,7 @@ test("custom avatar follows the speaker and video labels never cover the image",
   try {
     const other = await context.newPage();
     await other.goto("/");
+    await other.getByRole("button", { name: "既存ルームに参加" }).click();
     await other.getByLabel("入力方法").selectOption("text");
     await other.getByLabel("ルームID", { exact: true }).fill("avatar-room");
     await other.getByLabel("パスワード", { exact: true }).fill("e2e-password");
