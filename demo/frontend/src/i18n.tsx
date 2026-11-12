@@ -62,8 +62,20 @@ const english: Record<string, string> = {
   音声: 'Audio',
   文字: 'Text',
   '音声＋文字': 'Audio + text',
-  '発声・読唇': 'Speech / lip reading',
-  '音声・文字': 'Audio / text',
+  '声や口の動きで話し、音声と字幕で受け取ります':
+    'Speak by voice or lip movement; receive audio and captions',
+  '見えにくい方向け。声で話し、音声で受け取ります':
+    'For people with low vision. Speak by voice; receive audio',
+  '聞こえにくい方向け。手話で話し、字幕で受け取ります':
+    'For deaf and hard-of-hearing people. Sign; receive captions',
+  '招待されたルームです。ルームを作成した方から聞いたパスワードを入力してください。':
+    'You were invited to this room. Enter the password you got from the person who created it.',
+  '参加後、会話画面の「招待リンクをコピー」で相手を呼べます。パスワードは別に伝えてください。':
+    'After joining, use "Copy invite link" in the room to invite others. Share the password separately.',
+  招待リンクをコピー: 'Copy invite link',
+  'コピーしました。パスワードは別に伝えてください': 'Copied. Share the password separately.',
+  'リンクをコピーできませんでした。ルームIDとパスワードを相手に伝えてください':
+    'Could not copy the link. Tell the other person the room ID and password.',
   ルームの操作: 'Room actions',
   利用モードを選択: 'Choose your mode',
   ルームID: 'Room ID',
@@ -94,8 +106,6 @@ const english: Record<string, string> = {
   '作成済みのルームIDとパスワードを入力してください。': 'Enter the ID and password of an existing room.',
   'ルームIDは半角英数字・ハイフンの3〜32文字、パスワードは8〜128文字で設定してください。作成後、そのまま参加します。':
     'Use 3–32 letters, numbers or hyphens for the room ID and 8–128 characters for the password. You will join after creation.',
-  '相手も同じルームIDとパスワードで参加できます。作成した方から相手に伝えてください。':
-    'Share the room ID and password with the other participants.',
   'ルーム「{room}」を作成しました。有効期限：{date}。参加できない場合は、同じIDとパスワードで再試行してください。':
     'Room “{room}” was created. Expires: {date}. If joining fails, retry with the same ID and password.',
   もうすぐ会話がはじまります: 'You are almost ready',

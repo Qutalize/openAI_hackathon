@@ -42,6 +42,7 @@ async function instrument(page: Page) {
 
 async function join(page: Page, mode = "standard", room = "e2e-room") {
   await page.goto("/");
+  await page.getByRole("button", { name: "既存ルームに参加" }).click();
   await page
     .locator(`input[name="mode"][value="${mode}"]`)
     .check({ force: true });
@@ -270,6 +271,7 @@ test("speech input sends PCM from an AudioWorklet and stops its microphone", asy
       });
   });
   await page.goto("/");
+  await page.getByRole("button", { name: "既存ルームに参加" }).click();
   const capabilities = await page.request
     .get("/api/config")
     .then((r) => r.json());
@@ -325,6 +327,7 @@ test("four participants form a mesh and the fifth cannot join", async ({
     contexts.push(fifth);
     const page = await fifth.newPage();
     await page.goto("/");
+    await page.getByRole("button", { name: "既存ルームに参加" }).click();
     await page.getByLabel("入力方法").selectOption("text");
     await page.getByLabel("ルームID", { exact: true }).fill("four-room");
     await page.getByLabel("パスワード", { exact: true }).fill("e2e-password");

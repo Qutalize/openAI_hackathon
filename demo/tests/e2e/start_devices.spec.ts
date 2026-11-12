@@ -4,6 +4,7 @@ test("starting from the all-off setup screen turns on the microphone that speech
   page,
 }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "既存ルームに参加" }).click();
   const config = await page.request.get("/api/config").then((r) => r.json());
   test.skip(
     !config.capabilities.speech.available,

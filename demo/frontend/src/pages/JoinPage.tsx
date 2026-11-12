@@ -42,8 +42,11 @@ export default function JoinPage({
   });
   const [mode, setMode] = useState<Mode>('standard');
   const [input, setInput] = useState<InputKind>(config.capabilities.speech.available ? 'speech' : 'text');
-  const [room, setRoom] = useState(sessionStorage.getItem('last-room') ?? '');
-  const [action, setAction] = useState<'join' | 'create'>('join');
+  // A shared room URL (/rooms/<id>) opens the join form with the room already filled in.
+  const invited = location.pathname.match(/^\/rooms\/([a-z0-9-]{3,32})$/)?.[1] ?? '';
+  const [room, setRoom] = useState(invited || (sessionStorage.getItem('last-room') ?? ''));
+  // A first-time visitor has no room yet, so start on "create".
+  const [action, setAction] = useState<'join' | 'create'>(room ? 'join' : 'create');
   const [created, setCreated] = useState<{ room: string; expires: number } | null>(null);
   const [password, setPassword] = useState(''),
     [show, setShow] = useState(false),
@@ -106,7 +109,7 @@ export default function JoinPage({
       )}
       <form onSubmit={submit}>
         <div className="room-actions" role="group" aria-label={t('ルームの操作')}>
-          {(['join', 'create'] as const).map((value) => (
+          {(['create', 'join'] as const).map((value) => (
             <button
               key={value}
               type="button"
@@ -129,15 +132,15 @@ export default function JoinPage({
             <ModeCard key={m} mode={m} selected={mode === m} onSelect={() => chooseMode(m)} />
           ))}
         </fieldset>
-        <div className="join-profile">
+        <div className="join-fields">
           <AvatarPicker
             value={avatar}
             onChange={changeAvatar}
             disabled={busy || avatarBusy}
             onBusy={setAvatarBusy}
           />
-          <label className="join-name">
-            {t('名前')}
+          <label className="join-field">
+            <span>{t('名前')}</span>
             <input
               aria-label={t('表示名')}
               maxLength={40}
@@ -147,10 +150,8 @@ export default function JoinPage({
               placeholder={t('任意・40文字まで')}
             />
           </label>
-        </div>
-        <div className="join-options">
-          <label>
-            {t('入力方法')}
+          <label className="join-field">
+            <span>{t('入力方法')}</span>
             <select
               aria-label={t('入力方法')}
               value={input}
@@ -165,11 +166,11 @@ export default function JoinPage({
               ))}
             </select>
           </label>
-          <p>
-            {t('音声または特徴点をサーバーで認識します。')}
-            {t('自分のカメラは会話中にこの端末内で録画されます。')}
-          </p>
         </div>
+        <p className="join-privacy">
+          {t('音声または特徴点をサーバーで認識します。')}
+          {t('自分のカメラは会話中にこの端末内で録画されます。')}
+        </p>
         {input === 'text' && (
           <p className="availability">
             {t('文字入力で参加できます。')}
@@ -238,7 +239,11 @@ export default function JoinPage({
             ? t(
                 'ルームIDは半角英数字・ハイフンの3〜32文字、パスワードは8〜128文字で設定してください。作成後、そのまま参加します。',
               )
-            : t('作成済みのルームIDとパスワードを入力してください。')}
+            : t(
+                invited && room === invited
+                  ? '招待されたルームです。ルームを作成した方から聞いたパスワードを入力してください。'
+                  : '作成済みのルームIDとパスワードを入力してください。',
+              )}
         </p>
         <label className="show-password">
           <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
@@ -265,7 +270,7 @@ export default function JoinPage({
           <span aria-hidden="true">→</span>
         </button>
         <p className="join-footnote">
-          {t('相手も同じルームIDとパスワードで参加できます。作成した方から相手に伝えてください。')}
+          {t('参加後、会話画面の「招待リンクをコピー」で相手を呼べます。パスワードは別に伝えてください。')}
         </p>
       </form>
     </main>

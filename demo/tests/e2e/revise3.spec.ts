@@ -85,6 +85,7 @@ test("independent output modes control real remote audio and reading of recogniz
     const other = await context.newPage();
     await synth(other);
     await other.goto("/");
+    await other.getByRole("button", { name: "既存ルームに参加" }).click();
     await other.getByLabel("表示名", { exact: true }).fill("送信者");
     await other.getByLabel("入力方法").selectOption("text");
     await other.getByLabel("ルームID", { exact: true }).fill("output-room");

@@ -23,6 +23,16 @@ export default function TalkPage({
   const c = useConversation(config, session, onLeave),
     { t } = useI18n();
   const [pinned, setPinned] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  async function copyInvite() {
+    try {
+      await navigator.clipboard.writeText(`${location.origin}/rooms/${encodeURIComponent(session.room_id)}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 4000);
+    } catch {
+      c.setError('リンクをコピーできませんでした。ルームIDとパスワードを相手に伝えてください');
+    }
+  }
   const [split, setSplit] = useState(62),
     [vertical, setVertical] = useState(() => matchMedia('(max-width: 760px)').matches);
   const grid = useRef<HTMLDivElement>(null);
@@ -91,6 +101,9 @@ export default function TalkPage({
         <span className="room-id">
           {t('ルーム')} {session.room_id}
         </span>
+        <button className="text-button invite-button" aria-live="polite" onClick={() => void copyInvite()}>
+          {t(copied ? 'コピーしました。パスワードは別に伝えてください' : '招待リンクをコピー')}
+        </button>
         <NameEditor name={c.displayName} onSave={c.rename} avatar={session.avatar} />
         <span className={'connection-label ' + (connected ? 'online' : '')} role="status">
           {t(connected ? '接続中' : c.state === 'expired' ? 'セッションが切れました' : '再接続しています…')}
