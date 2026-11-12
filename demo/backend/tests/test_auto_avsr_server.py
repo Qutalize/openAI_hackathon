@@ -93,6 +93,6 @@ def test_clip_rejected_by_the_server_fails_without_retrying(recognizer):
 
 def test_closing_stops_the_server(recognizer):
     model = recognizer("answer")
-    process = model.server
+    process = model.server.process
     model.close()
     assert process.poll() is not None

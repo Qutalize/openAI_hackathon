@@ -35,6 +35,25 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def inference_env():
+    """上流の推論プロセスに渡す環境変数（キャッシュの場所とGPUライブラリの場所）。"""
+    env = os.environ.copy()
+    env["TORCH_HOME"] = str(MODEL_DIR / "weights/torch-cache")
+    env["HF_HOME"] = str(MODEL_DIR / "weights/hf-cache")
+    env["TRITON_CACHE_DIR"] = str(MODEL_DIR / "outputs/triton-cache")
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["UNI_SIGN_INFERENCE_ONLY"] = "1"
+    torch_package = Path(importlib.util.find_spec("torch").origin).parent
+    library_dirs = [torch_package / "lib"] + sorted(
+        (torch_package.parent / "nvidia").glob("*/lib")
+    )
+    env["LD_LIBRARY_PATH"] = os.pathsep.join(
+        [str(path) for path in library_dirs if path.is_dir()]
+        + ([env["LD_LIBRARY_PATH"]] if env.get("LD_LIBRARY_PATH") else [])
+    )
+    return env
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("video", type=Path)
@@ -82,20 +101,7 @@ def main():
         stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         output_dir = Path(tempfile.mkdtemp(prefix=f"how2sign-{stamp}-", dir=outputs))
 
-    env = os.environ.copy()
-    env["TORCH_HOME"] = str(MODEL_DIR / "weights/torch-cache")
-    env["HF_HOME"] = str(MODEL_DIR / "weights/hf-cache")
-    env["TRITON_CACHE_DIR"] = str(MODEL_DIR / "outputs/triton-cache")
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-    env["UNI_SIGN_INFERENCE_ONLY"] = "1"
-    torch_package = Path(importlib.util.find_spec("torch").origin).parent
-    library_dirs = [torch_package / "lib"] + sorted(
-        (torch_package.parent / "nvidia").glob("*/lib")
-    )
-    env["LD_LIBRARY_PATH"] = os.pathsep.join(
-        [str(path) for path in library_dirs if path.is_dir()]
-        + ([env["LD_LIBRARY_PATH"]] if env.get("LD_LIBRARY_PATH") else [])
-    )
+    env = inference_env()
     command = [
         sys.executable, "-B", "-u", "-m", "demo.online_inference",
         "--online_video", str(video),

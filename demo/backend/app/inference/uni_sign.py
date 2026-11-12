@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 
 from app.inference.base import Recognizer
+from app.inference.resident import ResidentProcess
 
 
 class UniSignRecognizer(Recognizer):
@@ -28,6 +29,11 @@ class UniSignRecognizer(Recognizer):
             raise ValueError("Uni-Sign environment is missing")
         self.model_dir = self.runner.parent.parent / "Uni-Sign"
         self.model_version = config.get("model_version") or "uni-sign-how2sign"
+        # Optional resident process that keeps the model loaded between requests.
+        script = self.runner.parent / "serve_online.py"
+        self.server = (
+            ResidentProcess([str(self.python), "-B", str(script)]) if script.is_file() else None
+        )
 
     def _resolve(self, value: str) -> Path:
         path = Path(value)
@@ -60,6 +66,13 @@ class UniSignRecognizer(Recognizer):
             capture_output=True,
             timeout=60,
         )
+        # Loading takes tens of seconds, so start it now and wait for it on the first request.
+        if self.server:
+            self.server.start()
+
+    def close(self):
+        if self.server:
+            self.server.stop()
 
     def recognize(self, segment):
         video = segment.get("video")
@@ -72,22 +85,24 @@ class UniSignRecognizer(Recognizer):
             source = work / f"capture{suffix}"
             output = work / "result"
             source.write_bytes(video)
-            subprocess.run(
-                [
-                    str(self.python),
-                    "-B",
-                    str(self.runner),
-                    str(source),
-                    "--output-dir",
-                    str(output),
-                ],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=180,
-            )
-            result = json.loads((output / "result.json").read_text(encoding="utf-8"))
-            prediction = (result.get("prediction") or "").strip()
+            reply = self.server.ask({"video": str(source)}) if self.server else None
+            if reply is None:
+                subprocess.run(
+                    [
+                        str(self.python),
+                        "-B",
+                        str(self.runner),
+                        str(source),
+                        "--output-dir",
+                        str(output),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=180,
+                )
+                reply = json.loads((output / "result.json").read_text(encoding="utf-8"))
+            prediction = (reply.get("prediction") or "").strip()
             return {
                 "candidates": ([{"label": "uni-sign", "text": prediction}] if prediction else []),
                 "model_version": self.model_version,
