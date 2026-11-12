@@ -59,9 +59,14 @@ def process_main(root_string, config, incoming, outgoing):
                     continue
                 from app.inference.speech import SpeechRecognizer
 
-                verify_assets(
-                    root, [path / x for x in ("model.bin", "config.json", "tokenizer.json", "vocabulary.txt")]
-                )
+                # The vocabulary is .txt for older conversions and .json for large-v3 based ones,
+                # which also ship the feature extractor settings.
+                optional = [
+                    x
+                    for x in ("vocabulary.txt", "vocabulary.json", "preprocessor_config.json")
+                    if (path / x).is_file()
+                ]
+                verify_assets(root, [path / x for x in ("model.bin", "config.json", "tokenizer.json", *optional)])
                 model = SpeechRecognizer(path, c)
             elif c["provider"] in {"auto_avsr_cli", "uni_sign_cli"}:
                 if c["provider"] == "auto_avsr_cli":

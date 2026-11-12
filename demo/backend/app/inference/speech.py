@@ -3,11 +3,26 @@ import numpy as np
 from app.inference.base import Recognizer
 
 
+def load_cuda_libraries():
+    """Open the pip-installed cuBLAS and cuDNN so CTranslate2, which looks them up by name, finds them."""
+    import ctypes
+    import sysconfig
+    from pathlib import Path
+
+    packages = Path(sysconfig.get_paths()["purelib"]) / "nvidia"
+    for package in ("cublas", "cudnn"):
+        for library in sorted((packages / package / "lib").glob("*.so.*")):
+            ctypes.CDLL(str(library), mode=ctypes.RTLD_GLOBAL)
+
+
 class SpeechRecognizer(Recognizer):
     def __init__(self, path, config):
         from faster_whisper import WhisperModel
 
         self.config = config
+        self.model_version = path.name
+        if config["device"] == "cuda":
+            load_cuda_libraries()
         self.model = WhisperModel(
             str(path), device=config["device"], compute_type=config["compute_type"], local_files_only=True
         )
@@ -25,7 +40,7 @@ class SpeechRecognizer(Recognizer):
             vad_filter=True,
             condition_on_previous_text=False,
         )
-        return {"text": "".join(s.text for s in segments).strip(), "model_version": "whisper-small"}
+        return {"text": "".join(s.text for s in segments).strip(), "model_version": self.model_version}
 
 
 class SpeechSegmenter:
