@@ -201,6 +201,7 @@ export default function TalkPage({
         </div>
         <TranscriptPanel
           utterances={c.utterances}
+          partials={c.partials}
           readingId={c.readingId}
           self={session.participant_id}
           onCorrect={c.correct}

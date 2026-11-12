@@ -55,7 +55,7 @@ recognition:
   max_pending_jobs_total: 8
   worker_processes: 1
   job_timeout_seconds: 10
-  partial_results: false          # 初期版は区間終了後の確定候補のみ
+  partial_results: false          # trueで、話している途中の字幕も出す（発声のみ。GPU向け）
   speech:
     enabled: true
     provider: faster_whisper

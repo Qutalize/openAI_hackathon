@@ -175,6 +175,7 @@ const english: Record<string, string> = {
   '読唇の認識は数秒かかります。': 'Lip reading takes a few seconds. ',
   '手話の認識は数秒から十数秒かかります。': 'Sign recognition takes a few seconds to around ten. ',
   '{seconds}秒経過': '{seconds}s elapsed',
+  '話しています…': 'Speaking…',
   話した言葉が字幕になります: 'What you say becomes captions',
   'マイクがOFFです。話すときはマイクをONにしてください': 'Your microphone is off. Turn it on to speak.',
   '「読唇の撮影を開始」を押してから話してください': 'Press "Capture lip reading", then speak',
