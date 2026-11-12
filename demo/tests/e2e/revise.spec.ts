@@ -134,7 +134,9 @@ test("camera enabled before joining records a playable local video across camera
     )
     .toBeGreaterThan(1);
   await page.getByRole("button", { name: /カメラ.*ON/ }).click();
-  await expect(page.getByText("録画待機", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("自分のカメラを録画中", { exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: /カメラ.*OFF/ }).click();
   await expect(
     page.getByText("自分のカメラを録画中", { exact: true }),

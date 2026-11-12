@@ -160,6 +160,15 @@ const english: Record<string, string> = {
   読唇の撮影を開始: 'Capture lip reading',
   手話の撮影を開始: 'Capture sign language',
   対応する登録表現: 'Supported phrases',
+  '英語の口の動きを英語字幕へ変換する検証版です。日本語の読唇には対応していません。':
+    'An experimental build that turns English lip movements into English captions. Japanese lip reading is not supported.',
+  '読唇の認識は20秒ほどかかります。': 'Lip reading takes about 20 seconds. ',
+  '手話の認識は40秒ほどかかります。': 'Sign recognition takes about 40 seconds. ',
+  '{seconds}秒経過': '{seconds}s elapsed',
+  話した言葉が字幕になります: 'What you say becomes captions',
+  'マイクがOFFです。話すときはマイクをONにしてください': 'Your microphone is off. Turn it on to speak.',
+  '「読唇の撮影を開始」を押してから話してください': 'Press "Capture lip reading", then speak',
+  '「手話の撮影を開始」を押してから話してください': 'Press "Capture sign language", then sign',
   対象言語と制約: 'Language and limitations',
   'ASL（米国手話）の動画を英語字幕へ変換する検証版です。日本手話には対応していません。':
     'Experimental ASL (American Sign Language) video-to-English captions. Japanese Sign Language is not supported.',

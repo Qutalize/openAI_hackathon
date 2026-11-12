@@ -201,7 +201,9 @@ test("layout, two participants, captions, correction, camera, reconnect and leav
     page.getByText("自分のカメラを録画中", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: /カメラ.*ON/ }).click();
-  await expect(page.getByText("録画待機", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("自分のカメラを録画中", { exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: /カメラ.*OFF/ }).click();
   await expect(
     page.getByText("自分のカメラを録画中", { exact: true }),
@@ -242,7 +244,7 @@ test("permission-free text fallback and responsive keyboard navigation", async (
         document.documentElement.scrollHeight <= window.innerHeight,
     ),
   ).toBe(true);
-  for (const name of ["会話終了", "送信", "読み上げ停止", "未読を再生"]) {
+  for (const name of ["会話終了", "送信"]) {
     const box = await page
       .getByRole("button", { name, exact: true })
       .boundingBox();

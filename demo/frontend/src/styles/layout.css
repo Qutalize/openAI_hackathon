@@ -755,6 +755,11 @@ button.name-button {
   font-size: 12px;
   color: var(--muted);
 }
+.capture-controls .capture-wait {
+  display: flex;
+  gap: 8px;
+  color: var(--navy);
+}
 .capture-controls button {
   min-height: 34px;
   font-size: 13px;

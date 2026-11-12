@@ -525,6 +525,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
         ...(candidateId ? { candidate_id: candidateId } : {}),
       });
       setCandidate(null);
+      setRecognition('待機中');
     } catch (e) {
       setError((e as Error).message);
       throw e;

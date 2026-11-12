@@ -61,6 +61,19 @@ export default function TalkPage({
     c.participants.find((p) => p.id !== session.participant_id) ??
     c.participants[0];
   const connected = c.state === 'connected';
+  const mic = c.devices.stream.getAudioTracks().some((track) => track.readyState === 'live');
+  // While idle, say what to do next with the current input instead of a bare "ready".
+  const idleHint =
+    c.input === 'speech'
+      ? mic
+        ? '話した言葉が字幕になります'
+        : 'マイクがOFFです。話すときはマイクをONにしてください'
+      : c.input === 'lipread'
+        ? '「読唇の撮影を開始」を押してから話してください'
+        : c.input === 'sign'
+          ? '「手話の撮影を開始」を押してから話してください'
+          : '';
+  const status = c.recognition === '待機中' ? idleHint : c.recognition;
   const clamp = (value: number) => Math.max(min, Math.min(max, value));
   const drag = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!event.currentTarget.hasPointerCapture(event.pointerId) || !grid.current) return;
@@ -128,8 +141,8 @@ export default function TalkPage({
             />
           </SpeakerStage>
           <div className="stage-status">
-            <span role="status" title={t(c.recognition)}>
-              {t(c.recognition)}
+            <span role="status" title={t(status)}>
+              {t(status)}
             </span>
             <span
               className={
@@ -137,7 +150,7 @@ export default function TalkPage({
               }
               role="status"
             >
-              {t(c.recordingStatus)}
+              {c.recordingStatus === '録画待機' ? '' : t(c.recordingStatus)}
             </span>
           </div>
         </div>
@@ -194,29 +207,26 @@ export default function TalkPage({
           />
         </TranscriptPanel>
       </div>
-      <div className="meeting-utilities">
-        <div className="auxiliary-buttons">
-          <button
-            className="secondary"
-            disabled={c.playback === 'captions'}
-            onClick={() => void c.startSound()}
-          >
-            {t('音声を開始')}
-          </button>
-          <button className="secondary" disabled={c.playback === 'captions'} onClick={c.stopSpeech}>
-            {t('読み上げ停止')}
-          </button>
-          <button className="secondary" disabled={c.playback === 'captions'} onClick={c.replayUnread}>
-            {t('未読を再生')}
-          </button>
-        </div>
-        {c.playback !== 'captions' &&
-          !['待機中', '停止', '読み上げ中', '読み上げ一時停止中'].includes(c.ttsStatus) && (
+      {c.playback !== 'captions' && (
+        <div className="meeting-utilities">
+          <div className="auxiliary-buttons">
+            <button className="secondary" onClick={() => void c.startSound()}>
+              {t('音声を開始')}
+            </button>
+            <button className="secondary" onClick={c.stopSpeech}>
+              {t('読み上げ停止')}
+            </button>
+            <button className="secondary" onClick={c.replayUnread}>
+              {t('未読を再生')}
+            </button>
+          </div>
+          {!['待機中', '停止', '読み上げ中', '読み上げ一時停止中'].includes(c.ttsStatus) && (
             <span className="tts-notice" role="status">
               {t(c.ttsStatus)}
             </span>
           )}
-      </div>
+        </div>
+      )}
       <ConversationControls c={c} config={config} session={session} />
       {Object.entries(c.streams)
         .filter(([id]) => id !== session.participant_id)
