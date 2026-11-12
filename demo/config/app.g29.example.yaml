@@ -5,11 +5,13 @@ recognition:
   speech:
     enabled: true
     provider: faster_whisper
-    model_path: models/speech/whisper-small
-    device: cpu
-    compute_type: int8
+    # Japanese-tuned model on the GPU: fetch it with
+    # `scripts/prepare_models.py --speech-model kotoba-whisper-v2.0` and install the backend's gpu extra.
+    model_path: models/speech/kotoba-whisper-v2.0
+    device: cuda
+    compute_type: float16
     beam_size: 1
-    vad_silence_ms: 600
+    vad_silence_ms: 400
     min_segment_ms: 300
     max_segment_ms: 10000
   lipread:

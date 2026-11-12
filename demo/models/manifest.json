@@ -84,6 +84,41 @@
       "source": "npm:@mediapipe/tasks-vision",
       "revision": "0.10.32",
       "license": "Apache-2.0"
+    },
+    {
+      "path": "models/speech/kotoba-whisper-v2.0/model.bin",
+      "sha256": "60d2bc2e33de9d43f2745be09caefe1161acab670f6796d4a750d8d848382b36",
+      "source": "https://huggingface.co/kotoba-tech/kotoba-whisper-v2.0-faster/resolve/f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc/model.bin",
+      "revision": "f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/kotoba-whisper-v2.0/config.json",
+      "sha256": "a9306624f5ec14270a014b647e5c316b6e03a662c369758d1b90697a7b0655b9",
+      "source": "https://huggingface.co/kotoba-tech/kotoba-whisper-v2.0-faster/resolve/f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc/config.json",
+      "revision": "f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/kotoba-whisper-v2.0/tokenizer.json",
+      "sha256": "f70c9740a90657b489cf05b0fa0605c1d497db542f11a70a8cc80a025c94c7d8",
+      "source": "https://huggingface.co/kotoba-tech/kotoba-whisper-v2.0-faster/resolve/f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc/tokenizer.json",
+      "revision": "f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/kotoba-whisper-v2.0/vocabulary.json",
+      "sha256": "c69260f2ab26d659b7c398f9a2b2b48ed0df16c3b47d7326782fd9cba71690c1",
+      "source": "https://huggingface.co/kotoba-tech/kotoba-whisper-v2.0-faster/resolve/f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc/vocabulary.json",
+      "revision": "f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc",
+      "license": "MIT"
+    },
+    {
+      "path": "models/speech/kotoba-whisper-v2.0/preprocessor_config.json",
+      "sha256": "7ccc62c6f2765af1f3b46c00c9b5894426835a05021c8b9c01eecb6dfb542711",
+      "source": "https://huggingface.co/kotoba-tech/kotoba-whisper-v2.0-faster/resolve/f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc/preprocessor_config.json",
+      "revision": "f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc",
+      "license": "MIT"
     }
   ],
   "note": "prepare_models.py records pinned revisions and SHA-256 hashes. No trained lipread/sign weights are bundled."

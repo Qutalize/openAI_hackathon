@@ -10,6 +10,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEECH_REVISION = "536b0662742c02347bc0e980a01041f333bce120"
+# Additional speech models: name -> (Hugging Face repository, pinned revision, license, files).
+SPEECH_MODELS = {
+    "kotoba-whisper-v2.0": (
+        "kotoba-tech/kotoba-whisper-v2.0-faster",
+        "f44edd35eaeb2274e85ac7b31fb2c6f59ff1c4bc",
+        "MIT",
+        ("model.bin", "config.json", "tokenizer.json", "vocabulary.json", "preprocessor_config.json"),
+    ),
+}
 VISION_ASSETS = {
     "face_landmarker.task": "face_landmarker/face_landmarker/float16/1/face_landmarker.task",
     "hand_landmarker.task": "hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
@@ -50,6 +59,11 @@ def main():
         description="モデルを取得・登録しSHA-256 manifestを作成"
     )
     parser.add_argument("--speech", action="store_true")
+    parser.add_argument(
+        "--speech-model",
+        choices=sorted(SPEECH_MODELS),
+        help="追加の音声モデルを取得（GPU向け。config の speech.model_path で選ぶ）",
+    )
     parser.add_argument("--vision-assets", action="store_true")
     parser.add_argument("--register", choices=["lipread", "sign"])
     parser.add_argument("--verify", action="store_true")
@@ -61,6 +75,19 @@ def main():
     args = parser.parse_args()
     manifest_path = ROOT / "models/manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if args.speech_model:
+        repository, revision, license_name, files = SPEECH_MODELS[args.speech_model]
+        for filename in files:
+            url = f"https://huggingface.co/{repository}/resolve/{revision}/{filename}"
+            path = ROOT / "models/speech" / args.speech_model / filename
+            print(f"Downloading speech/{args.speech_model}/{filename}", flush=True)
+            if not path.exists():
+                download(url, path)
+            record(manifest, path, url, revision, license_name)
+            manifest_path.write_text(
+                json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
     if args.speech:
         for filename in (
             "model.bin",
