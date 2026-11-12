@@ -171,6 +171,8 @@ class Settings(StrictModel):
     turn_urls: list[str] = []
     turn_username: str = Field("", repr=False)
     turn_password: str = Field("", repr=False)
+    turn_cloudflare_key_id: str = Field("", repr=False)
+    turn_cloudflare_api_token: str = Field("", repr=False)
 
     @model_validator(mode="after")
     def check_deployment(self):
@@ -187,8 +189,13 @@ class Settings(StrictModel):
         if self.rtc.turn_enabled:
             shared_auth = len(self.turn_secret) >= 32
             service_auth = bool(self.turn_username and self.turn_password)
-            if not self.turn_urls or not (shared_auth or service_auth):
-                raise ValueError("TURN requires URLs and a shared secret or service username/password")
+            cloudflare = bool(self.turn_cloudflare_key_id and self.turn_cloudflare_api_token)
+            if cloudflare and (self.turn_urls or self.turn_secret or service_auth):
+                raise ValueError("Choose either Cloudflare TURN or your own TURN server")
+            if not cloudflare and (not self.turn_urls or not (shared_auth or service_auth)):
+                raise ValueError(
+                    "TURN requires a Cloudflare TURN key, or URLs with a shared secret or username/password"
+                )
             if self.turn_secret and (self.turn_username or self.turn_password):
                 raise ValueError("Choose either TURN shared-secret or service username/password authentication")
         if self.rtc.ice_transport_policy == "relay" and not self.rtc.turn_enabled:
@@ -241,4 +248,6 @@ def load_settings(root: Path = ROOT) -> Settings:
     data["turn_urls"] = [x.strip() for x in os.getenv("APP_TURN_URLS", "").split(",") if x.strip()]
     data["turn_username"] = os.getenv("APP_TURN_USERNAME", "")
     data["turn_password"] = os.getenv("APP_TURN_PASSWORD", "")
+    data["turn_cloudflare_key_id"] = os.getenv("APP_TURN_CLOUDFLARE_KEY_ID", "")
+    data["turn_cloudflare_api_token"] = os.getenv("APP_TURN_CLOUDFLARE_API_TOKEN", "")
     return Settings.model_validate(data)

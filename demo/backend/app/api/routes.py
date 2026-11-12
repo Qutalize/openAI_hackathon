@@ -1,14 +1,19 @@
 import asyncio
 import hmac
+import logging
 import sqlite3
+import time
 
+import httpx
 from fastapi import APIRouter, HTTPException, Request, Response
 
+from app.core.cloudflare_turn import CloudflareTurn
 from app.core.security import digest, turn_credentials, verify_password
 from app.repositories.rooms import normalize_room_id
 from app.schemas.protocol import CreateRoomRequest, JoinRequest, RenameRequest
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def session_for(request):
@@ -209,7 +214,22 @@ async def rtc_config(request: Request):
     s, cfg = session_for(request), request.app.state.settings
     servers = [{"urls": cfg.rtc.stun_urls}] if cfg.rtc.stun_urls else []
     expires = None
-    if cfg.rtc.turn_enabled:
+    if cfg.rtc.turn_enabled and cfg.turn_cloudflare_key_id:
+        turn = getattr(request.app.state, "cloudflare_turn", None)
+        if turn is None:
+            turn = request.app.state.cloudflare_turn = CloudflareTurn(
+                cfg.turn_cloudflare_key_id,
+                cfg.turn_cloudflare_api_token,
+                cfg.rtc.turn_credential_ttl_seconds,
+            )
+        try:
+            relay, expires = await turn.ice_servers()
+            servers += [server for server in relay if server.get("username")]
+        except (httpx.HTTPError, KeyError, ValueError) as exc:
+            # Calls on one network still work without a relay, so answer and let the client ask again soon.
+            logger.warning("Cloudflare TURN credentials unavailable: %r", exc)
+            expires = int(time.time()) + 120
+    elif cfg.rtc.turn_enabled:
         if cfg.turn_username and cfg.turn_password:
             credentials = {"username": cfg.turn_username, "credential": cfg.turn_password}
         else:
