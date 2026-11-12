@@ -172,8 +172,8 @@ const english: Record<string, string> = {
   対応する登録表現: 'Supported phrases',
   '英語の口の動きを英語字幕へ変換する検証版です。日本語の読唇には対応していません。':
     'An experimental build that turns English lip movements into English captions. Japanese lip reading is not supported.',
-  '読唇の認識は20秒ほどかかります。': 'Lip reading takes about 20 seconds. ',
-  '手話の認識は40秒ほどかかります。': 'Sign recognition takes about 40 seconds. ',
+  '読唇の認識は数秒かかります。': 'Lip reading takes a few seconds. ',
+  '手話の認識は数秒から十数秒かかります。': 'Sign recognition takes a few seconds to around ten. ',
   '{seconds}秒経過': '{seconds}s elapsed',
   話した言葉が字幕になります: 'What you say becomes captions',
   'マイクがOFFです。話すときはマイクをONにしてください': 'Your microphone is off. Turn it on to speak.',

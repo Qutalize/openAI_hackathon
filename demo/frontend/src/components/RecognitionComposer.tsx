@@ -93,8 +93,8 @@ export default function RecognitionComposer({
               <span role="status">
                 {t(
                   input === 'lipread'
-                    ? '読唇の認識は20秒ほどかかります。'
-                    : '手話の認識は40秒ほどかかります。',
+                    ? '読唇の認識は数秒かかります。'
+                    : '手話の認識は数秒から十数秒かかります。',
                 )}
               </span>
               <span aria-hidden="true">{t('{seconds}秒経過', { seconds: elapsed })}</span>
