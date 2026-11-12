@@ -104,7 +104,7 @@ test("independent output modes control real remote audio and reading of recogniz
     expect(await spoken(page)).toEqual([]);
     await expect(
       page.getByRole("button", { name: "音声を開始", exact: true }),
-    ).toBeDisabled();
+    ).toHaveCount(0);
     const snapshot = await page.request
       .get("/api/rooms/output-room/snapshot")
       .then((r) => r.json());

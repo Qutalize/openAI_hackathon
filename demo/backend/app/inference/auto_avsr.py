@@ -12,6 +12,11 @@ from app.inference.base import Recognizer
 
 
 class AutoAvsrRecognizer(Recognizer):
+    language_note = (
+        "英語の口の動きを英語字幕へ変換する検証版です。"
+        "日本語の読唇には対応していません。"
+    )
+
     def __init__(self, root: Path, config):
         self.root = root
         self.config = config

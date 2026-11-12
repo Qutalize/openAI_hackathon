@@ -40,6 +40,14 @@ export default function RecognitionComposer({
     }
   }, [candidate]);
   const vision = input === 'lipread' || input === 'sign';
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    if (!processing) return;
+    setElapsed(0);
+    const since = Date.now();
+    const timer = setInterval(() => setElapsed(Math.floor((Date.now() - since) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [processing]);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -80,6 +88,18 @@ export default function RecognitionComposer({
               {t('取消')}
             </button>
           )}
+          {processing && (
+            <p className="capture-wait">
+              <span role="status">
+                {t(
+                  input === 'lipread'
+                    ? '読唇の認識は20秒ほどかかります。'
+                    : '手話の認識は40秒ほどかかります。',
+                )}
+              </span>
+              <span aria-hidden="true">{t('{seconds}秒経過', { seconds: elapsed })}</span>
+            </p>
+          )}
           <details>
             <summary>
               {t(config.capabilities[input].language_note ? '対象言語と制約' : '対応する登録表現')}
@@ -95,20 +115,22 @@ export default function RecognitionComposer({
       {candidate && (
         <div className="candidate-box">
           <p>{expired ? t('候補の期限が切れました。文字入力として送信できます。') : t(candidate.message)}</p>
-          <div className="candidate-options">
-            {candidate.candidates.map((c) => (
-              <button
-                className="secondary"
-                key={c.label}
-                onClick={() => {
-                  setText(c.text);
-                  setUseCandidate(true);
-                }}
-              >
-                {c.text}
-              </button>
-            ))}
-          </div>
+          {candidate.candidates.length > 1 && (
+            <div className="candidate-options">
+              {candidate.candidates.map((c) => (
+                <button
+                  className="secondary"
+                  key={c.label}
+                  onClick={() => {
+                    setText(c.text);
+                    setUseCandidate(true);
+                  }}
+                >
+                  {c.text}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <form onSubmit={submit}>
