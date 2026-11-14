@@ -213,6 +213,8 @@ export default function TalkPage({
             onLanguage={c.changeLanguage}
             candidate={c.candidate}
             capturing={c.capturing}
+            watching={c.watching}
+            onWatch={(on) => (on ? c.startWatch() : c.stopWatch())}
             processing={c.processing}
             connected={connected}
             config={config}

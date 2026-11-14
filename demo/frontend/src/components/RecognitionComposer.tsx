@@ -9,6 +9,8 @@ export default function RecognitionComposer({
   onLanguage,
   candidate,
   capturing,
+  watching,
+  onWatch,
   processing,
   connected,
   config,
@@ -22,6 +24,8 @@ export default function RecognitionComposer({
   onLanguage: (language: VisionLanguage) => Promise<void>;
   candidate: Candidate | null;
   capturing: boolean;
+  watching: boolean;
+  onWatch: (on: boolean) => Promise<void>;
   processing: boolean;
   connected: boolean;
   config: PublicConfig;
@@ -81,7 +85,7 @@ export default function RecognitionComposer({
                   type="button"
                   className={x === language ? 'primary' : 'secondary'}
                   aria-pressed={x === language}
-                  disabled={capturing || processing}
+                  disabled={capturing || processing || watching}
                   onClick={() => void onLanguage(x)}
                 >
                   {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
@@ -94,19 +98,32 @@ export default function RecognitionComposer({
               ? t('口元を明るく、正面から映してください。')
               : t('両手と上半身が映る位置にカメラを置いてください。')}
           </p>
-          <button
-            className="primary"
-            disabled={!connected || processing}
-            onClick={() => {
-              void (capturing ? onEnd() : onStart());
-            }}
-          >
-            {capturing
-              ? t('撮影を終了して認識')
-              : processing
-                ? t('認識しています…')
-                : t(input === 'lipread' ? '読唇の撮影を開始' : '手話の撮影を開始')}
-          </button>
+          {instant && (
+            <button
+              type="button"
+              className={watching ? 'primary watch-toggle on' : 'secondary watch-toggle'}
+              aria-pressed={watching}
+              disabled={!connected || capturing || (processing && !watching)}
+              onClick={() => void onWatch(!watching)}
+            >
+              {watching ? t('自動で認識中（押すと停止）') : t('自動で認識')}
+            </button>
+          )}
+          {!watching && (
+            <button
+              className="primary"
+              disabled={!connected || processing}
+              onClick={() => {
+                void (capturing ? onEnd() : onStart());
+              }}
+            >
+              {capturing
+                ? t('撮影を終了して認識')
+                : processing
+                  ? t('認識しています…')
+                  : t(input === 'lipread' ? '読唇の撮影を開始' : '手話の撮影を開始')}
+            </button>
+          )}
           {(capturing || processing) && (
             <button className="secondary" onClick={onCancel}>
               {t('取消')}

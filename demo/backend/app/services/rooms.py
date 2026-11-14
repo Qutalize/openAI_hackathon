@@ -31,6 +31,10 @@ class Connection:
             pass
 
 
+# Continuous recognition: how often to classify the window, and the pause after offering a phrase.
+WATCH_INTERVAL = 0.4
+WATCH_QUIET = 1.5
+
 class RoomService:
     def __init__(self, settings, repo, inference):
         self.settings, self.repo, self.inference = settings, repo, inference
@@ -236,7 +240,7 @@ class RoomService:
         s.input_epoch += 1
         s.stream_id = uid()
         s.media_seq, s.capture_ms = -1, -1
-        s.segment, s.segmenter = None, None
+        s.segment, s.segmenter, s.watch = None, None, None
         s.candidates.clear()
         for task in list(s.tasks):
             task.cancel()
@@ -386,27 +390,7 @@ class RoomService:
                         await self.clear_partial(s)
                     await self.private(s, "recognition.state", {"state": "idle"})
                 else:
-                    candidate_id = uid()
-                    candidates = result.get("candidates", [])
-                    s.candidates[candidate_id] = {
-                        **result,
-                        "source": kind,
-                        "epoch": epoch,
-                        "expires_at": time.time() + 60,
-                    }
-                    await self.private(
-                        s,
-                        "recognition.candidate",
-                        {
-                            "candidate_id": candidate_id,
-                            "candidates": candidates,
-                            "input": kind,
-                            "expires_in": 60,
-                            "message": "候補を確認して送信してください"
-                            if candidates
-                            else "認識できませんでした",
-                        },
-                    )
+                    await self.offer_candidates(s, kind, result, epoch)
             except InferenceBusy:
                 await self.private(
                     s, "recognition.busy", {"message": "認識が混み合っています。区間をやり直してください"}
@@ -423,6 +407,78 @@ class RoomService:
                 if s.input_epoch == epoch:
                     s.recognition_jobs = max(0, s.recognition_jobs - 1)
                     await self.publish_activity(s)
+
+        task = asyncio.create_task(run())
+        s.tasks.add(task)
+        task.add_done_callback(s.tasks.discard)
+
+    async def offer_candidates(self, s, kind, result, epoch, automatic=False):
+        candidate_id = uid()
+        candidates = result.get("candidates", [])
+        s.candidates[candidate_id] = {
+            **result,
+            "source": kind,
+            "epoch": epoch,
+            "expires_at": time.time() + 60,
+        }
+        await self.private(
+            s,
+            "recognition.candidate",
+            {
+                "candidate_id": candidate_id,
+                "candidates": candidates,
+                "input": kind,
+                "expires_in": 60,
+                "automatic": automatic,
+                "message": "候補を確認して送信してください" if candidates else "認識できませんでした",
+            },
+        )
+
+    def watch_frames(self, s, frames, timestamps):
+        """Append landmark frames to the rolling window and keep only its last max_frames * 50 ms."""
+        w = s.watch
+        span = getattr(self.settings.recognition, s.input).max_frames * 50
+        w["frames"].extend(frames)
+        w["timestamps"].extend(timestamps)
+        while w["timestamps"] and w["timestamps"][-1] - w["timestamps"][0] > span - 50:
+            w["frames"].pop(0)
+            w["timestamps"].pop(0)
+        self.launch_watch(s)
+
+    def launch_watch(self, s):
+        """Recognize the window every WATCH_INTERVAL; offer a phrase seen in two windows in a row."""
+        w, now = s.watch, time.monotonic()
+        if not w or w["busy"] or now < w["next_at"] or now < w["quiet_until"]:
+            return
+        span = getattr(self.settings.recognition, s.input).max_frames * 50
+        if len(w["timestamps"]) < 10 or w["timestamps"][-1] - w["timestamps"][0] < span * 0.5:
+            return
+        w["busy"], w["next_at"] = True, now + WATCH_INTERVAL
+        epoch, segment = s.input_epoch, {"frames": list(w["frames"]), "timestamps": list(w["timestamps"])}
+        model = self.model_kind(s.input, s.language)
+
+        async def run():
+            try:
+                result = await self.inference.recognize(s.participant_id, model, segment)
+                if s.watch is not w or s.input_epoch != epoch or not s.control:
+                    return
+                label = result["candidates"][0]["label"] if result.get("candidates") else None
+                if label and label == w["last_label"]:
+                    w["frames"].clear()
+                    w["timestamps"].clear()
+                    w["last_label"] = None
+                    w["quiet_until"] = time.monotonic() + WATCH_QUIET
+                    await self.offer_candidates(s, s.input, result, epoch, automatic=True)
+                else:
+                    w["last_label"] = label
+            except (InferenceBusy, asyncio.CancelledError):
+                pass
+            except Exception:
+                await self.private(
+                    s, "recognition.state", {"state": "error", "message": "自動認識を続けられません"}
+                )
+            finally:
+                w["busy"] = False
 
         task = asyncio.create_task(run())
         s.tasks.add(task)
@@ -503,6 +559,7 @@ class RoomService:
                 raise ValueError("カメラと認識接続を確認してください")
             if s.segment:
                 raise ValueError("既に撮影中です")
+            s.watch = None
             segment_id = p.get("segment_id")
             if not isinstance(segment_id, str) or not 1 <= len(segment_id) <= 100:
                 raise ValueError("撮影区間IDが不正です")
@@ -510,6 +567,28 @@ class RoomService:
             s.candidates.clear()
             await self.activity(s, True)
             result = {"segment_id": segment_id}
+        elif kind == "watch.start":
+            model = self.model_kind(s.input, s.language)
+            if s.input not in ("lipread", "sign") or not s.devices["camera"] or not s.media:
+                raise ValueError("カメラと認識接続を確認してください")
+            if self.inference.capabilities.get(model, {}).get("transport") != "features":
+                raise ValueError("このモデルは自動認識に対応していません")
+            watch_id = p.get("watch_id")
+            if not isinstance(watch_id, str) or not 1 <= len(watch_id) <= 100:
+                raise ValueError("自動認識のIDが不正です")
+            s.segment = None
+            s.watch = {
+                "id": watch_id,
+                "frames": [],
+                "timestamps": [],
+                "busy": False,
+                "next_at": 0.0,
+                "quiet_until": 0.0,
+                "last_label": None,
+            }
+            result = {"watch_id": watch_id}
+        elif kind == "watch.stop":
+            s.watch = None
         elif kind == "segment.cancel":
             await self.reset_input(s)
             result = s.stream()

@@ -120,15 +120,21 @@ async def media(ws: WebSocket, room_id: str):
                     if active and cfg.recognition.partial_results:
                         service.launch_partial(s)
                 else:
-                    if s.input not in ("lipread", "sign") or not s.devices["camera"] or not s.segment:
+                    target = s.segment or s.watch
+                    if s.input not in ("lipread", "sign") or not s.devices["camera"] or not target:
                         raise ValueError("撮影を開始してください")
                     c = getattr(cfg.recognition, s.input)
-                    if h.get("schema") != c.feature_schema or h.get("segment_id") != s.segment["id"]:
+                    if h.get("schema") != c.feature_schema or h.get("segment_id") != target["id"]:
                         raise ValueError("特徴点の方式または撮影区間が一致しません")
                     expected_k = 40 if s.input == "lipread" else 100
                     if body.shape[1] != expected_k:
                         raise ValueError("特徴点の数が一致しません")
                     times = h["frame_timestamps_ms"]
+                    if target is s.watch:
+                        if s.watch["timestamps"] and times[0] <= s.watch["timestamps"][-1]:
+                            raise ValueError("フレームの順序が不正です")
+                        service.watch_frames(s, body.tolist(), times)
+                        continue
                     if s.segment["timestamps"] and times[0] <= s.segment["timestamps"][-1]:
                         raise ValueError("フレームの順序が不正です")
                     if len(s.segment["frames"]) + len(body) > c.max_frames:
