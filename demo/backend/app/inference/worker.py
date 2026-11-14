@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import multiprocessing as mp
 import queue
 import sys
@@ -14,8 +15,12 @@ from pathlib import Path
 
 
 def verify_assets(root: Path, paths: list[Path]):
-    manifest = json.loads((root / "models/manifest.json").read_text(encoding="utf-8"))
-    records = {a["path"]: a for a in manifest["assets"]}
+    records = {}
+    # manifest.local.json (not in Git) holds models trained on this server.
+    for name in ("manifest.json", "manifest.local.json"):
+        path = root / "models" / name
+        if path.is_file():
+            records.update({a["path"]: a for a in json.loads(path.read_text(encoding="utf-8"))["assets"]})
     for path in paths:
         key = path.relative_to(root).as_posix()
         record = records.get(key)
@@ -38,6 +43,78 @@ def failure_log(kind: str, exc: Exception) -> str:
 
 
 MODEL_KINDS = ("speech", "lipread", "sign", "lipread_open", "sign_open")
+VIDEO_PROVIDERS = {"auto_avsr_cli", "uni_sign_cli"}
+
+
+def unavailable(reason="モデル未導入"):
+    return {"available": False, "reason": reason, "vocabulary": [], "transport": "features"}
+
+
+def load_model(root: Path, kind: str, c: dict, vocabulary: dict):
+    """Build, verify and warm one model; return (model, capability), or (None, capability) when absent."""
+    # lipread_open / sign_open serve the same input as lipread / sign.
+    base = kind.removesuffix("_open")
+    if kind == "speech":
+        path = root / c["model_path"]
+        if not path.exists():
+            return None, unavailable()
+        from app.inference.speech import SpeechRecognizer
+
+        # The vocabulary is .txt for older conversions and .json for large-v3 based ones,
+        # which also ship the feature extractor settings.
+        optional = [
+            x
+            for x in ("vocabulary.txt", "vocabulary.json", "preprocessor_config.json")
+            if (path / x).is_file()
+        ]
+        verify_assets(root, [path / x for x in ("model.bin", "config.json", "tokenizer.json", *optional)])
+        model = SpeechRecognizer(path, c)
+    elif c["provider"] in VIDEO_PROVIDERS:
+        if c["provider"] == "auto_avsr_cli":
+            if base != "lipread":
+                raise ValueError("Auto-AVSR is only available for lipread input")
+            from app.inference.auto_avsr import AutoAvsrRecognizer
+
+            model = AutoAvsrRecognizer(root, c)
+        else:
+            if base != "sign":
+                raise ValueError("Uni-Sign is only available for sign input")
+            from app.inference.uni_sign import UniSignRecognizer
+
+            model = UniSignRecognizer(root, c)
+    else:
+        if kind != base:
+            raise ValueError("Open-vocabulary slots take video models only")
+        path = root / c["model_path"]
+        if not path.exists():
+            return None, unavailable()
+        from app.inference.lipread import TemporalRecognizer
+
+        meta = root / c["metadata_path"]
+        assets = root / "frontend/public/models/mediapipe"
+        needed = [assets / "face_landmarker.task"]
+        wasm_files = list((assets / "wasm").glob("*.wasm"))
+        if not wasm_files:
+            raise ValueError("MediaPipe WASM assets missing")
+        needed.extend(wasm_files)
+        if kind == "sign":
+            needed += [assets / "hand_landmarker.task", assets / "pose_landmarker.task"]
+        verify_assets(root, [path, meta, meta.parent / "labels.json", *needed])
+        model = TemporalRecognizer(path, meta, c, kind, vocabulary)
+    model.warmup()
+    metadata = getattr(model, "metadata", {})
+    return model, {
+        "available": True,
+        "reason": "利用可能",
+        "vocabulary": (
+            []
+            if c["provider"] == "uni_sign_cli"
+            else [x for x in vocabulary["items"] if base in x["modalities"]]
+        ),
+        "transport": "video" if c["provider"] in VIDEO_PROVIDERS else "features",
+        "language_note": getattr(model, "language_note", ""),
+        "model_version": metadata.get("model_version", c.get("model_version", "")),
+    }
 
 
 def process_main(root_string, config, incoming, outgoing):
@@ -46,91 +123,39 @@ def process_main(root_string, config, incoming, outgoing):
     vocabulary = json.loads((root / "config/vocabulary.ja.json").read_text(encoding="utf-8"))
     for kind in MODEL_KINDS:
         c = config.get(kind)
-        # lipread_open / sign_open serve the same input as lipread / sign.
-        base = kind.removesuffix("_open")
-        capabilities[kind] = {
-            "available": False,
-            "reason": "モデル未導入",
-            "vocabulary": [],
-            "transport": "features",
-        }
         if c is None:
-            capabilities[kind]["reason"] = "設定されていません"
+            capabilities[kind] = unavailable("設定されていません")
             continue
         if not c["enabled"]:
-            capabilities[kind]["reason"] = "設定で無効になっています"
+            capabilities[kind] = unavailable("設定で無効になっています")
             continue
         try:
-            if kind == "speech":
-                path = root / c["model_path"]
-                if not path.exists():
-                    continue
-                from app.inference.speech import SpeechRecognizer
-
-                # The vocabulary is .txt for older conversions and .json for large-v3 based ones,
-                # which also ship the feature extractor settings.
-                optional = [
-                    x
-                    for x in ("vocabulary.txt", "vocabulary.json", "preprocessor_config.json")
-                    if (path / x).is_file()
-                ]
-                verify_assets(root, [path / x for x in ("model.bin", "config.json", "tokenizer.json", *optional)])
-                model = SpeechRecognizer(path, c)
-            elif c["provider"] in {"auto_avsr_cli", "uni_sign_cli"}:
-                if c["provider"] == "auto_avsr_cli":
-                    if base != "lipread":
-                        raise ValueError("Auto-AVSR is only available for lipread input")
-                    from app.inference.auto_avsr import AutoAvsrRecognizer
-
-                    model = AutoAvsrRecognizer(root, c)
-                else:
-                    if base != "sign":
-                        raise ValueError("Uni-Sign is only available for sign input")
-                    from app.inference.uni_sign import UniSignRecognizer
-
-                    model = UniSignRecognizer(root, c)
-                capabilities[kind]["transport"] = "video"
-            else:
-                if kind != base:
-                    raise ValueError("Open-vocabulary slots take video models only")
-                path = root / c["model_path"]
-                if not path.exists():
-                    continue
-                from app.inference.lipread import TemporalRecognizer
-
-                meta = root / c["metadata_path"]
-                assets = root / "frontend/public/models/mediapipe"
-                needed = [assets / "face_landmarker.task"]
-                wasm_files = list((assets / "wasm").glob("*.wasm"))
-                if not wasm_files:
-                    raise ValueError("MediaPipe WASM assets missing")
-                needed.extend(wasm_files)
-                if kind == "sign":
-                    needed += [assets / "hand_landmarker.task", assets / "pose_landmarker.task"]
-                verify_assets(root, [path, meta, meta.parent / "labels.json", *needed])
-                model = TemporalRecognizer(path, meta, c, kind, vocabulary)
-            model.warmup()
-            models[kind] = model
-            capabilities[kind] = {
-                "available": True,
-                "reason": "利用可能",
-                "vocabulary": (
-                    []
-                    if c["provider"] == "uni_sign_cli"
-                    else [x for x in vocabulary["items"] if base in x["modalities"]]
-                ),
-                "transport": (
-                    "video" if c["provider"] in {"auto_avsr_cli", "uni_sign_cli"} else "features"
-                ),
-                "language_note": getattr(model, "language_note", ""),
-            }
+            model, capabilities[kind] = load_model(root, kind, c, vocabulary)
+            if model is not None:
+                models[kind] = model
         except Exception as exc:
-            capabilities[kind]["reason"] = f"モデルを初期化できません ({type(exc).__name__})"
+            capabilities[kind] = unavailable(f"モデルを初期化できません ({type(exc).__name__})")
     outgoing.put({"capabilities": capabilities})
     while True:
         job = incoming.get()
         if job is None:
             break
+        if job["kind"].startswith("reload:"):
+            # Swap one retrained model in place; keep the old one if the new one does not load.
+            kind = job["kind"].removeprefix("reload:")
+            try:
+                model, capability = load_model(root, kind, config[kind], vocabulary)
+                if model is None:
+                    raise ValueError("model file missing")
+                old = models.get(kind)
+                models[kind] = model
+                if old is not None:
+                    old.close()
+                outgoing.put({"result": {"capability": capability}})
+            except Exception as exc:
+                print(failure_log(job["kind"], exc), file=sys.stderr, flush=True)
+                outgoing.put({"error": type(exc).__name__})
+            continue
         try:
             result = models[job["kind"]].recognize(job["segment"])
             outgoing.put({"result": result})
@@ -139,6 +164,12 @@ def process_main(root_string, config, incoming, outgoing):
             outgoing.put({"error": type(exc).__name__})
     for model in models.values():
         model.close()
+
+
+logger = logging.getLogger(__name__)
+# Queue name for model reloads, and how often to look for retrained models.
+RELOAD = "__models__"
+MODEL_CHECK_SECONDS = 30
 
 
 class InferenceBusy(Exception):
@@ -164,6 +195,40 @@ class InferenceService:
     async def start(self):
         await self.spawn()
         self.task = asyncio.create_task(self.consume())
+        self.watcher = asyncio.create_task(self.watch_models())
+
+    def model_stamp(self, kind):
+        """When the retrainable phrase model of an input last changed, or None."""
+        c = getattr(self.config, kind)
+        if not c.enabled or c.provider != "onnx_temporal_classifier":
+            return None
+        path = self.settings.path(c.metadata_path)
+        return path.stat().st_mtime_ns if path.is_file() else None
+
+    async def reload(self, kind):
+        """Load a retrained model of one input inside the worker without stopping the others."""
+        future = asyncio.get_running_loop().create_future()
+        self.pending[RELOAD] = self.pending.get(RELOAD, 0) + 1
+        self.queues.setdefault(RELOAD, deque()).append((f"reload:{kind}", {}, future, time.monotonic()))
+        self.wake.set()
+        result = await future
+        self.capabilities = {**self.capabilities, kind: result["capability"]}
+        return result["capability"]
+
+    async def watch_models(self, interval=MODEL_CHECK_SECONDS):
+        stamps = {k: self.model_stamp(k) for k in ("lipread", "sign")}
+        while not self.closed:
+            await asyncio.sleep(interval)
+            for kind, before in stamps.items():
+                stamp = self.model_stamp(kind)
+                if stamp is None or stamp == before:
+                    continue
+                stamps[kind] = stamp
+                try:
+                    capability = await self.reload(kind)
+                    logger.info("reloaded %s model %s", kind, capability.get("model_version"))
+                except Exception as exc:
+                    logger.warning("could not reload the %s model, keeping the previous one: %r", kind, exc)
 
     async def spawn(self):
         context = mp.get_context("spawn")
@@ -258,6 +323,8 @@ class InferenceService:
 
     async def close(self):
         self.closed = True
+        if getattr(self, "watcher", None):
+            self.watcher.cancel()
         if self.task:
             self.task.cancel()
             await asyncio.gather(self.task, return_exceptions=True)

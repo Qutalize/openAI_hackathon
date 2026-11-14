@@ -6,7 +6,32 @@ import { LanguageSelect, useI18n } from '../i18n';
 
 type Kind = 'lipread' | 'sign';
 type Phrase = { id: string; text: string };
-type Status = Record<Kind, { labels: Record<string, number>; subjects: number; vocabulary: Phrase[] }>;
+type ModelInfo = {
+  available: boolean;
+  model_version?: string;
+  method?: string;
+  macro_f1_known?: number;
+  unknown_false_accept_rate?: number;
+  people?: number;
+  recordings?: number;
+};
+type Run = {
+  at: string;
+  modality: Kind;
+  version?: string;
+  registered: boolean;
+  accepted: boolean;
+  people?: number;
+  recordings?: number;
+  macro_f1_known?: number;
+  unknown_false_accept_rate?: number;
+  failed: boolean;
+};
+type Status = Record<Kind, { labels: Record<string, number>; subjects: number; vocabulary: Phrase[] }> & {
+  models?: Record<Kind, ModelInfo>;
+  runs?: Run[];
+};
+const percent = (x?: number) => (x == null ? '—' : `${Math.round(x * 100)}%`);
 
 const DURATION = { lipread: 3200, sign: 4800 };
 const MAX_FRAMES = { lipread: 64, sign: 96 };
@@ -366,6 +391,45 @@ export default function TrainingPage() {
           <button type="button" className="secondary" disabled={running} onClick={() => void deleteMine()}>
             {confirmDelete ? t('もう一度押すと削除します') : t('この人物IDの収録を削除')}
           </button>
+        </section>
+      )}
+      {counts?.models && (
+        <section className="training-counts" aria-label={t('学習と配備')}>
+          <h2>{t('いま会話で使っているモデル')}</h2>
+          {counts.models[kind].available ? (
+            <p>
+              {counts.models[kind].model_version}・
+              {t('{people}人・{recordings}件で学習', {
+                people: counts.models[kind].people ?? '—',
+                recordings: counts.models[kind].recordings ?? '—',
+              })}
+              ・{t('正解率の目安（F1）')} {percent(counts.models[kind].macro_f1_known)}・{t('対象外の誤受理')}{' '}
+              {percent(counts.models[kind].unknown_false_accept_rate)}
+              {counts.models[kind].method === 'within-subject-holdout' && <>（{t('1人分のデータで評価')}）</>}
+            </p>
+          ) : (
+            <p>{t('まだありません。データが集まると自動で学習し、評価に合格したモデルを会話で使います。')}</p>
+          )}
+          {!!counts.runs?.filter((x) => x.modality === kind).length && (
+            <>
+              <h2>{t('最近の学習')}</h2>
+              <ul className="training-runs">
+                {counts.runs
+                  .filter((x) => x.modality === kind)
+                  .map((x) => (
+                    <li key={x.at + (x.version ?? '')}>
+                      <span>{new Date(x.at).toLocaleString()}</span>
+                      <span>
+                        {x.failed
+                          ? t('データ不足で学習せず')
+                          : `${t('{people}人・{recordings}件', { people: x.people ?? '—', recordings: x.recordings ?? '—' })} F1 ${percent(x.macro_f1_known)}`}
+                      </span>
+                      <b>{x.registered ? t('配備') : x.failed ? '—' : t('不合格')}</b>
+                    </li>
+                  ))}
+              </ul>
+            </>
+          )}
         </section>
       )}
       <a href="/">{t('会話の入室画面へ')}</a>

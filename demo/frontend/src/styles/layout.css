@@ -285,6 +285,9 @@
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 6px 16px;
 }
+.training-runs {
+  grid-template-columns: 1fr !important;
+}
 .training-counts li {
   display: flex;
   justify-content: space-between;

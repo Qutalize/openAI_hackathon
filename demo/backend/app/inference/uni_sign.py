@@ -13,10 +13,7 @@ from app.inference.resident import ResidentProcess
 
 
 class UniSignRecognizer(Recognizer):
-    language_note = (
-        "ASL（米国手話）の動画を英語字幕へ変換する検証版です。"
-        "日本手話には対応していません。"
-    )
+    language_note = "ASL（米国手話）の動画を英語字幕へ変換する検証版です。日本手話には対応していません。"
 
     def __init__(self, root: Path, config):
         self.root = root
@@ -31,9 +28,7 @@ class UniSignRecognizer(Recognizer):
         self.model_version = config.get("model_version") or "uni-sign-how2sign"
         # Optional resident process that keeps the model loaded between requests.
         script = self.runner.parent / "serve_online.py"
-        self.server = (
-            ResidentProcess([str(self.python), "-B", str(script)]) if script.is_file() else None
-        )
+        self.server = ResidentProcess([str(self.python), "-B", str(script)]) if script.is_file() else None
 
     def _resolve(self, value: str) -> Path:
         path = Path(value)

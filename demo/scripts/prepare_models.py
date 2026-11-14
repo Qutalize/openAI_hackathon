@@ -43,9 +43,7 @@ def record(manifest, path, source, revision, license_name):
 def download(url, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(path.suffix + ".partial")
-    request = urllib.request.Request(
-        url, headers={"User-Agent": "kotoba-link-model-preparation/0.1"}
-    )
+    request = urllib.request.Request(url, headers={"User-Agent": "kotoba-link-model-preparation/0.1"})
     with (
         urllib.request.urlopen(request, timeout=120) as response,
         temp.open("wb") as target,
@@ -55,9 +53,7 @@ def download(url, path):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="モデルを取得・登録しSHA-256 manifestを作成"
-    )
+    parser = argparse.ArgumentParser(description="モデルを取得・登録しSHA-256 manifestを作成")
     parser.add_argument("--speech", action="store_true")
     parser.add_argument(
         "--speech-model",
@@ -100,11 +96,7 @@ def main():
             path = ROOT / "models/speech/whisper-small" / filename
             print(f"Downloading speech/{filename}", flush=True)
             existing = next(
-                (
-                    x
-                    for x in manifest["assets"]
-                    if x["path"] == path.relative_to(ROOT).as_posix()
-                ),
+                (x for x in manifest["assets"] if x["path"] == path.relative_to(ROOT).as_posix()),
                 None,
             )
             if not path.exists() or not existing:
@@ -137,22 +129,27 @@ def main():
         metadata = json.loads((directory / "metadata.json").read_text(encoding="utf-8"))
         if not metadata.get("evaluation_summary", {}).get("accepted"):
             parser.error("テストデータでの受入評価に合格したモデルのみ登録できます")
+        # Locally trained models go to a manifest outside Git, so pulling updates never conflicts.
+        local_path = ROOT / "models/manifest.local.json"
+        local = json.loads(local_path.read_text(encoding="utf-8")) if local_path.is_file() else {"assets": []}
         for filename in ("model.onnx", "metadata.json", "labels.json"):
             record(
-                manifest,
+                local,
                 directory / filename,
                 "local-training",
                 metadata["model_version"],
                 metadata["license"],
             )
-    manifest_path.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
+        local_path.write_text(json.dumps(local, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if args.verify or args.verify_speech:
         sys.path.insert(0, str(ROOT / "backend"))
         from app.inference.worker import verify_assets
 
         assets = manifest["assets"]
+        local_path = ROOT / "models/manifest.local.json"
+        if args.verify and local_path.is_file():
+            assets = assets + json.loads(local_path.read_text(encoding="utf-8"))["assets"]
         if args.verify_speech and not args.verify:
             assets = [a for a in assets if a["path"].startswith("models/speech/")]
             if not assets:

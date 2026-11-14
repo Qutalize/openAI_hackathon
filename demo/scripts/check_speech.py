@@ -35,9 +35,7 @@ async def main():
             completed, _, _ = segmenter.feed(pcm[offset : offset + 6400])
             for data in completed:
                 started = time.monotonic()
-                result = await worker.recognize(
-                    "local-smoke-test", "speech", {"pcm": data}
-                )
+                result = await worker.recognize("local-smoke-test", "speech", {"pcm": data})
                 print(f"{time.monotonic() - started:.2f}s: {result['text']}")
                 count += bool(result["text"])
         return 0 if count else 1

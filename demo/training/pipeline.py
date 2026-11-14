@@ -186,6 +186,7 @@ def main():
     p.add_argument(
         "--register", action="store_true", help="copy an accepted model to models/ and record hashes"
     )
+    p.add_argument("--summary", help="write the outcome of this run as JSON to this file")
     args = p.parse_args()
     kind, device = args.modality, pick_device(args.device)
     x, m, y, subjects, labels, vocabulary_version = load(args.data, kind)
@@ -224,18 +225,39 @@ def main():
     torch.save(c, run / "checkpoint.pt")
     export(c, run, version, args.license, evaluation)
     print(f"model: {run} (threshold {threshold}, accepted={evaluation['accepted']})")
-    if not args.register:
-        return 0 if evaluation["accepted"] else 1
-    if not evaluation["accepted"]:
+    registered = False
+    if args.register and evaluation["accepted"]:
+        target = ROOT / "models" / kind
+        target.mkdir(parents=True, exist_ok=True)
+        # metadata.json goes last: the server reloads when it changes.
+        for name in ("model.onnx", "labels.json", "metadata.json"):
+            shutil.copy2(run / name, target / name)
+        subprocess.run(
+            [sys.executable, str(ROOT / "scripts/prepare_models.py"), "--register", kind], check=True
+        )
+        registered = True
+        print(f"registered {version} in {target}; the server picks it up within a minute")
+    elif args.register:
         print("Not registered: the model did not meet the acceptance criteria.")
-        return 1
-    target = ROOT / "models" / kind
-    target.mkdir(parents=True, exist_ok=True)
-    for name in ("model.onnx", "metadata.json", "labels.json"):
-        shutil.copy2(run / name, target / name)
-    subprocess.run([sys.executable, str(ROOT / "scripts/prepare_models.py"), "--register", kind], check=True)
-    print(f"registered {version} in {target}; restart the server to load it")
-    return 0
+    if args.summary:
+        Path(args.summary).write_text(
+            json.dumps(
+                {
+                    "modality": kind,
+                    "version": version,
+                    "run": str(run),
+                    "accepted": evaluation["accepted"],
+                    "registered": registered,
+                    "threshold": threshold,
+                    "recordings": int(len(y)),
+                    "people": len(set(subjects.tolist())),
+                    "evaluation": {k: v for k, v in evaluation.items() if k != "folds"},
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+    return 0 if evaluation["accepted"] else 1
 
 
 if __name__ == "__main__":

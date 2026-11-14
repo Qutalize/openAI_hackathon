@@ -16,6 +16,9 @@ models/**/*.bin
 models/**/*.onnx
 models/**/*.pt
 models/speech/
+models/lipread/
+models/sign/
+models/manifest.local.json
 frontend/public/models/mediapipe/
 !frontend/public/models/mediapipe/.gitkeep
 *.tsbuildinfo
