@@ -37,18 +37,26 @@ def failure_log(kind: str, exc: Exception) -> str:
     return f"recognition failed ({kind}): {exc!r}{tail}"
 
 
+MODEL_KINDS = ("speech", "lipread", "sign", "lipread_open", "sign_open")
+
+
 def process_main(root_string, config, incoming, outgoing):
     root = Path(root_string)
     models, capabilities = {}, {}
     vocabulary = json.loads((root / "config/vocabulary.ja.json").read_text(encoding="utf-8"))
-    for kind in ("speech", "lipread", "sign"):
-        c = config[kind]
+    for kind in MODEL_KINDS:
+        c = config.get(kind)
+        # lipread_open / sign_open serve the same input as lipread / sign.
+        base = kind.removesuffix("_open")
         capabilities[kind] = {
             "available": False,
             "reason": "モデル未導入",
             "vocabulary": [],
             "transport": "features",
         }
+        if c is None:
+            capabilities[kind]["reason"] = "設定されていません"
+            continue
         if not c["enabled"]:
             capabilities[kind]["reason"] = "設定で無効になっています"
             continue
@@ -70,19 +78,21 @@ def process_main(root_string, config, incoming, outgoing):
                 model = SpeechRecognizer(path, c)
             elif c["provider"] in {"auto_avsr_cli", "uni_sign_cli"}:
                 if c["provider"] == "auto_avsr_cli":
-                    if kind != "lipread":
+                    if base != "lipread":
                         raise ValueError("Auto-AVSR is only available for lipread input")
                     from app.inference.auto_avsr import AutoAvsrRecognizer
 
                     model = AutoAvsrRecognizer(root, c)
                 else:
-                    if kind != "sign":
+                    if base != "sign":
                         raise ValueError("Uni-Sign is only available for sign input")
                     from app.inference.uni_sign import UniSignRecognizer
 
                     model = UniSignRecognizer(root, c)
                 capabilities[kind]["transport"] = "video"
             else:
+                if kind != base:
+                    raise ValueError("Open-vocabulary slots take video models only")
                 path = root / c["model_path"]
                 if not path.exists():
                     continue
@@ -107,7 +117,7 @@ def process_main(root_string, config, incoming, outgoing):
                 "vocabulary": (
                     []
                     if c["provider"] == "uni_sign_cli"
-                    else [x for x in vocabulary["items"] if kind in x["modalities"]]
+                    else [x for x in vocabulary["items"] if base in x["modalities"]]
                 ),
                 "transport": (
                     "video" if c["provider"] in {"auto_avsr_cli", "uni_sign_cli"} else "features"
@@ -141,7 +151,7 @@ class InferenceService:
         self.config = settings.recognition
         self.capabilities = {
             k: {"available": False, "reason": "モデル準備中", "vocabulary": [], "transport": "features"}
-            for k in ("speech", "lipread", "sign")
+            for k in MODEL_KINDS
         }
         self.queues = OrderedDict()
         self.pending = {}

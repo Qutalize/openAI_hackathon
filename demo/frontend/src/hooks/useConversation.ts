@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
+  VisionLanguage,
   Candidate,
   InputKind,
   PlaybackMode,
@@ -13,6 +14,7 @@ import type {
   VideoStatus,
 } from '../types/protocol';
 import { api, uploadRecognitionVideo } from '../services/api';
+import { capability, capabilityKey } from '../services/capabilities';
 import { ControlSocket } from '../services/controlSocket';
 import { MediaSocket } from '../services/mediaSocket';
 import { Peers } from '../services/peers';
@@ -43,6 +45,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     [peerStates, setPeerStates] = useState<Record<string, RTCPeerConnectionState>>({}),
     [speaker, setSpeaker] = useState<string | null>(null);
   const [input, setInput] = useState<InputKind>(session.input);
+  const [language, setLanguage] = useState<VisionLanguage>(session.language ?? 'ja');
   const [playback, setPlayback] = useState<PlaybackMode>(() => initialPlayback(session.mode));
   const [readingId, setReadingId] = useState<string | null>(null);
   const [recognition, setRecognition] = useState('待機中');
@@ -67,6 +70,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     tts: null as SpeechOutput | null,
     participants: [] as Participant[],
     input: session.input,
+    language: (session.language ?? 'ja') as VisionLanguage,
     playback,
     segment: null as string | null,
     captureGeneration: 0,
@@ -104,6 +108,8 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       r.media?.reset(info);
       r.input = info.input;
       setInput(info.input);
+      r.language = info.language ?? 'ja';
+      setLanguage(r.language);
     },
     [r],
   );
@@ -334,7 +340,9 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
             }
           }));
           await media.connect();
-          setStream(await control.request<StreamInfo>('input.update', { input: r.input }));
+          setStream(
+            await control.request<StreamInfo>('input.update', { input: r.input, language: r.language }),
+          );
           const ice = await refreshIce();
           r.peers = new Peers(
             session.participant_id,
@@ -415,6 +423,26 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       setOperating(false);
     }
   }
+  async function changeLanguage(next: VisionLanguage) {
+    if (next === r.language) return;
+    setOperating(true);
+    setError('');
+    stopCapture();
+    setCandidate(null);
+    setProcessing(false);
+    try {
+      if (started) {
+        setStream(await r.control!.request('input.update', { input: r.input, language: next }));
+      } else {
+        r.language = next;
+        setLanguage(next);
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setOperating(false);
+    }
+  }
   async function changeOutput(next: PlaybackMode) {
     r.playback = next;
     setPlayback(next);
@@ -440,7 +468,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     const id = r.segment;
     if (!id) return;
     const kind = r.input === 'lipread' ? 'lipread' : 'sign';
-    const videoTransport = config.capabilities[kind].transport === 'video';
+    const videoTransport = capability(config, kind, r.language).transport === 'video';
     const lastMediaSeq = r.media!.seq;
     r.captureGeneration++;
     clearTimeout(r.captureTimer);
@@ -473,8 +501,9 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       if (!devices.streamRef.current.getVideoTracks().length) throw new Error('カメラをONにしてください');
       if (r.input !== 'lipread' && r.input !== 'sign') return;
       const kind = r.input,
-        max = config.recognition[kind].max_frames,
-        videoTransport = config.capabilities[kind].transport === 'video';
+        key = capabilityKey(kind, r.language) as 'lipread' | 'sign',
+        max = (config.recognition[key] ?? config.recognition[kind]).max_frames,
+        videoTransport = capability(config, kind, r.language).transport === 'video';
       if (videoTransport) {
         await r.videoClip.start(devices.streamRef.current);
       } else {
@@ -631,6 +660,8 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     startConversation,
     toggleDevice,
     changeInput,
+    language,
+    changeLanguage,
     changeOutput,
     beginCapture,
     endCapture,

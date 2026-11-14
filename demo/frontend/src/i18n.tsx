@@ -252,6 +252,12 @@ const english: Record<string, string> = {
     'Perform each phrase shown on screen once, on the cue. Video is never sent. Only face, hand and pose landmarks are saved to the server, with the participant’s consent.',
   '読唇（声を出さずに口を動かす）': 'Lip reading (mouth the words silently)',
   収集コード: 'Collection code',
+  認識の言語: 'Recognition language',
+  '日本語（定型句）': 'Japanese (phrases)',
+  '英語（自由文）': 'English (free text)',
+  '登録表現の中から候補を探しています。': 'Matching the supported phrases.',
+  '会話中に英語の自由文モデルにも切り替えられます。':
+    'You can switch to the English free-text model during the conversation.',
   '1表現あたりの回数': 'Takes per phrase',
   連続撮影を開始: 'Start guided capture',
   中断: 'Stop',

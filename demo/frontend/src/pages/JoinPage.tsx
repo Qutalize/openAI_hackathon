@@ -1,3 +1,10 @@
+import {
+  capability,
+  defaultLanguage,
+  inputAvailable,
+  languages,
+  unavailableReason,
+} from '../services/capabilities';
 import { useState } from 'react';
 import type { InputKind, Mode, PublicConfig, Session } from '../types/protocol';
 import { inputNames } from '../types/protocol';
@@ -55,7 +62,7 @@ export default function JoinPage({
   function chooseMode(m: Mode) {
     setMode(m);
     const preferred = config.modes[m].input;
-    setInput(preferred === 'text' || config.capabilities[preferred].available ? preferred : 'text');
+    setInput(inputAvailable(config, preferred) ? preferred : 'text');
   }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +83,14 @@ export default function JoinPage({
       }
       const result = await api<Session>(`/api/rooms/${encodeURIComponent(id)}/join`, {
         method: 'POST',
-        body: JSON.stringify({ password, mode, input, display_name: displayName.trim(), avatar }),
+        body: JSON.stringify({
+          password,
+          mode,
+          input,
+          language: defaultLanguage(config, input),
+          display_name: displayName.trim(),
+          avatar,
+        }),
       });
       sessionStorage.setItem('last-room', id);
       setPassword('');
@@ -159,9 +173,9 @@ export default function JoinPage({
               onChange={(e) => setInput(e.target.value as InputKind)}
             >
               {config.modes[mode].allowed_inputs.map((k) => (
-                <option key={k} value={k} disabled={k !== 'text' && !config.capabilities[k].available}>
+                <option key={k} value={k} disabled={!inputAvailable(config, k)}>
                   {t(inputNames[k])}
-                  {k !== 'text' && !config.capabilities[k].available ? t('（モデル未導入）') : ''}
+                  {!inputAvailable(config, k) ? t('（モデル未導入）') : ''}
                 </option>
               ))}
             </select>
@@ -175,25 +189,30 @@ export default function JoinPage({
           <p className="availability">
             {t('文字入力で参加できます。')}
             {config.modes[mode].allowed_inputs
-              .filter((k) => k !== 'text' && !config.capabilities[k].available)
+              .filter((k) => !inputAvailable(config, k))
               .map((k) => (
                 <span key={k}>
                   {' '}
-                  {t(inputNames[k])}: {t(config.capabilities[k as 'speech'].reason)}。
+                  {t(inputNames[k])}: {t(unavailableReason(config, k))}。
                 </span>
               ))}
           </p>
         )}
         {(input === 'lipread' || input === 'sign') && (
           <p className="availability">
-            {config.capabilities[input].language_note ? (
-              <>{t(config.capabilities[input].language_note)}</>
+            {capability(config, input, defaultLanguage(config, input)).language_note ? (
+              <>{t(capability(config, input, defaultLanguage(config, input)).language_note!)}</>
             ) : (
               <>
                 {t('登録表現のみ対応：')}
-                {config.capabilities[input].vocabulary.map((x) => x.text).join('、')}
+                {capability(config, input, 'ja')
+                  .vocabulary.map((x) => x.text)
+                  .join('、')}
                 {t('。認識候補を確認して送信します。')}
               </>
+            )}
+            {languages(config, input).length > 1 && (
+              <> {t('会話中に英語の自由文モデルにも切り替えられます。')}</>
             )}
           </p>
         )}

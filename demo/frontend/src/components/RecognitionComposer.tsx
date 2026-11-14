@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import type { Candidate, InputKind, PublicConfig } from '../types/protocol';
+import type { Candidate, InputKind, PublicConfig, VisionLanguage } from '../types/protocol';
+import { capability, languages } from '../services/capabilities';
 import { useI18n } from '../i18n';
 
 export default function RecognitionComposer({
   input,
+  language,
+  onLanguage,
   candidate,
   capturing,
   processing,
@@ -15,6 +18,8 @@ export default function RecognitionComposer({
   onCancel,
 }: {
   input: InputKind;
+  language: VisionLanguage;
+  onLanguage: (language: VisionLanguage) => Promise<void>;
   candidate: Candidate | null;
   capturing: boolean;
   processing: boolean;
@@ -40,6 +45,9 @@ export default function RecognitionComposer({
     }
   }, [candidate]);
   const vision = input === 'lipread' || input === 'sign';
+  const cap = capability(config, input, language);
+  const choices = languages(config, input);
+  const instant = cap.transport === 'features';
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     if (!processing) return;
@@ -65,6 +73,22 @@ export default function RecognitionComposer({
     <section className="composer" aria-label={t('発言入力')}>
       {vision && (
         <div className="capture-controls">
+          {choices.length > 1 && (
+            <div className="language-switch" role="group" aria-label={t('認識の言語')}>
+              {choices.map((x) => (
+                <button
+                  key={x}
+                  type="button"
+                  className={x === language ? 'primary' : 'secondary'}
+                  aria-pressed={x === language}
+                  disabled={capturing || processing}
+                  onClick={() => void onLanguage(x)}
+                >
+                  {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
+                </button>
+              ))}
+            </div>
+          )}
           <p>
             {input === 'lipread'
               ? t('口元を明るく、正面から映してください。')
@@ -92,22 +116,22 @@ export default function RecognitionComposer({
             <p className="capture-wait">
               <span role="status">
                 {t(
-                  input === 'lipread'
-                    ? '読唇の認識は数秒かかります。'
-                    : '手話の認識は数秒から十数秒かかります。',
+                  instant
+                    ? '登録表現の中から候補を探しています。'
+                    : input === 'lipread'
+                      ? '読唇の認識は数秒かかります。'
+                      : '手話の認識は数秒から十数秒かかります。',
                 )}
               </span>
               <span aria-hidden="true">{t('{seconds}秒経過', { seconds: elapsed })}</span>
             </p>
           )}
           <details>
-            <summary>
-              {t(config.capabilities[input].language_note ? '対象言語と制約' : '対応する登録表現')}
-            </summary>
+            <summary>{t(cap.language_note ? '対象言語と制約' : '対応する登録表現')}</summary>
             <p>
-              {config.capabilities[input].language_note
-                ? t(config.capabilities[input].language_note)
-                : config.capabilities[input].vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}
+              {cap.language_note
+                ? t(cap.language_note)
+                : cap.vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}
             </p>
           </details>
         </div>

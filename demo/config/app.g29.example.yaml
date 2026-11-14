@@ -16,15 +16,20 @@ recognition:
     partial_interval_ms: 700
     min_segment_ms: 300
     max_segment_ms: 10000
-  lipread:
+  # Japanese phrase models trained with training/pipeline.py (models/lipread, models/sign) use the
+  # defaults in app.yaml. Until one is registered, lip reading and signing fall back to English.
+  lipread_open:
     provider: auto_avsr_cli
     runner_path: ../research/vsr/auto_avsr/scripts/run_vsr.sh
     model_version: auto-avsr-182b628
     max_upload_bytes: 8388608
-  sign:
+  sign_open:
     provider: uni_sign_cli
     runner_path: ../research/sign/uni-sign/scripts/run_online.py
     python_path: ../research/sign/uni-sign/.venv/bin/python
     model_version: uni-sign-how2sign-pose-only
     max_upload_bytes: 8388608
     max_frames: 200
+
+training:
+  upload_enabled: true

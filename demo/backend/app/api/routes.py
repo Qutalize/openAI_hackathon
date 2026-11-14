@@ -48,7 +48,9 @@ async def public_config(request: Request):
         "heartbeat_seconds": cfg.server.heartbeat_seconds,
         "reconnect_grace_seconds": cfg.room.reconnect_grace_seconds,
         "recognition": {
-            k: {"max_frames": getattr(cfg.recognition, k).max_frames} for k in ("lipread", "sign")
+            k: {"max_frames": getattr(cfg.recognition, k).max_frames}
+            for k in ("lipread", "sign", "lipread_open", "sign_open")
+            if getattr(cfg.recognition, k) is not None
         },
     }
 
@@ -97,7 +99,7 @@ async def join(room_id: str, body: JoinRequest, request: Request, response: Resp
         if old:
             raise HTTPException(409, "このブラウザは既に参加しています。会話へ戻るか退出してください")
     await service.cleanup()
-    s, token, csrf = service.join(room, body.mode, body.input, body.display_name, body.avatar)
+    s, token, csrf = service.join(room, body.mode, body.input, body.display_name, body.avatar, body.language)
     response.set_cookie(
         cfg.security.cookie_name,
         token,
@@ -179,9 +181,9 @@ async def upload_recognition_video(room_id: str, kind: str, segment_id: str, req
     check_csrf(request, s)
     if s.room_id != room_id or kind not in {"lipread", "sign"} or s.input != kind:
         raise HTTPException(403, "この認識入力は利用できません")
-    recognition = getattr(cfg.recognition, kind)
+    recognition = getattr(cfg.recognition, request.app.state.rooms.model_kind(kind, s.language))
     expected_provider = "auto_avsr_cli" if kind == "lipread" else "uni_sign_cli"
-    if recognition.provider != expected_provider:
+    if recognition is None or recognition.provider != expected_provider:
         raise HTTPException(409, "このモデルは動画アップロード方式ではありません")
     if not s.devices["camera"] or not s.segment or s.segment["id"] != segment_id:
         raise HTTPException(409, "撮影区間が見つかりません")

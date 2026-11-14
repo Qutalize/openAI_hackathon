@@ -209,6 +209,8 @@ export default function TalkPage({
         >
           <RecognitionComposer
             input={c.input}
+            language={c.language}
+            onLanguage={c.changeLanguage}
             candidate={c.candidate}
             capturing={c.capturing}
             processing={c.processing}

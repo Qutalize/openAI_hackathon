@@ -259,6 +259,17 @@
 .training-phase.recording {
   color: #ff6b6b;
 }
+.language-switch {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.language-switch button {
+  min-height: 36px;
+  padding: 4px 14px;
+}
 .training-counts {
   max-width: 650px;
   margin: 16px auto;

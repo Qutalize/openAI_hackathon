@@ -18,8 +18,17 @@ export const modeNames: Record<Mode, string> = {
   vision_support: '視覚サポート',
   hearing_support: '聴覚サポート',
 };
+export type VisionLanguage = 'ja' | 'en';
+export interface Capability {
+  available: boolean;
+  reason: string;
+  vocabulary: { id: string; text: string }[];
+  transport?: 'features' | 'video';
+  language_note?: string;
+}
 export interface StreamInfo {
   input: InputKind;
+  language?: VisionLanguage;
   input_epoch: number;
   stream_id: string;
 }
@@ -78,16 +87,8 @@ export interface PublicConfig {
       layout: string;
     }
   >;
-  capabilities: Record<
-    'speech' | 'lipread' | 'sign',
-    {
-      available: boolean;
-      reason: string;
-      vocabulary: { id: string; text: string }[];
-      transport?: 'features' | 'video';
-      language_note?: string;
-    }
-  >;
+  capabilities: Record<'speech' | 'lipread' | 'sign', Capability> &
+    Partial<Record<'lipread_open' | 'sign_open', Capability>>;
   media: {
     video_width: number;
     video_height: number;
@@ -100,7 +101,8 @@ export interface PublicConfig {
   max_text_chars: number;
   heartbeat_seconds: number;
   reconnect_grace_seconds: number;
-  recognition: { lipread: { max_frames: number }; sign: { max_frames: number } };
+  recognition: Record<'lipread' | 'sign', { max_frames: number }> &
+    Partial<Record<'lipread_open' | 'sign_open', { max_frames: number }>>;
 }
 export interface ServerEvent {
   version: number;
