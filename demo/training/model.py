@@ -9,7 +9,25 @@ import math
 import torch
 from torch import nn
 
-MODEL_ARCHITECTURE = "temporal-conv-v2"
+MODEL_ARCHITECTURE = "temporal-conv-v3"
+# lip40_v1 has 40 lip points; 0 and 10 are the mouth corners (face mesh 61 and 291).
+LIP_POINTS, LIP_CORNERS = 40, (0, 10)
+
+
+def mouth_frame(features, frame_mask):
+    """Lip points relative to the mouth centre of each frame, in units of the take's mouth width.
+
+    The browser scales by face width, so silent mouthing moves the points by only a few hundredths;
+    this makes the mouth shape itself the input and removes head motion and distance to the camera.
+    """
+    valid = features[..., 3:4] * frame_mask[:, :, None, None]
+    xyz = features[..., :3]
+    centre = (xyz * valid).sum(2, keepdim=True) / valid.sum(2, keepdim=True).clamp(min=1)
+    a, b = LIP_CORNERS
+    width = (xyz[:, :, a, :2] - xyz[:, :, b, :2]).norm(dim=-1)
+    present = valid[:, :, a, 0] * valid[:, :, b, 0]
+    take_width = ((width * present).sum(1) / present.sum(1).clamp(min=1)).clamp(min=1e-3)
+    return torch.cat([(xyz - centre) / take_width[:, None, None, None], features[..., 3:4]], -1)
 
 
 class Block(nn.Module):
@@ -35,6 +53,8 @@ class TemporalClassifier(nn.Module):
         self.head = nn.Sequential(nn.LayerNorm(width * 2), nn.Dropout(0.2), nn.Linear(width * 2, classes))
 
     def forward(self, features, frame_mask):
+        if features.shape[2] == LIP_POINTS:
+            features = mouth_frame(features, frame_mask)
         valid = features[..., 3:4] * frame_mask[:, :, None, None]
         xyz = features[..., :3] * valid
         # Velocity only where both this and the previous frame have the point.
