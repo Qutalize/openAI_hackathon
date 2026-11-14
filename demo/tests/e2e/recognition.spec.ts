@@ -57,3 +57,22 @@ test('speech output skips replays and replaces an unread correction', async ({ p
   });
   expect(result).toEqual(['ユーザーB。最初', 'ユーザーB。修正後']);
 });
+
+test('sign features keep hand and face landmarks that report no visibility', async ({ page }) => {
+  await page.goto('/');
+  const valid = await page.evaluate(async () => {
+    const modulePath = '/src/workers/features.ts';
+    const { signFeatures } = await import(modulePath);
+    const point = (x: number, y: number, visibility?: number) => ({ x, y, z: 0, visibility });
+    const pose = Array.from({ length: 33 }, (_, i) => point(0.5, 0.5 + i / 100, i > 24 ? 0.1 : 0.9));
+    pose[11] = point(0.6, 0.6, 0.99);
+    pose[12] = point(0.4, 0.6, 0.99);
+    // MediaPipe Tasks reports visibility 0 for hand and face landmarks.
+    const hand = Array.from({ length: 21 }, (_, i) => point(0.3 + i / 100, 0.5, 0));
+    const face = Array.from({ length: 478 }, (_, i) => point(0.5, 0.3 + i / 10000, 0));
+    const f = signFeatures(face, pose, [hand], ['Right']);
+    const ok = (a: number, b: number) => f.slice(a, b).filter((p: number[]) => p[3] === 1).length;
+    return { left: ok(0, 21), right: ok(21, 42), shoulders: f[53][3] + f[54][3], hidden: f[42 + 30][3], face: ok(75, 100) };
+  });
+  expect(valid).toEqual({ left: 0, right: 21, shoulders: 2, hidden: 0, face: 25 });
+});
