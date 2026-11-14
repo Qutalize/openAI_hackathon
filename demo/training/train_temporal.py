@@ -10,6 +10,7 @@ from torch import nn
 
 # Unknown-movement false accepts allowed when choosing the candidate threshold.
 TARGET_FALSE_ACCEPT = 0.05
+MIN_STEPS = 600
 
 
 def pick_device(name="auto"):
@@ -31,6 +32,8 @@ def fit(train, validation, classes, epochs=150, seed=42, device="cpu", batch_siz
     loss_fn = nn.CrossEntropyLoss(weight=(counts.sum() / counts / classes), label_smoothing=0.1)
     plain_loss = nn.CrossEntropyLoss()
     steps = max(1, int(np.ceil(len(y) / batch_size)))
+    # A few dozen recordings per phrase is only a handful of batches, so train for a minimum number of steps.
+    epochs = max(epochs, int(np.ceil(MIN_STEPS / steps)))
     optimizer = torch.optim.AdamW(model.parameters(), lr=2e-3, weight_decay=0.05)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, 2e-3, total_steps=epochs * steps)
     best, best_state, best_epoch = float("inf"), copy.deepcopy(model.state_dict()), 0

@@ -15,20 +15,22 @@ sys.path.insert(0, str(ROOT / "training"))
 import pipeline  # noqa: E402
 import synthetic  # noqa: E402
 from export_onnx import export  # noqa: E402
-from train_temporal import checkpoint  # noqa: E402
+from train_temporal import checkpoint, pick_device  # noqa: E402
 
 from app.inference.lipread import TemporalRecognizer  # noqa: E402
+
+DEVICE = pick_device()
 
 
 @pytest.mark.parametrize("kind", ["lipread", "sign"])
 def test_pipeline_generalises_to_an_unseen_person_and_exports(tmp_path, kind):
     synthetic.write(tmp_path / "data", kind, people=3, repetitions=4)
     x, m, y, subjects, labels, version = pipeline.load(tmp_path / "data", kind, log=None)
-    evaluation = pipeline.evaluate(x, m, y, subjects, labels, epochs=40, seed=0, device="cpu", log=None)
+    evaluation = pipeline.evaluate(x, m, y, subjects, labels, epochs=40, seed=0, device=DEVICE, log=None)
     assert evaluation["method"] == "leave-one-subject-out"
     assert evaluation["accepted"], evaluation
     unknown = labels.index("unknown")
-    model, threshold, info = pipeline.train_and_calibrate(x, m, y, len(labels), unknown, 40, 0, "cpu")
+    model, threshold, info = pipeline.train_and_calibrate(x, m, y, len(labels), unknown, 40, 0, DEVICE)
     c = checkpoint(
         model,
         labels,
@@ -57,6 +59,6 @@ def test_pipeline_generalises_to_an_unseen_person_and_exports(tmp_path, kind):
 def test_single_person_is_flagged_as_within_subject(tmp_path):
     synthetic.write(tmp_path / "data", "lipread", people=1, repetitions=4)
     x, m, y, subjects, labels, _ = pipeline.load(tmp_path / "data", "lipread", log=None)
-    evaluation = pipeline.evaluate(x, m, y, subjects, labels, epochs=5, seed=0, device="cpu", log=None)
+    evaluation = pipeline.evaluate(x, m, y, subjects, labels, epochs=5, seed=0, device=DEVICE, log=None)
     assert evaluation["method"] == "within-subject-holdout"
     assert evaluation["note"]
