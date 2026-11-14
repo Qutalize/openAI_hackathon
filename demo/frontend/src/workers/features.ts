@@ -40,15 +40,18 @@ export function signFeatures(face: Landmark[], pose: Landmark[], hands: Landmark
     cy = (l.y + r.y) / 2,
     scale = Math.hypot(l.x - r.x, l.y - r.y);
   if (scale < 0.001) return Array.from({ length: 100 }, zero);
-  const normalize = (p: Landmark, z0: number) =>
-    (p.visibility ?? 1) < 0.5 ? zero() : [(p.x - cx) / scale, (p.y - cy) / scale, (p.z - z0) / scale, 1];
+  // Only pose landmarks carry a meaningful visibility; hand and face landmarks report 0.
+  const normalize = (p: Landmark, z0: number, checkVisibility = false) =>
+    checkVisibility && (p.visibility ?? 1) < 0.5
+      ? zero()
+      : [(p.x - cx) / scale, (p.y - cy) / scale, (p.z - z0) / scale, 1];
   const results: number[][] = [];
   for (const side of ['Left', 'Right']) {
     const matches = handedness.map((s, i) => (s === side ? i : -1)).filter((i) => i >= 0);
     const hand = matches.length === 1 ? hands[matches[0]] : undefined;
     results.push(...(hand ? hand.map((p) => normalize(p, hand[0].z)) : Array.from({ length: 21 }, zero)));
   }
-  results.push(...pose.map((p) => normalize(p, (pose[23].z + pose[24].z) / 2)));
+  results.push(...pose.map((p) => normalize(p, (pose[23].z + pose[24].z) / 2, true)));
   results.push(
     ...(face.length
       ? FACE_INDICES.map((i) => normalize(face[i], face[1].z))
