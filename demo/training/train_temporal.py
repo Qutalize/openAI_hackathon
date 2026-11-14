@@ -84,7 +84,7 @@ def checkpoint(model, labels, modality, vocabulary_version, max_frames, extra):
     return {
         "state_dict": model.state_dict(),
         "architecture": MODEL_ARCHITECTURE,
-        "points": model.embed[0].in_features // 7,
+        "points": model.embed[0].in_features // 10,
         "max_frames": max_frames,
         "labels": list(labels),
         "modality": modality,

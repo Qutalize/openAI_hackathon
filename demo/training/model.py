@@ -28,7 +28,7 @@ class TemporalClassifier(nn.Module):
     def __init__(self, points, classes, width=128, dropout=0.15):
         super().__init__()
         self.embed = nn.Sequential(
-            nn.Linear(points * 7, width), nn.LayerNorm(width), nn.GELU(), nn.Dropout(dropout)
+            nn.Linear(points * 10, width), nn.LayerNorm(width), nn.GELU(), nn.Dropout(dropout)
         )
         self.blocks = nn.ModuleList(Block(width, d, dropout) for d in (1, 2, 4, 1))
         self.attention = nn.Linear(width, 1)
@@ -41,8 +41,11 @@ class TemporalClassifier(nn.Module):
         prev_xyz = torch.cat([xyz[:, :1], xyz[:, :-1]], 1)
         prev_valid = torch.cat([valid[:, :1], valid[:, :-1]], 1)
         velocity = (xyz - prev_xyz) * valid * prev_valid
+        # Position relative to each point's mean over the take: motion, not face or body shape.
+        count = valid.sum(1, keepdim=True).clamp(min=1)
+        centered = (xyz - xyz.sum(1, keepdim=True) / count) * valid
         mask = frame_mask[:, :, None]
-        h = torch.cat([xyz, valid, velocity], -1).flatten(2)
+        h = torch.cat([xyz, valid, velocity, centered], -1).flatten(2)
         h = self.embed(h) * mask
         h = h.transpose(1, 2)
         m = frame_mask[:, None, :]
