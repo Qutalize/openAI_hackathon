@@ -19,7 +19,9 @@ def write(directory, kind, people=3, repetitions=6, seed=0):
     points, frames = (40, 56) if kind == "lipread" else (100, 80)
     rng = np.random.default_rng(seed)
     base = rng.normal(0, 0.3, (points, 3))
-    groups = np.array_split(rng.permutation(points if kind == "lipread" else 42), len(labels) - 1)
+    # Sign takes show only the left hand, so move left-hand and pose points.
+    movable = np.arange(points) if kind == "lipread" else np.r_[0:21, 42:75]
+    groups = np.array_split(rng.permutation(movable), len(labels) - 1)
     for p in range(people):
         shape = base * rng.uniform(0.9, 1.1) + rng.normal(0, 0.02, (points, 3))
         tempo = rng.uniform(0.85, 1.15)
