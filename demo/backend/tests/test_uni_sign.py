@@ -17,11 +17,8 @@ def test_uni_sign_adapter_accepts_webm_and_returns_candidate(tmp_path, monkeypat
         model / "Uni-Sign/weights/mt5-base/spiece.model",
         model / "Uni-Sign/weights/mt5-base/tokenizer_config.json",
         model / "Uni-Sign/weights/mt5-base/special_tokens_map.json",
-        model
-        / "Uni-Sign/weights/torch-cache/hub/checkpoints/"
-        "yolox_tiny_8xb8-300e_humanart-6f3252f9.onnx",
-        model
-        / "Uni-Sign/weights/torch-cache/hub/checkpoints/"
+        model / "Uni-Sign/weights/torch-cache/hub/checkpoints/yolox_tiny_8xb8-300e_humanart-6f3252f9.onnx",
+        model / "Uni-Sign/weights/torch-cache/hub/checkpoints/"
         "rtmw-dw-l-m_simcc-cocktail14_270e-256x192_20231122.onnx",
     ]
     for path in [runner, python, *required]:

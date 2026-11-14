@@ -170,6 +170,7 @@ class TrainingConfig(StrictModel):
 
     upload_enabled: bool = False
     directory: str = "data/training"
+    runs_directory: str = "data/training-runs"
     max_samples_per_subject: int = Field(2000, ge=1, le=20000)
     # Signs start and end with the hands lowered, so fewer sign frames carry a hand.
     min_valid_frame_ratio: dict[Literal["lipread", "sign"], float] = {"lipread": 0.8, "sign": 0.5}
@@ -228,7 +229,9 @@ class Settings(StrictModel):
                     "TURN requires a Cloudflare TURN key, or URLs with a shared secret or username/password"
                 )
             if self.turn_secret and (self.turn_username or self.turn_password):
-                raise ValueError("Choose either TURN shared-secret or service username/password authentication")
+                raise ValueError(
+                    "Choose either TURN shared-secret or service username/password authentication"
+                )
         if self.rtc.ice_transport_policy == "relay" and not self.rtc.turn_enabled:
             raise ValueError("Relay-only connections require TURN")
         return self

@@ -17,9 +17,7 @@ async def main():
     try:
         await service.start()
         print(json.dumps(service.capabilities, ensure_ascii=False, indent=2))
-        if args.require_all and not all(
-            c["available"] for c in service.capabilities.values()
-        ):
+        if args.require_all and not all(c["available"] for c in service.capabilities.values()):
             return 1
         return 0
     finally:

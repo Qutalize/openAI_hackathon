@@ -19,13 +19,14 @@ class CaptureConnection:
 
 class TestVisionEngine:
     """Protocol test double, never loaded by the application."""
+
     async def recognize(self, *args):
         return {"candidates": [{"label": "greeting", "text": "こんにちは"}], "model_version": "test-only"}
 
 
 async def prepare():
     service = RoomService(load_settings(), None, TestVisionEngine())
-    s = Session("person", "room", "ユーザーA", "hearing_support", "sign", "digest", "csrf", time.time()+60)
+    s = Session("person", "room", "ユーザーA", "hearing_support", "sign", "digest", "csrf", time.time() + 60)
     s.control = CaptureConnection()
     service.rooms["room"] = RoomState(participants={s.participant_id: s})
     service.sessions[s.token_digest] = s
@@ -38,8 +39,15 @@ async def prepare():
 async def test_recognition_candidate_is_private_until_confirmed():
     service, s, candidate = await prepare()
     assert service.rooms["room"].utterances == []
-    await service.handle(s, ClientEvent(version=1, type="utterance.submit", request_id="submit",
-                                       payload={"candidate_id": candidate, "text": "こんにちは、ありがとう"}))
+    await service.handle(
+        s,
+        ClientEvent(
+            version=1,
+            type="utterance.submit",
+            request_id="submit",
+            payload={"candidate_id": candidate, "text": "こんにちは、ありがとう"},
+        ),
+    )
     u = service.rooms["room"].utterances[0]
     assert u["source"] == "sign" and u["confirmed_by_user"] is True
     assert u["text"] == "こんにちは、ありがとう"
@@ -49,6 +57,13 @@ async def test_candidate_from_old_input_epoch_cannot_be_submitted():
     service, s, candidate = await prepare()
     await service.reset_input(s)
     with pytest.raises(ValueError, match="候補の期限"):
-        await service.handle(s, ClientEvent(version=1, type="utterance.submit", request_id="submit",
-                                           payload={"candidate_id": candidate, "text": "こんにちは"}))
+        await service.handle(
+            s,
+            ClientEvent(
+                version=1,
+                type="utterance.submit",
+                request_id="submit",
+                payload={"candidate_id": candidate, "text": "こんにちは"},
+            ),
+        )
     assert service.rooms["room"].utterances == []

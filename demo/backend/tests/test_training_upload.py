@@ -44,7 +44,10 @@ def test_collection_is_off_without_a_code(client):
 def test_upload_requires_the_collection_code(collector):
     c, _ = collector
     assert c.post("/api/training/samples", json=sample()).status_code == 403
-    assert c.post("/api/training/samples", json=sample(), headers={"x-training-code": "wrong"}).status_code == 403
+    assert (
+        c.post("/api/training/samples", json=sample(), headers={"x-training-code": "wrong"}).status_code
+        == 403
+    )
 
 
 def test_upload_saves_landmarks_and_reports_counts(collector):
@@ -60,6 +63,35 @@ def test_upload_saves_landmarks_and_reports_counts(collector):
     assert status["lipread"]["labels"] == {"greeting": 1, "unknown": 1}
     assert status["lipread"]["subjects"] == 1
     assert {"id": "thanks", "text": "ありがとう"} in status["lipread"]["vocabulary"]
+    assert status["models"]["lipread"] == {"available": False}
+    assert status["runs"] == []
+
+
+def test_status_reports_the_latest_retraining(collector, tmp_path):
+    c, _ = collector
+    runs = tmp_path / "runs"
+    runs.mkdir()
+    c.app.state.settings.training.runs_directory = str(runs)
+    (runs / "history.jsonl").write_text(
+        json.dumps({"at": "t1", "modality": "lipread", "version": "v1", "accepted": False, "error": "few"})
+        + "\n"
+        + json.dumps(
+            {
+                "at": "t2",
+                "modality": "lipread",
+                "version": "v2",
+                "accepted": True,
+                "registered": True,
+                "people": 2,
+                "evaluation": {"macro_f1_known": 0.9, "unknown_false_accept_rate": 0.0},
+            }
+        )
+        + "\n"
+    )
+    status = c.get("/api/training/status", headers={"x-training-code": CODE}).json()
+    assert [r["version"] for r in status["runs"]] == ["v2", "v1"]
+    assert status["runs"][0]["macro_f1_known"] == 0.9 and status["runs"][0]["registered"]
+    assert status["runs"][1]["failed"]
 
 
 @pytest.mark.parametrize(

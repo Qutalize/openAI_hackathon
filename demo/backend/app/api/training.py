@@ -69,12 +69,58 @@ def counts(root: Path, directory: Path, subject: str | None = None) -> dict:
     return result
 
 
+def models_and_runs(cfg, capabilities) -> dict:
+    """The phrase model each input serves now, and the latest retraining outcomes."""
+    models = {}
+    for kind in MAX_FRAMES:
+        c = getattr(cfg.recognition, kind)
+        entry = {"available": bool(capabilities.get(kind, {}).get("available"))}
+        meta = cfg.path(c.metadata_path) if c.metadata_path else None
+        if entry["available"] and meta and meta.is_file():
+            m = json.loads(meta.read_text(encoding="utf-8"))
+            e = m.get("evaluation_summary", {})
+            entry.update(
+                {
+                    "model_version": m.get("model_version"),
+                    "method": e.get("method"),
+                    "macro_f1_known": e.get("macro_f1_known"),
+                    "unknown_false_accept_rate": e.get("unknown_false_accept_rate"),
+                    "people": m.get("training_data_summary", {}).get("subjects"),
+                    "recordings": m.get("training_data_summary", {}).get("samples"),
+                }
+            )
+        models[kind] = entry
+    history = cfg.path(cfg.training.runs_directory) / "history.jsonl"
+    runs = []
+    if history.is_file():
+        for line in history.read_text(encoding="utf-8").splitlines()[-6:]:
+            r = json.loads(line)
+            e = r.get("evaluation", {})
+            runs.append(
+                {
+                    "at": r.get("at"),
+                    "modality": r.get("modality"),
+                    "version": r.get("version"),
+                    "registered": r.get("registered", False),
+                    "accepted": r.get("accepted", False),
+                    "people": r.get("people"),
+                    "recordings": r.get("recordings"),
+                    "macro_f1_known": e.get("macro_f1_known"),
+                    "unknown_false_accept_rate": e.get("unknown_false_accept_rate"),
+                    "failed": "error" in r,
+                }
+            )
+    return {"models": models, "runs": runs[::-1]}
+
+
 @router.get("/api/training/status")
 async def status(request: Request, subject: str | None = None):
     cfg = settings_for(request)
     if subject is not None and not SUBJECT.match(subject):
         raise HTTPException(422, "人物IDは英数字・-・_の2〜40文字です")
-    return await asyncio.to_thread(counts, cfg.root, cfg.path(cfg.training.directory), subject)
+    result = await asyncio.to_thread(counts, cfg.root, cfg.path(cfg.training.directory), subject)
+    extra = await asyncio.to_thread(models_and_runs, cfg, request.app.state.inference.capabilities)
+    return {**result, **extra}
 
 
 @router.post("/api/training/samples", status_code=201)

@@ -83,6 +83,9 @@ def test_join_and_input_update_carry_the_language(tmp_path):
 
 def test_open_slots_accept_only_video_models():
     data = load_settings().model_dump()
-    data["recognition"]["lipread_open"] = {**data["recognition"]["lipread"], "provider": "onnx_temporal_classifier"}
+    data["recognition"]["lipread_open"] = {
+        **data["recognition"]["lipread"],
+        "provider": "onnx_temporal_classifier",
+    }
     with pytest.raises(ValidationError):
         type(load_settings()).model_validate(data)

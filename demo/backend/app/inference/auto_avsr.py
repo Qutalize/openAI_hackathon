@@ -13,10 +13,7 @@ from app.inference.resident import ResidentProcess
 
 
 class AutoAvsrRecognizer(Recognizer):
-    language_note = (
-        "英語の口の動きを英語字幕へ変換する検証版です。"
-        "日本語の読唇には対応していません。"
-    )
+    language_note = "英語の口の動きを英語字幕へ変換する検証版です。日本語の読唇には対応していません。"
 
     def __init__(self, root: Path, config):
         self.root = root

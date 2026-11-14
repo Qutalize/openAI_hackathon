@@ -29,14 +29,8 @@ def main():
     try:
         repo.create(args.room_id, password, args.hours * 3600, args.max_participants)
     except (ValueError, sqlite3.IntegrityError) as exc:
-        parser.error(
-            "同じIDのルームが存在します"
-            if isinstance(exc, sqlite3.IntegrityError)
-            else str(exc)
-        )
-    print(
-        f"ルーム {args.room_id.strip().lower()} を作成しました ({args.hours}時間有効)"
-    )
+        parser.error("同じIDのルームが存在します" if isinstance(exc, sqlite3.IntegrityError) else str(exc))
+    print(f"ルーム {args.room_id.strip().lower()} を作成しました ({args.hours}時間有効)")
 
 
 if __name__ == "__main__":

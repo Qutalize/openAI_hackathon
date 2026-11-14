@@ -35,6 +35,7 @@ class Connection:
 WATCH_INTERVAL = 0.4
 WATCH_QUIET = 1.5
 
+
 class RoomService:
     def __init__(self, settings, repo, inference):
         self.settings, self.repo, self.inference = settings, repo, inference
@@ -198,7 +199,9 @@ class RoomService:
 
     async def clear_partial(self, s):
         if self.settings.recognition.partial_results:
-            await self.transient(s.room_id, "utterance.partial", {"participant_id": s.participant_id, "text": ""})
+            await self.transient(
+                s.room_id, "utterance.partial", {"participant_id": s.participant_id, "text": ""}
+            )
 
     def launch_partial(self, s):
         """Caption speech still in progress: recognize what has been said so far, one request at a time."""

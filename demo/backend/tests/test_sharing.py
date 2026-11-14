@@ -100,7 +100,9 @@ def test_https_websocket_caption_flow(shared_app):
         client.cookies.update(first)
         assert client.get("/rooms/shared-room").status_code == 200
         session = client.get("/api/session").json()
-        assert client.delete("/api/session", headers={"x-csrf-token": session["csrf_token"]}).status_code == 204
+        assert (
+            client.delete("/api/session", headers={"x-csrf-token": session["csrf_token"]}).status_code == 204
+        )
         assert client.get("/api/session").status_code == 401
 
 
