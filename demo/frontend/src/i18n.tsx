@@ -246,29 +246,57 @@ const english: Record<string, string> = {
   映像接続を確立できませんでした: 'Could not establish video connection',
   '映像接続が不安定です。接続を確認してください': 'Video connection is unstable. Check your connection.',
   '学習データ収集 · 会話とは別の操作です': 'Training data collection · separate from conversations',
-  登録表現の特徴点を収集: 'Collect landmarks for supported phrases',
-  '映像は保存・送信しません。顔・手・姿勢の特徴点を端末に保存します。本人の同意がある収録だけ行ってください。':
-    'Video is not saved or sent here. Face, hand and pose landmarks are saved to this device. Only collect with the participant’s consent.',
+  '日本語の読唇・手話の学習データを集める':
+    'Collect training data for Japanese lip reading and sign language',
+  '画面に出る表現を、合図に合わせて1回ずつ行ってください。映像は送信しません。顔・手・姿勢の特徴点だけを、本人の同意がある場合にサーバーへ保存します。':
+    'Perform each phrase shown on screen once, on the cue. Video is never sent. Only face, hand and pose landmarks are saved to the server, with the participant’s consent.',
+  '読唇（声を出さずに口を動かす）': 'Lip reading (mouth the words silently)',
+  収集コード: 'Collection code',
+  '1表現あたりの回数': 'Takes per phrase',
+  連続撮影を開始: 'Start guided capture',
+  中断: 'Stop',
+  撮影中: 'Recording',
+  '（対象外の動き）': '(Other movement)',
+  対象外の動き: 'Other movement',
+  '対象外の動き：語彙にない言葉を話すか、口を閉じたままにしてください':
+    'Other movement: mouth words outside the list, or keep your mouth closed',
+  '対象外の動き：手を下ろす、頭をかくなど、語彙にない動きをしてください':
+    'Other movement: lower your hands, scratch your head, or anything outside the list',
+  収録数: 'Recordings',
+  この人物IDの収録数: 'Recordings for this subject ID',
+  '全体で{n}人': '{n} people in total',
+  この人物IDの収録を削除: 'Delete recordings for this subject ID',
+  もう一度押すと削除します: 'Press again to delete',
+  特徴点モデルを準備しています: 'Loading the landmark model',
+  '顔や手が映っていません。カメラの位置を確認してください':
+    'Face or hands not visible. Check the camera position.',
+  '特徴点が途切れました。顔や手が映る位置で、もう一度お願いします':
+    'Landmarks dropped out. Make sure your face and hands are visible, then try again.',
+  この人物IDの収録をすべて削除しました: 'All recordings for this subject ID were deleted',
+  中断しました: 'Stopped',
+  収集を停止しました: 'Collection stopped',
+  こんにちは: 'Hello',
+  ありがとう: 'Thank you',
+  はい: 'Yes',
+  いいえ: 'No',
+  すみません: 'Excuse me',
+  お願いします: 'Please',
+  わかりました: 'Understood',
+  もう一度お願いします: 'Once more, please',
+  ちょっと待ってください: 'Wait a moment, please',
+  大丈夫です: 'It’s fine',
   入力方式: 'Input method',
   日本手話: 'Japanese sign language',
   '人物ID（氏名を使用しない）': 'Subject ID (not a real name)',
-  クラスID: 'Class ID',
   '本人が収集・モデル学習への使用に同意しています':
     'The participant consents to collection and model training',
   学習データ収集のプレビュー: 'Training capture preview',
   'カメラ OFF': 'Camera OFF',
   'モデルを準備中…': 'Loading model…',
   撮影を開始: 'Start capture',
-  撮影を終了: 'Finish capture',
-  特徴点を保存: 'Save landmarks',
   会話の入室画面へ: 'Back to joining',
   カメラを準備しました: 'Camera ready',
   'カメラを利用できません。権限を確認してください': 'Camera unavailable. Check permissions.',
-  登録表現を1回行ってください: 'Perform one supported phrase',
-  先に撮影してください: 'Capture first',
-  '収集を停止し、未保存の特徴点を破棄しました': 'Collection stopped and unsaved landmarks discarded',
-  'クラスIDはconfig/vocabulary.ja.jsonと一致させます。対象外の動作はunknownとして収集します。':
-    'Class IDs must match config/vocabulary.ja.json. Use unknown for unsupported movements.',
 };
 
 export function translate(text: string, locale: Locale, values: Record<string, string | number> = {}) {

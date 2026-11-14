@@ -1,8 +1,15 @@
 {
-  "version": "demo-ja-v1",
+  "version": "demo-ja-v2",
   "items": [
     {"id": "greeting", "text": "こんにちは", "modalities": ["lipread", "sign"]},
     {"id": "thanks", "text": "ありがとう", "modalities": ["lipread", "sign"]},
-    {"id": "repeat", "text": "もう一度お願いします", "modalities": ["sign"]}
+    {"id": "yes", "text": "はい", "modalities": ["lipread", "sign"]},
+    {"id": "no", "text": "いいえ", "modalities": ["lipread", "sign"]},
+    {"id": "sorry", "text": "すみません", "modalities": ["lipread", "sign"]},
+    {"id": "please", "text": "お願いします", "modalities": ["lipread", "sign"]},
+    {"id": "understood", "text": "わかりました", "modalities": ["lipread", "sign"]},
+    {"id": "repeat", "text": "もう一度お願いします", "modalities": ["lipread", "sign"]},
+    {"id": "wait", "text": "ちょっと待ってください", "modalities": ["lipread", "sign"]},
+    {"id": "fine", "text": "大丈夫です", "modalities": ["lipread", "sign"]}
   ]
 }

@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router as api_router
+from app.api.training import router as training_router
 from app.core.config import load_settings
 from app.inference.worker import InferenceService
 from app.repositories.rooms import RoomRepository
@@ -57,6 +58,7 @@ def create_app(settings=None, inference=None):
         allow_headers=["Content-Type", "X-CSRF-Token"],
     )
     app.include_router(api_router)
+    app.include_router(training_router)
     app.include_router(ws_router)
     if cfg.server.serve_frontend:
         app.mount("/", FrontendFiles(cfg.path(cfg.server.frontend_dist)), name="frontend")

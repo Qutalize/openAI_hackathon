@@ -1,30 +1,38 @@
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
 
-for (const kind of ['lipread', 'sign']) test(`the real MediaPipe worker exports ${kind} features only after consent`, async ({ page }) => {
+for (const kind of ['lipread', 'sign']) test(`guided ${kind} collection sends only landmarks after consent`, async ({ page }) => {
   test.setTimeout(60000);
   page.on('console', message => { if(message.type()==='error')console.log(message.text()); });
+  const bodies: any[] = [];
+  page.on('request', request => {
+    if (request.url().endsWith('/api/training/samples')) bodies.push(JSON.parse(request.postData() ?? '{}'));
+  });
   await page.goto('/training');
   await page.getByLabel('入力方式').selectOption(kind);
   await page.getByLabel('人物ID（氏名を使用しない）').fill('test-person');
-  await page.getByLabel('クラスID').fill('unknown');
+  await page.getByLabel('収集コード').fill('e2e-collection-code');
+  await page.getByLabel('1表現あたりの回数').selectOption('1');
   await expect(page.getByRole('button', { name: 'カメラをON' })).toBeDisabled();
   await page.getByLabel('本人が収集・モデル学習への使用に同意しています').check();
   await page.getByRole('button', { name: 'カメラをON' }).click();
-  await page.getByRole('button', { name: '撮影を開始' }).click();
-  await expect(page.getByRole('status')).toContainText(/フレームを収集しました|特徴点モデルを開始できません/, { timeout: 45000 });
-  await expect(page.getByRole('status')).toContainText('フレームを収集しました');
-  const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: '特徴点を保存' }).click();
-  const saved = await download;
-  const data = JSON.parse(await readFile((await saved.path())!, 'utf8'));
+  await expect(page.getByText('この人物IDの収録数')).toBeVisible();
+  await expect(page.locator('.training-counts li')).toHaveCount(11);
+  await page.getByRole('button', { name: '連続撮影を開始' }).click();
+  await expect(page.locator('.training-prompt')).toContainText('1 / 11', { timeout: 45000 });
+  await expect(page.locator('.training-phase')).toHaveText('撮影中', { timeout: 10000 });
+  // The fake camera shows no face, so the server rejects the take and the page asks again.
+  await expect.poll(() => bodies.length, { timeout: 15000 }).toBeGreaterThan(0);
+  await expect(page.getByRole('status')).toContainText(/特徴点が途切れました|顔や手が映っていません/);
+  const data = bodies[0];
   expect(data.modality).toBe(kind);
-  expect(data.frames.length).toBeGreaterThan(1);
+  expect(data.consent).toBe(true);
   expect(data.frames[0]).toHaveLength(kind === 'lipread' ? 40 : 100);
   expect(data.frames[0][0]).toHaveLength(4);
   expect(data).not.toHaveProperty('video');
+  await page.getByRole('button', { name: '中断' }).click();
+  await expect(page.locator('.training-prompt')).toHaveCount(0);
   await page.getByLabel('本人が収集・モデル学習への使用に同意しています').uncheck();
-  await expect(page.getByRole('status')).toContainText('未保存の特徴点を破棄しました');
+  await expect(page.getByRole('status')).toContainText('収集を停止しました');
 });
 
 test('speech output skips replays and replaces an unread correction', async ({ page }) => {
