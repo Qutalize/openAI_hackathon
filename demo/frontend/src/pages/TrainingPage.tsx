@@ -5,7 +5,7 @@ import Video from '../components/Video';
 import { LanguageSelect, useI18n } from '../i18n';
 
 type Kind = 'lipread' | 'sign';
-type Phrase = { id: string; text: string };
+type Phrase = { id: string; text: string; hint?: string };
 type ModelInfo = {
   available: boolean;
   model_version?: string;
@@ -36,9 +36,18 @@ const percent = (x?: number) => (x == null ? '—' : `${Math.round(x * 100)}%`);
 const DURATION = { lipread: 3200, sign: 4800 };
 const MAX_FRAMES = { lipread: 64, sign: 96 };
 const COUNTDOWN = 3;
-const UNKNOWN_HINT = {
-  lipread: '対象外の動き：語彙にない言葉を話すか、口を閉じたままにしてください',
-  sign: '対象外の動き：手を下ろす、頭をかくなど、語彙にない動きをしてください',
+// "Other movements" vary far more than any phrase, so each round asks for three different kinds.
+const UNKNOWN_HINTS = {
+  lipread: [
+    '語彙にない言葉を、声を出さずに口だけ動かしてください（例：おはよう、さようなら、自分の名前）',
+    '口を閉じたまま、まばたきや首をかしげるなど、話す以外の動きをしてください',
+    '笑う・あくびをする・唇をなめるなど、話す以外の口の動きをしてください',
+  ],
+  sign: [
+    '手を下ろしたまま、少し体を動かしてください',
+    '頭をかく、髪を触るなど、手話ではない手の動きをしてください',
+    '語彙にない手話や身ぶりをしてください',
+  ],
 };
 const CODE_KEY = 'kotoba-training-code';
 
@@ -193,13 +202,20 @@ export default function TrainingPage() {
       stopAll((e as Error).message);
       return;
     }
-    const phrases: Phrase[] = [...vocabulary, { id: 'unknown', text: '（対象外の動き）' }];
+    const phrases: Phrase[] = [
+      ...vocabulary,
+      ...UNKNOWN_HINTS[kind].map((hint) => ({
+        id: 'unknown',
+        text: '（対象外の動き）',
+        hint: `対象外の動き：${hint}`,
+      })),
+    ];
     const queue = Array.from({ length: repetitions }, () => shuffle(phrases)).flat();
     let done = 0;
     for (const phrase of queue) {
       let saved = false;
       for (let attempt = 0; attempt < 3 && !saved && !r.cancelled; attempt++) {
-        const hint = phrase.id === 'unknown' ? UNKNOWN_HINT[kind] : undefined;
+        const hint = phrase.hint;
         for (let n = COUNTDOWN; n > 0 && !r.cancelled; n--) {
           setPrompt({ text: phrase.text, hint, phase: `${n}`, done, total: queue.length });
           await wait(700);

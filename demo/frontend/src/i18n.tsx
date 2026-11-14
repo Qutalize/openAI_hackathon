@@ -282,10 +282,17 @@ const english: Record<string, string> = {
   撮影中: 'Recording',
   '（対象外の動き）': '(Other movement)',
   対象外の動き: 'Other movement',
-  '対象外の動き：語彙にない言葉を話すか、口を閉じたままにしてください':
-    'Other movement: mouth words outside the list, or keep your mouth closed',
-  '対象外の動き：手を下ろす、頭をかくなど、語彙にない動きをしてください':
-    'Other movement: lower your hands, scratch your head, or anything outside the list',
+  '対象外の動き：語彙にない言葉を、声を出さずに口だけ動かしてください（例：おはよう、さようなら、自分の名前）':
+    'Other movement: silently mouth words outside the list (e.g. good morning, goodbye, your name)',
+  '対象外の動き：口を閉じたまま、まばたきや首をかしげるなど、話す以外の動きをしてください':
+    'Other movement: keep your mouth closed and blink or tilt your head',
+  '対象外の動き：笑う・あくびをする・唇をなめるなど、話す以外の口の動きをしてください':
+    'Other movement: smile, yawn or lick your lips, anything but speaking',
+  '対象外の動き：手を下ろしたまま、少し体を動かしてください':
+    'Other movement: keep your hands down and move a little',
+  '対象外の動き：頭をかく、髪を触るなど、手話ではない手の動きをしてください':
+    'Other movement: scratch your head or touch your hair, anything but signing',
+  '対象外の動き：語彙にない手話や身ぶりをしてください': 'Other movement: signs or gestures outside the list',
   収録数: 'Recordings',
   この人物IDの収録数: 'Recordings for this subject ID',
   '全体で{n}人': '{n} people in total',
