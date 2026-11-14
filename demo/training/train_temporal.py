@@ -36,7 +36,10 @@ def fit(train, validation, classes, epochs=150, seed=42, device="cpu", batch_siz
     epochs = max(epochs, int(np.ceil(MIN_STEPS / steps)))
     optimizer = torch.optim.AdamW(model.parameters(), lr=2e-3, weight_decay=0.05)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, 2e-3, total_steps=epochs * steps)
-    best, best_state, best_epoch = float("inf"), copy.deepcopy(model.state_dict()), 0
+    # With a few validation takes per phrase the loss is noisy and lowest while the model is still
+    # uniform, so pick by validation accuracy (then loss), and only once a third of training is done.
+    best, best_state, best_epoch = (-1.0, float("-inf")), copy.deepcopy(model.state_dict()), 0
+    start_selecting = epochs // 3
     for epoch in range(epochs):
         model.train()
         order = torch.randperm(len(y), device=device, generator=generator)
@@ -51,13 +54,23 @@ def fit(train, validation, classes, epochs=150, seed=42, device="cpu", batch_siz
             scheduler.step()
         model.eval()
         with torch.no_grad():
-            val_loss = float(plain_loss(model(vx, vm), vy)) if len(vy) else float(loss)
-        if val_loss < best:
-            best, best_state, best_epoch = val_loss, copy.deepcopy(model.state_dict()), epoch
+            if len(vy):
+                logits = model(vx, vm)
+                val_loss = float(plain_loss(logits, vy))
+                val_acc = float((logits.argmax(1) == vy).float().mean())
+            else:
+                val_loss, val_acc = float(loss), 0.0
+        score = (val_acc, -val_loss)
+        if epoch >= start_selecting and score >= best:
+            best, best_state, best_epoch = score, copy.deepcopy(model.state_dict()), epoch
         if log and (epoch % 25 == 0 or epoch == epochs - 1):
-            log(f"epoch={epoch} validation_loss={val_loss:.4f}")
+            log(f"epoch={epoch} validation_loss={val_loss:.4f} validation_accuracy={val_acc:.2f}")
     model.load_state_dict(best_state)
-    return model.cpu().eval(), {"best_epoch": best_epoch, "validation_loss": best}
+    return model.cpu().eval(), {
+        "best_epoch": best_epoch,
+        "validation_accuracy": best[0],
+        "validation_loss": -best[1],
+    }
 
 
 def probabilities(model, features, masks):
@@ -73,7 +86,7 @@ def decide(probs, unknown, threshold):
     return np.where(accept, top, unknown), accept
 
 
-def calibrate(probs, targets, unknown, floor=0.5):
+def calibrate(probs, targets, unknown, floor=0.3):
     """Lowest threshold whose unknown false accept rate stays within the target."""
     known = targets != unknown
     for threshold in np.arange(floor, 0.991, 0.01):

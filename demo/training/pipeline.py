@@ -118,9 +118,18 @@ def evaluate(x, m, y, subjects, labels, epochs, seed, device, log=print):
         method = "leave-one-subject-out"
         splits = [(np.flatnonzero(subjects != p), np.flatnonzero(subjects == p), p) for p in people]
     else:
+        # One person: fold k holds out the k-th take of every phrase, so every take is tested once.
         method = "within-subject-holdout"
-        rest, held = stratified_split(y, 0.25, seed + 1)
-        splits = [(rest, held, people[0])]
+        rng = np.random.default_rng(seed + 1)
+        take = np.zeros(len(y), int)
+        for c in np.unique(y):
+            idx = rng.permutation(np.flatnonzero(y == c))
+            take[idx] = np.arange(len(idx))
+        k_folds = min(5, int(np.bincount(y).min()))
+        splits = [
+            (np.flatnonzero(take % k_folds != k), np.flatnonzero(take % k_folds == k), f"{people[0]}#{k}")
+            for k in range(k_folds)
+        ]
     for train_idx, test_idx, person in splits:
         model, threshold, _ = train_and_calibrate(
             x[train_idx], m[train_idx], y[train_idx], classes, unknown, epochs, seed, device
