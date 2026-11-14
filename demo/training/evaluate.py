@@ -35,7 +35,7 @@ def main():
         accept = (
             predicted != unknown
             and scores[predicted] >= m["thresholds"]["candidate"]
-            and d["valid_ratios"][i] >= 0.8
+            and d["valid_ratios"][i] >= m.get("min_valid_frame_ratio", 0.8)
         )
         targets.append(int(d["targets"][i]))
         predictions.append(predicted if accept else unknown)
