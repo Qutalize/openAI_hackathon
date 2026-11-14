@@ -74,7 +74,8 @@ recognition:
     feature_schema: lip40_v1
     max_frames: 64
     min_valid_frame_ratio: 0.8
-    candidate_threshold: 0.80
+    # Floor only: each trained model carries the threshold chosen on its validation data.
+    candidate_threshold: 0.50
     top_k: 3
     require_confirmation: true
   sign:
@@ -84,8 +85,9 @@ recognition:
     metadata_path: models/sign/metadata.json
     feature_schema: sign100_v1
     max_frames: 96
-    min_valid_frame_ratio: 0.8
-    candidate_threshold: 0.85
+    # Signs start and end with the hands lowered.
+    min_valid_frame_ratio: 0.5
+    candidate_threshold: 0.50
     top_k: 3
     require_confirmation: true
 

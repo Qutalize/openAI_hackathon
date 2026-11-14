@@ -64,8 +64,12 @@ def export(c, output_directory, version, license_name, evaluation=None):
         "evaluation_summary": evaluation or {"accepted": False},
         "license": license_name,
     }
-    (directory / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
-    (directory / "labels.json").write_text(json.dumps(c["labels"], ensure_ascii=False, indent=2), encoding="utf-8")
+    (directory / "metadata.json").write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    (directory / "labels.json").write_text(
+        json.dumps(c["labels"], ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     return metadata
 
 

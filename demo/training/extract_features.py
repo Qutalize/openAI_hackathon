@@ -18,12 +18,8 @@ def extract(manifest_path, destination):
     kind = manifest["modality"]
     if kind not in ("lipread", "sign"):
         raise ValueError("modality must be lipread or sign")
-    vocabulary = json.loads(
-        (ROOT / "config/vocabulary.ja.json").read_text(encoding="utf-8")
-    )
-    labels = [x["id"] for x in vocabulary["items"] if kind in x["modalities"]] + [
-        "unknown"
-    ]
+    vocabulary = json.loads((ROOT / "config/vocabulary.ja.json").read_text(encoding="utf-8"))
+    labels = [x["id"] for x in vocabulary["items"] if kind in x["modalities"]] + ["unknown"]
     subjects, seen_paths, rows = {}, set(), []
     for entry in manifest["samples"]:
         path = (manifest_path.parent / entry["path"]).resolve()
@@ -39,13 +35,8 @@ def extract(manifest_path, destination):
         ):
             raise ValueError(f"missing consent or preprocessing mismatch: {path.name}")
         subject, split = sample["subject_id"], entry["split"]
-        if (
-            split not in ("train", "validation", "test")
-            or subjects.get(subject, split) != split
-        ):
-            raise ValueError(
-                "A person must belong to exactly one train/validation/test split"
-            )
+        if split not in ("train", "validation", "test") or subjects.get(subject, split) != split:
+            raise ValueError("A person must belong to exactly one train/validation/test split")
         subjects[subject] = split
         features, mask, valid_ratio = pack_frames(
             sample["frames"],
@@ -82,9 +73,7 @@ def extract(manifest_path, destination):
         modality=kind,
         vocabulary_version=vocabulary["version"],
     )
-    print(
-        f"Packed {len(rows)} recordings from {len(subjects)} people into {destination}"
-    )
+    print(f"Packed {len(rows)} recordings from {len(subjects)} people into {destination}")
 
 
 if __name__ == "__main__":

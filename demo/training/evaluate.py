@@ -18,9 +18,7 @@ def main():
     d = np.load(args.dataset, allow_pickle=False)
     if d["labels"].tolist() != m["labels"]:
         raise ValueError("Dataset/model labels differ")
-    session = ort.InferenceSession(
-        str(directory / "model.onnx"), providers=["CPUExecutionProvider"]
-    )
+    session = ort.InferenceSession(str(directory / "model.onnx"), providers=["CPUExecutionProvider"])
     indices = np.flatnonzero(d["splits"] == "test")
     unknown = m["labels"].index("unknown")
     targets, predictions, accepted = [], [], []
@@ -46,9 +44,7 @@ def main():
         np.array(accepted),
     )
     if not len(targets) or set(targets) != set(range(len(m["labels"]))):
-        raise ValueError(
-            "The held-out test split must contain all classes including unknown"
-        )
+        raise ValueError("The held-out test split must contain all classes including unknown")
     known = targets != unknown
     macro = f1_score(
         targets[known],
@@ -75,9 +71,7 @@ def main():
         ),
     }
     m["evaluation_summary"] = report
-    metadata_path.write_text(
-        json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
+    metadata_path.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["accepted"] else 1
 

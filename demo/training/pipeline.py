@@ -46,7 +46,9 @@ def load(directory, kind, log=print):
             skipped["label not in vocabulary"] += 1
             continue
         try:
-            features, mask, ratio = pack_frames(sample["frames"], sample["timestamps"], MAX_FRAMES[kind], kind)
+            features, mask, ratio = pack_frames(
+                sample["frames"], sample["timestamps"], MAX_FRAMES[kind], kind
+            )
         except ValueError:
             skipped["unreadable"] += 1
             continue
@@ -101,7 +103,9 @@ def scores(probs, targets, unknown, threshold, classes):
 
 def train_and_calibrate(x, m, y, classes, unknown, epochs, seed, device):
     rest, val = stratified_split(y, 0.15, seed)
-    model, info = fit((x[rest], m[rest], y[rest]), (x[val], m[val], y[val]), classes, epochs, seed, device, log=None)
+    model, info = fit(
+        (x[rest], m[rest], y[rest]), (x[val], m[val], y[val]), classes, epochs, seed, device, log=None
+    )
     threshold = calibrate(probabilities(model, x[val], m[val]), y[val], unknown)
     return model, threshold, info
 
@@ -122,7 +126,11 @@ def evaluate(x, m, y, subjects, labels, epochs, seed, device, log=print):
             x[train_idx], m[train_idx], y[train_idx], classes, unknown, epochs, seed, device
         )
         probs = probabilities(model, x[test_idx], m[test_idx])
-        fold = {"subject": person, "threshold": threshold, **scores(probs, y[test_idx], unknown, threshold, classes)}
+        fold = {
+            "subject": person,
+            "threshold": threshold,
+            **scores(probs, y[test_idx], unknown, threshold, classes),
+        }
         if log:
             log(json.dumps(fold, ensure_ascii=False))
         folds.append(fold)
@@ -175,7 +183,9 @@ def main():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--device", default="auto")
     p.add_argument("--license", default="CC-BY-4.0")
-    p.add_argument("--register", action="store_true", help="copy an accepted model to models/ and record hashes")
+    p.add_argument(
+        "--register", action="store_true", help="copy an accepted model to models/ and record hashes"
+    )
     args = p.parse_args()
     kind, device = args.modality, pick_device(args.device)
     x, m, y, subjects, labels, vocabulary_version = load(args.data, kind)
@@ -187,7 +197,9 @@ def main():
     evaluation = evaluate(x, m, y, subjects, labels, args.epochs, args.seed, device)
     print(json.dumps({k: v for k, v in evaluation.items() if k != "folds"}, ensure_ascii=False))
     unknown = labels.index("unknown")
-    model, threshold, info = train_and_calibrate(x, m, y, len(labels), unknown, args.epochs, args.seed, device)
+    model, threshold, info = train_and_calibrate(
+        x, m, y, len(labels), unknown, args.epochs, args.seed, device
+    )
     version = f"{kind}-ja-{time.strftime('%Y%m%d-%H%M%S')}"
     run = Path(args.work) / version
     c = checkpoint(

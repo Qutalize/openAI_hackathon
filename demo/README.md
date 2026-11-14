@@ -203,22 +203,26 @@ research/sign/uni-sign/.venv/bin/python -B \
 ## 読唇・日本手話モデルを作る
 
 1. `config/vocabulary.ja.json` に認識対象のクラスID、表示文、方式を定義します。語彙を変更したらversionも更新します。
-2. `http://localhost:5173/training` を会話に参加していないブラウザで開きます。本人の同意を確認し、人物ID・クラスIDを指定して特徴点を収集します。カメラ映像は保存されません。「特徴点を保存」でJSONをローカルに保存できます。
-3. 同じ人・同じ動画がtrain、validation、testをまたがないよう、`training/dataset_manifest.example.json` をコピーして実際のパスを指定します。各分割に全クラスと `unknown` が必要です。
-4. 学習用依存を追加し、前処理→学習→出力→評価を実行します。
+2. サーバーの `.env` に `APP_TRAINING_UPLOAD_TOKEN`（収集コード）を書き、`config/app.local.yaml` で `training.upload_enabled: true` にします。
+3. `/training` を会話に参加していないブラウザで開き、入力方式・人物ID（氏名は使わない）・収集コード・回数を入れて「連続撮影を開始」を押します。画面に出る表現を合図に合わせて1回ずつ行うと、特徴点だけが `data/training/{入力方式}/{人物ID}/` に保存されます。映像は送信しません。語彙にない動き（`unknown`）も同じ流れで撮ります。
+4. 学習用の依存を入れた環境で、評価・学習・ONNX 出力・登録を1コマンドで行います（GPU があれば使います）。
 
-```powershell
-uv sync --project backend --extra inference --extra training --cache-dir .cache/uv --system-certs
-backend/.venv/Scripts/python.exe training/extract_features.py data/training/manifest.json data/training/lipread.npz
-backend/.venv/Scripts/python.exe training/train_temporal.py data/training/lipread.npz data/training/lipread.pt
-backend/.venv/Scripts/python.exe training/export_onnx.py data/training/lipread.pt models/lipread --version lipread-demo-v1 --license YOUR_MODEL_LICENSE
-backend/.venv/Scripts/python.exe training/evaluate.py data/training/lipread.npz models/lipread
-backend/.venv/Scripts/python.exe scripts/prepare_models.py --register lipread
+```bash
+uv sync --project backend --extra inference --extra training
+backend/.venv/bin/python training/pipeline.py lipread --register
+backend/.venv/bin/python training/pipeline.py sign --register
 ```
 
-手話はmanifestの `modality` を `sign` とし、出力先を `models/sign` に変えて同じ工程を行います。ONNXは `features` と `frame_mask` を入力し、`logits` を返します。読唇は `[1,64,40,4]`、手話は `[1,96,100,4]` です。モデルの入出力・点ID・語彙・前処理版が一致しない場合は利用不可になります。
+評価は、収録した人が2人以上なら1人抜き交差検証（その人を見ていないモデルでその人を認識する）で行います。1人だけのときは、その人の収録の一部を取り分けて評価し、metadata に「新しい人での精度は不明」と書きます。登録表現の macro-F1 が 0.80 以上、語彙にない動きの誤受理率が 5% 以下なら合格で、`--register` を付けたときだけ `models/{入力方式}/` に置いて hash を記録します。候補として出す確信度の閾値は、誤受理率が5%以下になる値を検証データから決めて metadata に書きます。各回の結果は `data/training-runs/` に残ります。
 
-評価は未知人物のテスト分割で実施します。登録表現macro-F1 0.80以上・未知表現の誤受理率5%以下という初期目標に合格すると登録できます。少数の収録でこの値が出ても一般利用の精度保証にはなりません。実際の利用者・照明・距離・背景で評価を追加してください。
+学習が動くかだけを確かめるには、合成データを使います（精度の目安にはなりません）。
+
+```bash
+backend/.venv/bin/python training/synthetic.py lipread /tmp/synthetic
+backend/.venv/bin/python training/pipeline.py lipread --data /tmp/synthetic --work /tmp/runs
+```
+
+人ごとに分割を指定したい場合は、従来どおり `training/dataset_manifest.example.json` の形式で manifest を作り、`extract_features.py` → `train_temporal.py` → `export_onnx.py` → `evaluate.py` → `scripts/prepare_models.py --register` の順に実行できます。ONNX は `features` と `frame_mask` を入力し、`logits` を返します。読唇は `[1,64,40,4]`、手話は `[1,96,100,4]` です。モデルの入出力・点ID・語彙・前処理のバージョンが一致しない場合は利用不可になります。少数の収録で合格しても一般利用の精度保証にはなりません。実際の利用者・照明・距離・背景で評価を追加してください。
 
 モデル登録後にサーバーを再起動し、以下を実行します。3方式のいずれかが未導入なら `--require-all` は終了コード1を返します。
 
