@@ -35,6 +35,8 @@ class Session:
     media_seq: int = -1
     capture_ms: float = -1
     segment: dict | None = None
+    # Continuous recognition of a rolling window of landmark frames (no capture button).
+    watch: dict | None = None
     candidates: dict = field(default_factory=dict)
     requests: dict = field(default_factory=dict)
     segmenter: object = None

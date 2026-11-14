@@ -53,6 +53,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
   const [recordingStatus, setRecordingStatus] = useState('録画待機');
   const [ttsStatus, setTtsStatus] = useState('待機中'),
     [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [watching, setWatching] = useState(false);
   const [capturing, setCapturing] = useState(false),
     [processing, setProcessing] = useState(false),
     [operating, setOperating] = useState(false);
@@ -71,6 +72,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     participants: [] as Participant[],
     input: session.input,
     language: (session.language ?? 'ja') as VisionLanguage,
+    watch: null as string | null,
     playback,
     segment: null as string | null,
     captureGeneration: 0,
@@ -119,7 +121,9 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     r.vision.stop();
     r.videoClip.cancel();
     r.segment = null;
+    r.watch = null;
     setCapturing(false);
+    setWatching(false);
   }, [r]);
   const dropPeers = useCallback(() => {
     // Signals that arrive before the next Peers instance exists are queued, never sent to a closed one.
@@ -551,6 +555,64 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
       }
     }
   }
+  /** Keep sending landmarks; the server offers a phrase when it sees one, without capture buttons. */
+  async function startWatch() {
+    if (r.input !== 'lipread' && r.input !== 'sign') return;
+    const generation = ++r.captureGeneration;
+    const kind = r.input;
+    setError('');
+    setCandidate(null);
+    try {
+      if (!devices.streamRef.current.getVideoTracks().length) throw new Error('カメラをONにしてください');
+      const id = crypto.randomUUID();
+      await r.vision.start(
+        devices.streamRef.current,
+        kind,
+        (features, timestamp) => {
+          if (r.watch !== id) return;
+          try {
+            r.media?.send(
+              'vision.features',
+              new Float32Array(features.flat()).buffer,
+              {
+                segment_id: id,
+                schema: kind === 'lipread' ? 'lip40_v1' : 'sign100_v1',
+                shape: [1, features.length, 4],
+                frame_timestamps_ms: [timestamp],
+              },
+              timestamp,
+            );
+          } catch (e) {
+            setError((e as Error).message);
+            void stopWatch();
+          }
+        },
+        setError,
+      );
+      if (generation !== r.captureGeneration || r.closed) return;
+      await r.control!.request('watch.start', { watch_id: id });
+      if (generation !== r.captureGeneration || r.closed) return;
+      r.watch = id;
+      setWatching(true);
+      setRecognition(
+        kind === 'lipread'
+          ? '自動で認識しています。口を動かしてください'
+          : '自動で認識しています。手話をしてください',
+      );
+    } catch (e) {
+      if (generation === r.captureGeneration) {
+        stopCapture();
+        setError((e as Error).message);
+      }
+    }
+  }
+  async function stopWatch() {
+    stopCapture();
+    try {
+      if (r.control?.socket?.readyState === WebSocket.OPEN) await r.control.request('watch.stop', {});
+    } catch {}
+    setRecognition('待機中');
+  }
   async function cancelRecognition() {
     stopCapture();
     setProcessing(false);
@@ -569,7 +631,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
         ...(candidateId ? { candidate_id: candidateId } : {}),
       });
       setCandidate(null);
-      setRecognition('待機中');
+      setRecognition(r.watch ? '自動で認識しています' : '待機中');
     } catch (e) {
       setError((e as Error).message);
       throw e;
@@ -642,6 +704,9 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     ttsStatus,
     candidate,
     capturing,
+    watching,
+    startWatch,
+    stopWatch,
     processing,
     operating,
     devices,
