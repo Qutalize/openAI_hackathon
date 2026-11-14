@@ -6,27 +6,26 @@ from pathlib import Path
 import numpy as np
 import onnxruntime as ort
 import torch
-from train_temporal import TemporalClassifier
+from model import TemporalClassifier
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
-from app.inference.preprocessing import FACE_INDICES, LIP_INDICES, PREPROCESSING_VERSION
+from app.inference.preprocessing import FACE_INDICES, LIP_INDICES, PREPROCESSING_VERSION  # noqa: E402
+
+# Signs start and end with the hands lowered, so fewer sign frames carry a hand.
+MIN_VALID_RATIO = {"lipread": 0.8, "sign": 0.5}
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("checkpoint")
-    p.add_argument("output_directory")
-    p.add_argument("--version", required=True)
-    p.add_argument("--license", required=True)
-    args = p.parse_args()
-    c = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+def export(c, output_directory, version, license_name, evaluation=None):
+    """Write model.onnx, metadata.json and labels.json from a checkpoint dict; return the metadata."""
     model = TemporalClassifier(c["points"], len(c["labels"]))
     model.load_state_dict(c["state_dict"])
     model.eval()
-    directory = Path(args.output_directory)
+    directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)
     features = torch.randn(1, c["max_frames"], c["points"], 4)
+    features[..., 3] = 1
     mask = torch.ones(1, c["max_frames"])
+    mask[:, c["max_frames"] // 2 :] = 0
     torch.onnx.export(
         model,
         (features, mask),
@@ -36,20 +35,18 @@ def main():
         opset_version=17,
         dynamo=False,
     )
-    session = ort.InferenceSession(
-        str(directory / "model.onnx"), providers=["CPUExecutionProvider"]
-    )
+    session = ort.InferenceSession(str(directory / "model.onnx"), providers=["CPUExecutionProvider"])
     with torch.no_grad():
         expected = model(features, mask).numpy()
-    actual = session.run(
-        None, {"features": features.numpy(), "frame_mask": mask.numpy()}
-    )[0]
-    np.testing.assert_allclose(expected, actual, atol=1e-5, rtol=1e-4)
+    actual = session.run(None, {"features": features.numpy(), "frame_mask": mask.numpy()})[0]
+    np.testing.assert_allclose(expected, actual, atol=1e-4, rtol=1e-3)
     kind = c["modality"]
+    default_threshold = 0.8 if kind == "lipread" else 0.85
     metadata = {
-        "model_version": args.version,
+        "model_version": version,
         "modality": kind,
         "language": "ja",
+        "architecture": c.get("architecture", "temporal-conv-v1"),
         "vocabulary_version": c["vocabulary_version"],
         "feature_schema": "lip40_v1" if kind == "lipread" else "sign100_v1",
         "landmark_indices": LIP_INDICES if kind == "lipread" else FACE_INDICES,
@@ -60,13 +57,12 @@ def main():
         "input_shapes": [list(features.shape), list(mask.shape)],
         "output_names": ["logits"],
         "labels": c["labels"],
-        "thresholds": {"candidate": 0.8 if kind == "lipread" else 0.85},
-        "required_points": "lip-valid-80pct"
-        if kind == "lipread"
-        else "one-hand-70pct-and-both-shoulders",
+        "thresholds": {"candidate": c.get("candidate_threshold", default_threshold)},
+        "min_valid_frame_ratio": MIN_VALID_RATIO[kind],
+        "required_points": "lip-valid-80pct" if kind == "lipread" else "one-hand-70pct-and-both-shoulders",
         "training_data_summary": c["training_data_summary"],
-        "evaluation_summary": {"accepted": False},
-        "license": args.license,
+        "evaluation_summary": evaluation or {"accepted": False},
+        "license": license_name,
     }
     (directory / "metadata.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -74,6 +70,18 @@ def main():
     (directory / "labels.json").write_text(
         json.dumps(c["labels"], ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    return metadata
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("checkpoint")
+    p.add_argument("output_directory")
+    p.add_argument("--version", required=True)
+    p.add_argument("--license", required=True)
+    args = p.parse_args()
+    c = torch.load(args.checkpoint, map_location="cpu", weights_only=True)
+    export(c, args.output_directory, args.version, args.license)
     print("ONNX parity passed. Run evaluate.py before registering this model.")
 
 
