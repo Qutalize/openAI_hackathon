@@ -147,6 +147,16 @@ class StorageConfig(StrictModel):
     persist_media: Literal[False] = False
 
 
+class TrainingConfig(StrictModel):
+    """Consented landmark uploads from /training; off unless a collection code is configured."""
+
+    upload_enabled: bool = False
+    directory: str = "data/training"
+    max_samples_per_subject: int = Field(2000, ge=1, le=20000)
+    # Signs start and end with the hands lowered, so fewer sign frames carry a hand.
+    min_valid_frame_ratio: dict[Literal["lipread", "sign"], float] = {"lipread": 0.8, "sign": 0.5}
+
+
 class ObservabilityConfig(StrictModel):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     log_transcript_text: Literal[False] = False
@@ -165,6 +175,8 @@ class Settings(StrictModel):
     modes: dict[Mode, ModeConfig]
     storage: StorageConfig
     observability: ObservabilityConfig
+    training: TrainingConfig = TrainingConfig()
+    training_upload_token: str = Field("", repr=False)
     root: Path = ROOT
     session_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(48), repr=False)
     public_origin: str = "http://localhost:5173"
@@ -251,4 +263,5 @@ def load_settings(root: Path = ROOT) -> Settings:
     data["turn_password"] = os.getenv("APP_TURN_PASSWORD", "")
     data["turn_cloudflare_key_id"] = os.getenv("APP_TURN_CLOUDFLARE_KEY_ID", "")
     data["turn_cloudflare_api_token"] = os.getenv("APP_TURN_CLOUDFLARE_API_TOKEN", "")
+    data["training_upload_token"] = os.getenv("APP_TRAINING_UPLOAD_TOKEN", "")
     return Settings.model_validate(data)

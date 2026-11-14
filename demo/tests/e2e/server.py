@@ -19,6 +19,9 @@ if __name__ == "__main__":
         cfg = load_settings()
         cfg.storage.room_database = str(Path(directory) / "rooms.sqlite3")
         cfg.security.join_attempts_per_minute = 100
+        cfg.training.upload_enabled = True
+        cfg.training.directory = str(Path(directory) / "training")
+        cfg.training_upload_token = "e2e-collection-code"
         repository = RoomRepository(Path(cfg.storage.room_database))
         for room_id in ("e2e-room", "mobile-room", "voice-room", "four-room", "reconnect-room", "status-room"):
             repository.create(room_id, "e2e-password", ttl=3600)

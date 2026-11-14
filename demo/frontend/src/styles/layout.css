@@ -231,6 +231,55 @@
   text-align: left;
   gap: 8px;
 }
+.training-prompt {
+  max-width: 650px;
+  margin: 16px auto 0;
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  background: rgb(0 0 0 / 72%);
+  color: #fff;
+  text-align: center;
+}
+.training-prompt strong {
+  font-size: 32px;
+}
+.training-prompt small {
+  font-size: 15px;
+}
+.training-progress {
+  font-size: 14px;
+  opacity: 0.8;
+}
+.training-phase {
+  font-size: 22px;
+  font-weight: 700;
+}
+.training-phase.recording {
+  color: #ff6b6b;
+}
+.training-counts {
+  max-width: 650px;
+  margin: 16px auto;
+  text-align: left;
+}
+.training-counts h2 {
+  font-size: 18px;
+}
+.training-counts ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px 16px;
+}
+.training-counts li {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line, #ddd);
+  padding: 4px 0;
+}
 .talk-page {
   display: flex;
   flex-direction: column;
