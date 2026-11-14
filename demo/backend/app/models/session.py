@@ -18,6 +18,8 @@ class Session:
     csrf_digest: str
     expires_at: float
     avatar: str = ""
+    # Recognition language for lipread/sign: "ja" (phrase models) or "en" (open-vocabulary models).
+    language: str = "ja"
     # Changes on every control WebSocket so peers can discard stale RTCPeerConnections.
     connection_id: str = ""
     input_epoch: int = 0
@@ -47,6 +49,7 @@ class Session:
             "avatar": self.avatar,
             "mode": self.mode,
             "input": self.input,
+            "language": self.language,
             "devices": self.devices.copy(),
             "speaking": self.active_since is not None,
             "recognizing": self.recognition_jobs > 0,
@@ -55,7 +58,12 @@ class Session:
         }
 
     def stream(self):
-        return {"input": self.input, "input_epoch": self.input_epoch, "stream_id": self.stream_id}
+        return {
+            "input": self.input,
+            "language": self.language,
+            "input_epoch": self.input_epoch,
+            "stream_id": self.stream_id,
+        }
 
 
 @dataclass

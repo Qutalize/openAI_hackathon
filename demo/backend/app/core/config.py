@@ -96,13 +96,13 @@ class VisionConfig(StrictModel):
     provider: Literal["onnx_temporal_classifier", "auto_avsr_cli", "uni_sign_cli"] = (
         "onnx_temporal_classifier"
     )
-    model_path: str
-    metadata_path: str
+    model_path: str = ""
+    metadata_path: str = ""
     runner_path: str = ""
     python_path: str = ""
     max_upload_bytes: int = Field(8 * 1024 * 1024, ge=1024, le=32 * 1024 * 1024)
     model_version: str = ""
-    feature_schema: Literal["lip40_v1", "sign100_v1"]
+    feature_schema: Literal["lip40_v1", "sign100_v1"] | None = None
     max_frames: int = Field(64, ge=20, le=256)
     min_valid_frame_ratio: float = Field(0.8, ge=0, le=1)
     candidate_threshold: float = Field(0.8, ge=0, le=1)
@@ -118,8 +118,26 @@ class RecognitionConfig(StrictModel):
     job_timeout_seconds: int = Field(10, ge=1, le=300)
     partial_results: bool = False
     speech: SpeechConfig
+    # Japanese phrase models (or any provider) per input.
     lipread: VisionConfig
     sign: VisionConfig
+    # Optional English open-vocabulary video models offered next to them.
+    lipread_open: VisionConfig | None = None
+    sign_open: VisionConfig | None = None
+
+    @model_validator(mode="after")
+    def check_open_models(self):
+        for kind, provider in (("lipread_open", "auto_avsr_cli"), ("sign_open", "uni_sign_cli")):
+            c = getattr(self, kind)
+            if c is not None and c.provider != provider:
+                raise ValueError(f"{kind} must use the {provider} provider")
+        for kind in ("lipread", "sign"):
+            c = getattr(self, kind)
+            if c.provider == "onnx_temporal_classifier" and not (
+                c.model_path and c.metadata_path and c.feature_schema
+            ):
+                raise ValueError(f"{kind} needs model_path, metadata_path and feature_schema")
+        return self
 
 
 class OutputConfig(StrictModel):

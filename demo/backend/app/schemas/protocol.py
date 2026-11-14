@@ -16,6 +16,7 @@ class JoinRequest(StrictModel):
     password: str = Field(min_length=1, max_length=128)
     mode: Mode
     input: Input
+    language: Literal["ja", "en"] | None = None
     display_name: str = Field(default="", max_length=40)
     avatar: str = Field(default="", max_length=65536)
 

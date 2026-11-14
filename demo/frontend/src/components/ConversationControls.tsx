@@ -1,3 +1,4 @@
+import { inputAvailable } from '../services/capabilities';
 import type { Conversation } from '../hooks/useConversation';
 import type { InputKind, PublicConfig, Session } from '../types/protocol';
 import { inputNames } from '../types/protocol';
@@ -51,13 +52,9 @@ export default function ConversationControls({
           onChange={(e) => void c.changeInput(e.target.value as InputKind)}
         >
           {config.modes[session.mode].allowed_inputs.map((kind) => (
-            <option
-              key={kind}
-              value={kind}
-              disabled={kind !== 'text' && !config.capabilities[kind].available}
-            >
+            <option key={kind} value={kind} disabled={!inputAvailable(config, kind)}>
               {t(inputNames[kind])}
-              {kind !== 'text' && !config.capabilities[kind].available ? t('（未導入）') : ''}
+              {!inputAvailable(config, kind) ? t('（未導入）') : ''}
             </option>
           ))}
         </select>

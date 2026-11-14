@@ -65,12 +65,38 @@ class RoomService:
             raise HTTPException(403, "このルームには参加していません")
         return session
 
-    def join(self, room, mode, input_kind, display_name="", avatar=""):
+    def model_kind(self, kind, language):
+        """The worker model serving an input in a recognition language."""
+        return f"{kind}_open" if kind in ("lipread", "sign") and language == "en" else kind
+
+    def available(self, kind, language=None):
+        caps = self.inference.capabilities
+        if kind not in ("lipread", "sign"):
+            return caps[kind]["available"]
+        languages = [language] if language else ["ja", "en"]
+        return any(caps.get(self.model_kind(kind, x), {}).get("available") for x in languages)
+
+    def pick_language(self, kind, requested=None):
+        if requested is not None and requested not in ("ja", "en"):
+            raise ValueError("認識の言語が不正です")
+        if kind not in ("lipread", "sign"):
+            return requested or "ja"
+        if requested:
+            if not self.available(kind, requested):
+                raise ValueError("選択した言語の認識モデルは利用できません")
+            return requested
+        return "ja" if self.available(kind, "ja") else "en"
+
+    def join(self, room, mode, input_kind, display_name="", avatar="", language=None):
         allowed = self.settings.modes[mode].allowed_inputs
         if input_kind not in allowed:
             raise HTTPException(422, "このモードでは利用できない入力方式です")
-        if input_kind != "text" and not self.inference.capabilities[input_kind]["available"]:
+        if input_kind != "text" and not self.available(input_kind):
             raise HTTPException(409, "選択したモデルは未導入です。文字入力を選択してください")
+        try:
+            language = self.pick_language(input_kind, language)
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
         state = self.rooms.setdefault(room["id"], RoomState())
         if len(state.participants) >= min(room["max_participants"], self.settings.room.max_participants):
             raise HTTPException(409, "ルームが満員です")
@@ -88,6 +114,7 @@ class RoomService:
             avatar=avatar,
             mode=mode,
             input=input_kind,
+            language=language,
             token_digest=digest(self.settings.session_secret, token),
             csrf_digest=digest(self.settings.session_secret, csrf),
             expires_at=min(room["expires_at"], time.time() + self.settings.room.session_ttl_seconds),
@@ -333,7 +360,7 @@ class RoomService:
             raise ValueError("本文は1〜500文字で入力してください")
         return text.strip()
 
-    def launch_recognition(self, s, kind, segment):
+    def launch_recognition(self, s, kind, segment, model=None):
         epoch = s.input_epoch
 
         async def run():
@@ -343,7 +370,7 @@ class RoomService:
             try:
                 await self.publish_activity(s)
                 await self.private(s, "recognition.state", {"state": "processing", "input": kind})
-                result = await self.inference.recognize(s.participant_id, kind, segment)
+                result = await self.inference.recognize(s.participant_id, model or kind, segment)
                 if s.input_epoch != epoch or s.token_digest not in self.sessions or not s.control:
                     return
                 if kind == "speech":
@@ -437,8 +464,9 @@ class RoomService:
             selected = p.get("input")
             if selected not in self.settings.modes[s.mode].allowed_inputs:
                 raise ValueError("このモードでは利用できない入力方式です")
-            if selected != "text" and not self.inference.capabilities[selected]["available"]:
+            if selected != "text" and not self.available(selected):
                 raise ValueError("認識モデルが利用できません")
+            s.language = self.pick_language(selected, p.get("language"))
             s.input = selected
             if selected != "speech":
                 s.devices["microphone"] = False
@@ -504,7 +532,7 @@ class RoomService:
                 raise ValueError("撮影データが不足しています。撮り直してください")
             s.segment = None
             await self.activity(s, False)
-            self.launch_recognition(s, s.input, segment)
+            self.launch_recognition(s, s.input, segment, self.model_kind(s.input, s.language))
         elif kind == "utterance.submit":
             text = self.validate_text(p.get("text"))
             source, version = "text", None
