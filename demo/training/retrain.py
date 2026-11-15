@@ -25,7 +25,9 @@ def fingerprint(directory: Path) -> list:
     return [len(files), max((f.stat().st_mtime_ns for f in files), default=0)]
 
 
-def run_once(data: Path, work: Path, epochs: int, log=print) -> list[dict]:
+def run_once(
+    data: Path, work: Path, epochs: int, log=print, max_false_accept: float | None = None
+) -> list[dict]:
     work.mkdir(parents=True, exist_ok=True)
     state_path = work / "state.json"
     state = json.loads(state_path.read_text(encoding="utf-8")) if state_path.is_file() else {}
@@ -51,6 +53,7 @@ def run_once(data: Path, work: Path, epochs: int, log=print) -> list[dict]:
                 "--register",
                 "--summary",
                 str(summary),
+                *([] if max_false_accept is None else ["--max-false-accept", str(max_false_accept)]),
             ],
             capture_output=True,
             text=True,
@@ -86,9 +89,14 @@ def main():
     p.add_argument("--work", default=str(ROOT / "data/training-runs"))
     p.add_argument("--epochs", type=int, default=150)
     p.add_argument("--every", type=float, help="repeat every N minutes")
+    p.add_argument("--max-false-accept", type=float, help="passed to pipeline.py (default 0.05)")
+    p.add_argument("--force", action="store_true", help="retrain even when the recordings have not changed")
     args = p.parse_args()
     while True:
-        run_once(Path(args.data), Path(args.work), args.epochs)
+        if args.force:
+            (Path(args.work) / "state.json").unlink(missing_ok=True)
+            args.force = False
+        run_once(Path(args.data), Path(args.work), args.epochs, max_false_accept=args.max_false_accept)
         if not args.every:
             return
         time.sleep(args.every * 60)

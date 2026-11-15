@@ -67,6 +67,19 @@ def load(directory, kind, log=print):
     return x, m, y, subjects, labels, vocabulary["version"]
 
 
+def take_folds(y, seed, most=5):
+    """Folds where fold k holds out every k-th take of each label, so every take is held out once."""
+    rng = np.random.default_rng(seed)
+    take = np.zeros(len(y), int)
+    for c in np.unique(y):
+        idx = rng.permutation(np.flatnonzero(y == c))
+        take[idx] = np.arange(len(idx))
+    k = min(most, int(np.bincount(y)[np.unique(y)].min()))
+    return (
+        [(np.flatnonzero(take % k != i), np.flatnonzero(take % k == i)) for i in range(k)] if k >= 2 else []
+    )
+
+
 def stratified_split(y, fraction, seed):
     """Indices for (rest, held) holding out `fraction` of every class (at least one when possible)."""
     rng = np.random.default_rng(seed)
@@ -101,16 +114,44 @@ def scores(probs, targets, unknown, threshold, classes):
     }
 
 
-def train_and_calibrate(x, m, y, classes, unknown, epochs, seed, device):
-    rest, val = stratified_split(y, 0.15, seed)
-    model, info = fit(
-        (x[rest], m[rest], y[rest]), (x[val], m[val], y[val]), classes, epochs, seed, device, log=None
-    )
-    threshold = calibrate(probabilities(model, x[val], m[val]), y[val], unknown)
+def train_and_calibrate(x, m, y, classes, unknown, epochs, seed, device, max_false_accept=0.05):
+    """Train a model and pick its threshold.
+
+    The threshold comes from out-of-fold probabilities over all of the given recordings, not from
+    the small part held out for model selection, which may contain only one or two other movements.
+    """
+
+    def train(idx):
+        rest, val = stratified_split(y[idx], 0.15, seed)
+        rest, val = idx[rest], idx[val]
+        return fit(
+            (x[rest], m[rest], y[rest]), (x[val], m[val], y[val]), classes, epochs, seed, device, log=None
+        )
+
+    everything = np.arange(len(y))
+    folds = take_folds(y, seed + 7, most=4)
+    if folds:
+        probs, targets = [], []
+        for rest, held in folds:
+            fold_model, _ = train(rest)
+            probs.append(probabilities(fold_model, x[held], m[held]))
+            targets.append(y[held])
+        threshold = calibrate(
+            np.concatenate(probs), np.concatenate(targets), unknown, max_false_accept=max_false_accept
+        )
+        model, info = train(everything)
+    else:
+        model, info = train(everything)
+        rest, val = stratified_split(y, 0.15, seed)
+        threshold = calibrate(
+            probabilities(model, x[val], m[val]), y[val], unknown, max_false_accept=max_false_accept
+        )
     return model, threshold, info
 
 
-def evaluate(x, m, y, subjects, labels, epochs, seed, device, log=print):
+def evaluate(
+    x, m, y, subjects, labels, epochs, seed, device, log=print, max_false_accept=ACCEPT_FALSE_ACCEPT
+):
     unknown, classes = labels.index("unknown"), len(labels)
     people = sorted(set(subjects.tolist()))
     folds, all_probs, all_targets, thresholds = [], [], [], []
@@ -120,19 +161,10 @@ def evaluate(x, m, y, subjects, labels, epochs, seed, device, log=print):
     else:
         # One person: fold k holds out the k-th take of every phrase, so every take is tested once.
         method = "within-subject-holdout"
-        rng = np.random.default_rng(seed + 1)
-        take = np.zeros(len(y), int)
-        for c in np.unique(y):
-            idx = rng.permutation(np.flatnonzero(y == c))
-            take[idx] = np.arange(len(idx))
-        k_folds = min(5, int(np.bincount(y).min()))
-        splits = [
-            (np.flatnonzero(take % k_folds != k), np.flatnonzero(take % k_folds == k), f"{people[0]}#{k}")
-            for k in range(k_folds)
-        ]
+        splits = [(rest, held, f"{people[0]}#{k}") for k, (rest, held) in enumerate(take_folds(y, seed + 1))]
     for train_idx, test_idx, person in splits:
         model, threshold, _ = train_and_calibrate(
-            x[train_idx], m[train_idx], y[train_idx], classes, unknown, epochs, seed, device
+            x[train_idx], m[train_idx], y[train_idx], classes, unknown, epochs, seed, device, max_false_accept
         )
         probs = probabilities(model, x[test_idx], m[test_idx])
         fold = {
@@ -169,12 +201,13 @@ def evaluate(x, m, y, subjects, labels, epochs, seed, device, log=print):
         "test_subjects": len(people) if method == "leave-one-subject-out" else 1,
     }
     accepted = (
-        overall["macro_f1_known"] >= ACCEPT_F1 and overall["unknown_false_accept_rate"] <= ACCEPT_FALSE_ACCEPT
+        overall["macro_f1_known"] >= ACCEPT_F1
+        and overall["unknown_false_accept_rate"] <= max_false_accept + 1e-9
     )
     return {
         "accepted": bool(accepted),
         "method": method,
-        "criteria": {"macro_f1_known": ACCEPT_F1, "unknown_false_accept_rate": ACCEPT_FALSE_ACCEPT},
+        "criteria": {"macro_f1_known": ACCEPT_F1, "unknown_false_accept_rate": max_false_accept},
         **overall,
         "folds": folds,
         "note": ""
@@ -196,6 +229,12 @@ def main():
         "--register", action="store_true", help="copy an accepted model to models/ and record hashes"
     )
     p.add_argument("--summary", help="write the outcome of this run as JSON to this file")
+    p.add_argument(
+        "--max-false-accept",
+        type=float,
+        default=ACCEPT_FALSE_ACCEPT,
+        help="highest share of other movements a model may accept, for the threshold and for acceptance",
+    )
     args = p.parse_args()
     kind, device = args.modality, pick_device(args.device)
     x, m, y, subjects, labels, vocabulary_version = load(args.data, kind)
@@ -204,11 +243,13 @@ def main():
     missing = [label for label in labels if counts[label] < 2]
     if missing:
         raise SystemExit(f"Every phrase and unknown needs at least 2 recordings; missing: {missing}")
-    evaluation = evaluate(x, m, y, subjects, labels, args.epochs, args.seed, device)
+    evaluation = evaluate(
+        x, m, y, subjects, labels, args.epochs, args.seed, device, max_false_accept=args.max_false_accept
+    )
     print(json.dumps({k: v for k, v in evaluation.items() if k != "folds"}, ensure_ascii=False))
     unknown = labels.index("unknown")
     model, threshold, info = train_and_calibrate(
-        x, m, y, len(labels), unknown, args.epochs, args.seed, device
+        x, m, y, len(labels), unknown, args.epochs, args.seed, device, args.max_false_accept
     )
     version = f"{kind}-ja-{time.strftime('%Y%m%d-%H%M%S')}"
     run = Path(args.work) / version
