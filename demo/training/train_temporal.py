@@ -86,12 +86,12 @@ def decide(probs, unknown, threshold):
     return np.where(accept, top, unknown), accept
 
 
-def calibrate(probs, targets, unknown, floor=0.3):
+def calibrate(probs, targets, unknown, floor=0.3, max_false_accept=TARGET_FALSE_ACCEPT):
     """Lowest threshold whose unknown false accept rate stays within the target."""
     known = targets != unknown
     for threshold in np.arange(floor, 0.991, 0.01):
         _, accept = decide(probs, unknown, threshold)
-        if not (~known).any() or accept[~known].mean() <= TARGET_FALSE_ACCEPT:
+        if not (~known).any() or accept[~known].mean() <= max_false_accept + 1e-9:
             return float(round(threshold, 2))
     return 0.99
 
