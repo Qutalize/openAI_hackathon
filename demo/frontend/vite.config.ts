@@ -6,6 +6,8 @@ export default defineConfig({
   // Prebundle worker-only imports before camera use so Vite does not reload
   // the page to optimize MediaPipe during the first capture.
   optimizeDeps: { include: ['@mediapipe/tasks-vision'] },
+  // The worker is a plain file under /workers, which the CDN caches for hours; the page asks for it by build.
+  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
   server: {
     port: 5173,
     strictPort: true,
