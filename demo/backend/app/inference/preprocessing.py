@@ -74,6 +74,9 @@ FACE_INDICES = [
 PREPROCESSING_VERSION = "landmarks-v1"
 
 
+MIN_SIGN_HAND_RATIO = 0.15
+
+
 def pack_frames(frames, timestamps, max_frames: int, kind: str):
     points = 40 if kind == "lipread" else 100
     source = np.asarray(frames, dtype=np.float32)
@@ -88,6 +91,7 @@ def pack_frames(frames, timestamps, max_frames: int, kind: str):
     data = np.zeros((1, max_frames, points, 4), dtype=np.float32)
     mask = np.zeros((1, max_frames), dtype=np.float32)
     count = min(max_frames, int(times[-1] // 50) + 1)
+    hand_frames = 0
     for n in range(count):
         t = n * 50
         hi = int(np.searchsorted(times, t))
@@ -102,12 +106,19 @@ def pack_frames(frames, timestamps, max_frames: int, kind: str):
             frame[:, 3] = (source[lo, :, 3] > 0.5) & (source[hi, :, 3] > 0.5)
         frame[frame[:, 3] < 0.5] = 0
         valid = frame[:, 3] > 0.5
-        good = (
-            valid.mean() >= 0.8
-            if kind == "lipread"
-            else ((valid[:21].mean() >= 0.7 or valid[21:42].mean() >= 0.7) and valid[53] and valid[54])
-        )
+        if kind == "lipread":
+            good = valid.mean() >= 0.8
+        else:
+            # Signs start and end with the hands lowered, often below the frame. A frame with both shoulders
+            # is kept even without hands, since "no hand in view" is part of the movement.
+            good = bool(valid[53] and valid[54])
+            if good and (valid[:21].mean() >= 0.7 or valid[21:42].mean() >= 0.7):
+                hand_frames += 1
         if good:
             data[0, n] = frame
             mask[0, n] = 1
-    return data, mask, float(mask.sum() / max(count, 1))
+    ratio = float(mask.sum() / max(count, 1))
+    # A sign clip still needs the hands for part of it; otherwise nothing was signed.
+    if kind != "lipread" and hand_frames < MIN_SIGN_HAND_RATIO * count:
+        ratio = 0.0
+    return data, mask, ratio
