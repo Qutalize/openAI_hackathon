@@ -3,15 +3,18 @@
 import asyncio
 import hmac
 import json
+import logging
 import re
 import time
 from pathlib import Path
 
+import numpy as np
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.inference.preprocessing import PREPROCESSING_VERSION, pack_frames
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 SUBJECT = re.compile(r"^[a-zA-Z0-9_-]{2,40}$")
 MAX_FRAMES = {"lipread": 64, "sign": 96}
@@ -52,6 +55,19 @@ def vocabulary_for(root: Path, kind: str) -> list[dict]:
             item["reference"] = reference
         items.append(item)
     return items
+
+
+def rejection_reason(frames, kind: str) -> str:
+    """Which part was missing from a rejected clip, in words the person recording can act on."""
+    x = np.asarray(frames, dtype=np.float32)
+    present = x[..., 3] > 0.5
+    if kind == "lipread":
+        return f"口元が映っていたのは{(present.mean(1) >= 0.8).mean():.0%}"
+    shoulders = (present[:, 53] & present[:, 54]).mean()
+    hands = ((present[:, :21].mean(1) >= 0.7) | (present[:, 21:42].mean(1) >= 0.7)).mean()
+    if shoulders < 0.5:
+        return f"両肩が映っていたのは{shoulders:.0%}。カメラから離れて、両肩まで映してください"
+    return f"手が映っていたのは{hands:.0%}。手を胸の前まで上げて手話をしてください"
 
 
 def labels_for(root: Path, kind: str) -> list[str]:
@@ -151,7 +167,9 @@ async def upload(sample: TrainingSample, request: Request):
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
     if ratio < cfg.training.min_valid_frame_ratio[kind]:
-        raise HTTPException(422, "特徴点が途切れました。顔や手が映る位置で、もう一度お願いします")
+        reason = rejection_reason(sample.frames, kind)
+        logger.info("training sample rejected (%s, %s): ratio=%.2f %s", kind, sample.label, ratio, reason)
+        raise HTTPException(422, f"特徴点が途切れました（{reason}）。もう一度お願いします")
     folder = cfg.path(cfg.training.directory) / kind / sample.subject_id
     if folder.is_dir() and sum(1 for _ in folder.glob("*.json")) >= cfg.training.max_samples_per_subject:
         raise HTTPException(429, "この人物IDの収録数が上限に達しました")
