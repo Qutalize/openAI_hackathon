@@ -1,3 +1,5 @@
+declare const __BUILD_ID__: string;
+
 // Landmarks used for the features, in image coordinates (0–1), and whether the frame was accepted.
 export type FeaturePoints = {
   lips?: number[][];
@@ -32,7 +34,8 @@ export class VisionCapture {
     video.playsInline = true;
     await video.play();
     if (this.stopped) return;
-    const worker = (this.worker = new Worker('/workers/vision.js'));
+    const build = typeof __BUILD_ID__ === 'undefined' ? 'dev' : __BUILD_ID__;
+    const worker = (this.worker = new Worker(`/workers/vision.js?v=${build}`));
     return new Promise<void>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('特徴点モデルの開始がタイムアウトしました'));
