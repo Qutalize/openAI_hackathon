@@ -1,15 +1,25 @@
 {
   "version": "demo-ja-v2",
   "items": [
-    {"id": "greeting", "text": "こんにちは", "modalities": ["lipread", "sign"]},
-    {"id": "thanks", "text": "ありがとう", "modalities": ["lipread", "sign"]},
-    {"id": "yes", "text": "はい", "modalities": ["lipread", "sign"]},
-    {"id": "no", "text": "いいえ", "modalities": ["lipread", "sign"]},
-    {"id": "sorry", "text": "すみません", "modalities": ["lipread", "sign"]},
-    {"id": "please", "text": "お願いします", "modalities": ["lipread", "sign"]},
-    {"id": "understood", "text": "わかりました", "modalities": ["lipread", "sign"]},
-    {"id": "repeat", "text": "もう一度お願いします", "modalities": ["lipread", "sign"]},
-    {"id": "wait", "text": "ちょっと待ってください", "modalities": ["lipread", "sign"]},
-    {"id": "fine", "text": "大丈夫です", "modalities": ["lipread", "sign"]}
+    {"id": "greeting", "text": "こんにちは", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=YjXV8vCntpE", "source": "長野県 手話辞典「あいさつ」"}}},
+    {"id": "thanks", "text": "ありがとう", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=mB_gC7mcsv0", "source": "長野県 手話辞典「あいさつ」"}}},
+    {"id": "yes", "text": "はい", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/results?search_query=%E6%89%8B%E8%A9%B1+%E3%81%AF%E3%81%84", "source": "YouTube で検索（公式の1語動画なし）"}}},
+    {"id": "no", "text": "いいえ", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/results?search_query=%E6%89%8B%E8%A9%B1+%E3%81%84%E3%81%84%E3%81%88", "source": "YouTube で検索（公式の1語動画なし）"}}},
+    {"id": "sorry", "text": "すみません", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=ct9uATMqH2A", "source": "長野県 手話辞典「あいさつ」"}}},
+    {"id": "please", "text": "お願いします", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=MT7LjmMrJkI", "source": "長野県 手話辞典「レストランで」"}}},
+    {"id": "understood", "text": "わかりました", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=N4oqQc_IW_E", "source": "長野県 手話辞典「レストランで」"}}},
+    {"id": "repeat", "text": "もう一度お願いします", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/results?search_query=%E6%89%8B%E8%A9%B1+%E3%82%82%E3%81%86%E4%B8%80%E5%BA%A6", "source": "「もう一度」を YouTube で検索し、続けて「お願いします」"}}},
+    {"id": "wait", "text": "ちょっと待ってください", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=BxmVKJOIbTs", "source": "長野県 手話辞典「レストランで」の「少々お待ちください」"}}},
+    {"id": "fine", "text": "大丈夫です", "modalities": ["lipread", "sign"],
+     "references": {"sign": {"url": "https://www.youtube.com/watch?v=1Zu990FQIvQ", "source": "長野県 手話辞典「救急のとき」の「大丈夫ですか」"}}}
   ]
 }

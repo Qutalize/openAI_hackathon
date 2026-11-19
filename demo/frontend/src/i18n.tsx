@@ -294,6 +294,9 @@ const english: Record<string, string> = {
     'Other movement: scratch your head or touch your hair, anything but signing',
   '対象外の動き：語彙にない手話や身ぶりをしてください': 'Other movement: signs or gestures outside the list',
   収録数: 'Recordings',
+  見本の動画: 'Reference videos',
+  '撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。':
+    'Before recording, pick one form for each phrase and use it every time.',
   この人物IDの収録数: 'Recordings for this subject ID',
   '全体で{n}人': '{n} people in total',
   この人物IDの収録を削除: 'Delete recordings for this subject ID',

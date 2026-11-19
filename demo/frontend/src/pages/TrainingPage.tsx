@@ -5,7 +5,7 @@ import Video from '../components/Video';
 import { LanguageSelect, useI18n } from '../i18n';
 
 type Kind = 'lipread' | 'sign';
-type Phrase = { id: string; text: string; hint?: string };
+type Phrase = { id: string; text: string; hint?: string; reference?: { url: string; source: string } };
 type ModelInfo = {
   available: boolean;
   model_version?: string;
@@ -391,6 +391,26 @@ export default function TrainingPage() {
           </button>
         </div>
       </form>
+      {vocabulary.some((p) => p.reference) && (
+        <section className="training-counts" aria-label={t('見本の動画')}>
+          <h2>{t('見本の動画')}</h2>
+          <p>{t('撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。')}</p>
+          <ul className="training-references">
+            {vocabulary.map((p) => (
+              <li key={p.id}>
+                <span>{t(p.text)}</span>
+                {p.reference ? (
+                  <a href={p.reference.url} target="_blank" rel="noopener noreferrer">
+                    {p.reference.source}
+                  </a>
+                ) : (
+                  <span>—</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {counts && (
         <section className="training-counts" aria-label={t('収録数')}>
           <h2>

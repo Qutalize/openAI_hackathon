@@ -63,6 +63,8 @@ def test_upload_saves_landmarks_and_reports_counts(collector):
     assert status["lipread"]["labels"] == {"greeting": 1, "unknown": 1}
     assert status["lipread"]["subjects"] == 1
     assert {"id": "thanks", "text": "ありがとう"} in status["lipread"]["vocabulary"]
+    # Sign phrases carry a reference video for first-time signers; lipread phrases have none.
+    assert all(p["reference"]["url"].startswith("https://") for p in status["sign"]["vocabulary"])
     assert status["models"]["lipread"] == {"available": False}
     assert status["runs"] == []
 

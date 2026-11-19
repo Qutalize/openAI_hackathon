@@ -285,6 +285,12 @@
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 6px 16px;
 }
+.training-references {
+  grid-template-columns: 1fr !important;
+}
+.training-references li {
+  gap: 12px;
+}
 .training-runs {
   grid-template-columns: 1fr !important;
 }
