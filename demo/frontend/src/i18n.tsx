@@ -295,6 +295,8 @@ const english: Record<string, string> = {
   '対象外の動き：語彙にない手話や身ぶりをしてください': 'Other movement: signs or gestures outside the list',
   収録数: 'Recordings',
   見本の動画: 'Reference videos',
+  見本: 'Watch',
+  '連続撮影で、毎回の撮影の前に見本を流す': 'Play the reference before each recording',
   '見本：{text}': 'Reference: {text}',
   'この表現は、見本のリンク先で動きを確認してください': 'Open the reference link to see this phrase',
   '撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。':
