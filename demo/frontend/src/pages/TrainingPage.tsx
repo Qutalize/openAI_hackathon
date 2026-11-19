@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { VisionCapture } from '../services/visionCapture';
 import { api } from '../services/api';
 import Video from '../components/Video';
+import { drawLandmarks } from '../components/landmarkOverlay';
 import { LanguageSelect, useI18n } from '../i18n';
 
 type Kind = 'lipread' | 'sign';
@@ -96,6 +97,7 @@ export default function TrainingPage() {
     [shown, setShown] = useState<string>(),
     [plays, setPlays] = useState(0),
     [playExample, setPlayExample] = useState(true),
+    [showPoints, setShowPoints] = useState(false),
     [prompt, setPrompt] = useState<{
       id: string;
       text: string;
@@ -112,8 +114,11 @@ export default function TrainingPage() {
     times: [] as number[],
     recording: false,
     cancelled: false,
+    // The landmark model currently running, so recording can reuse the one started for the overlay.
+    visionKind: undefined as Kind | undefined,
   });
   const r = refs.current;
+  const overlay = useRef<HTMLCanvasElement>(null);
   useEffect(
     () => () => {
       r.cancelled = true;
@@ -122,6 +127,38 @@ export default function TrainingPage() {
     },
     [r],
   );
+
+  async function startVision() {
+    if (r.visionKind === kind) return;
+    r.visionKind = undefined;
+    await r.vision.start(
+      r.stream!,
+      kind,
+      (features, timestamp) => {
+        if (!r.recording) return;
+        r.frames.push(features);
+        r.times.push(timestamp);
+      },
+      setStatus,
+    );
+    r.visionKind = kind;
+  }
+  function stopVision() {
+    r.vision.stop();
+    r.visionKind = undefined;
+  }
+
+  // The overlay shows the landmarks that become features; outside recording it runs the model just for the preview.
+  useEffect(() => {
+    const canvas = overlay.current;
+    r.vision.onPoints = showPoints && canvas ? (points) => drawLandmarks(canvas, points) : undefined;
+    if (canvas) drawLandmarks(canvas);
+    if (running || !stream) return;
+    if (showPoints) startVision().catch(() => undefined);
+    else stopVision();
+    // startVision reads the current kind and stream; re-running on those is what restarts it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPoints, stream, running, kind]);
   const headers = { 'X-Training-Code': code };
   const vocabulary = counts?.[kind].vocabulary ?? [];
   const subjectValid = /^[a-zA-Z0-9_-]{2,40}$/.test(subject);
@@ -168,7 +205,7 @@ export default function TrainingPage() {
   function stopAll(message: string) {
     r.cancelled = true;
     r.recording = false;
-    r.vision.stop();
+    stopVision();
     setRunning(false);
     setPrompt(undefined);
     setStatus(message);
@@ -212,16 +249,7 @@ export default function TrainingPage() {
     setRunning(true);
     setStatus('特徴点モデルを準備しています');
     try {
-      await r.vision.start(
-        r.stream,
-        kind,
-        (features, timestamp) => {
-          if (!r.recording) return;
-          r.frames.push(features);
-          r.times.push(timestamp);
-        },
-        setStatus,
-      );
+      await startVision();
     } catch (e) {
       stopAll((e as Error).message);
       return;
@@ -376,6 +404,10 @@ export default function TrainingPage() {
           />
           {t('本人が収集・モデル学習への使用に同意しています')}
         </label>
+        <label className="setting-check">
+          <input type="checkbox" checked={showPoints} onChange={(e) => setShowPoints(e.target.checked)} />
+          {t('特徴点を表示（緑は学習に使われる映像、赤は使われない映像）')}
+        </label>
         {prompt && (
           <div className="training-prompt" aria-live="assertive">
             <span className="training-progress">
@@ -395,6 +427,7 @@ export default function TrainingPage() {
             ) : (
               <p>{t('カメラ OFF')}</p>
             )}
+            <canvas ref={overlay} className="landmark-overlay mirrored" aria-hidden="true" />
           </div>
           {example && (
             <figure className="training-example">

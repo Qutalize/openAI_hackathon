@@ -1,4 +1,17 @@
+// Landmarks used for the features, in image coordinates (0–1), and whether the frame was accepted.
+export type FeaturePoints = {
+  lips?: number[][];
+  hands?: number[][][];
+  pose?: (number[] | null)[];
+  face?: number[][];
+  valid: boolean;
+  width: number;
+  height: number;
+};
+
 export class VisionCapture {
+  // Receives each frame's landmark positions; set it to draw them over the camera preview.
+  onPoints?: (points: FeaturePoints) => void;
   private worker?: Worker;
   private timer?: ReturnType<typeof setTimeout>;
   private video?: HTMLVideoElement;
@@ -42,7 +55,10 @@ export class VisionCapture {
           this.tick();
         } else if (data.type === 'features') {
           this.busy = false;
-          if (!this.stopped) onFrame(data.features, data.timestamp);
+          if (!this.stopped) {
+            onFrame(data.features, data.timestamp);
+            if (data.points) this.onPoints?.(data.points);
+          }
         } else if (data.type === 'error') {
           clearTimeout(timeout);
           reject(new Error(data.message));
