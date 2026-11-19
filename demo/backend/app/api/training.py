@@ -42,7 +42,16 @@ def settings_for(request: Request):
 
 def vocabulary_for(root: Path, kind: str) -> list[dict]:
     vocabulary = json.loads((root / "config/vocabulary.ja.json").read_text(encoding="utf-8"))
-    return [{"id": x["id"], "text": x["text"]} for x in vocabulary["items"] if kind in x["modalities"]]
+    items = []
+    for x in vocabulary["items"]:
+        if kind not in x["modalities"]:
+            continue
+        item = {"id": x["id"], "text": x["text"]}
+        # A video showing the phrase, for people who record it for the first time.
+        if reference := x.get("references", {}).get(kind):
+            item["reference"] = reference
+        items.append(item)
+    return items
 
 
 def labels_for(root: Path, kind: str) -> list[str]:
