@@ -31,6 +31,13 @@ type Status = Record<Kind, { labels: Record<string, number>; subjects: number; v
   models?: Record<Kind, ModelInfo>;
   runs?: Run[];
 };
+// A muted, looping player for a YouTube video or Short; search-result links have no single video to embed.
+function youtubeEmbed(url: string) {
+  const id = new URL(url).searchParams.get('v') ?? url.match(/youtube\.com\/shorts\/([\w-]+)/)?.[1];
+  return id
+    ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&rel=0`
+    : undefined;
+}
 const percent = (x?: number) => (x == null ? '—' : `${Math.round(x * 100)}%`);
 
 const DURATION = { lipread: 3200, sign: 4800 };
@@ -81,7 +88,9 @@ export default function TrainingPage() {
     [status, setStatus] = useState(''),
     [counts, setCounts] = useState<Status>(),
     [running, setRunning] = useState(false),
+    [shown, setShown] = useState<string>(),
     [prompt, setPrompt] = useState<{
+      id: string;
       text: string;
       hint?: string;
       phase: string;
@@ -109,6 +118,14 @@ export default function TrainingPage() {
   const headers = { 'X-Training-Code': code };
   const vocabulary = counts?.[kind].vocabulary ?? [];
   const subjectValid = /^[a-zA-Z0-9_-]{2,40}$/.test(subject);
+  // While recording, the example follows the phrase being asked for; otherwise the one picked from the list.
+  const exampleOf = (id?: string) => {
+    const p = vocabulary.find((x) => x.id === id && x.reference);
+    return p?.reference && { id: p.id, text: p.text, ...p.reference, embed: youtubeEmbed(p.reference.url) };
+  };
+  const example = running
+    ? exampleOf(prompt?.id)
+    : exampleOf(shown) || exampleOf(vocabulary.find((x) => x.reference)?.id);
 
   async function refresh() {
     if (!code || !subjectValid) return;
@@ -217,11 +234,11 @@ export default function TrainingPage() {
       for (let attempt = 0; attempt < 3 && !saved && !r.cancelled; attempt++) {
         const hint = phrase.hint;
         for (let n = COUNTDOWN; n > 0 && !r.cancelled; n--) {
-          setPrompt({ text: phrase.text, hint, phase: `${n}`, done, total: queue.length });
+          setPrompt({ id: phrase.id, text: phrase.text, hint, phase: `${n}`, done, total: queue.length });
           await wait(700);
         }
         if (r.cancelled) break;
-        setPrompt({ text: phrase.text, hint, phase: '撮影中', done, total: queue.length });
+        setPrompt({ id: phrase.id, text: phrase.text, hint, phase: '撮影中', done, total: queue.length });
         const { frames, times } = await record();
         if (r.cancelled) break;
         try {
@@ -358,11 +375,35 @@ export default function TrainingPage() {
             </span>
           </div>
         )}
-        <div className="setup-preview">
-          {stream ? (
-            <Video stream={stream} local label={t('学習データ収集のプレビュー')} />
-          ) : (
-            <p>{t('カメラ OFF')}</p>
+        <div className={example ? 'training-stage with-example' : 'training-stage'}>
+          <div className="setup-preview">
+            {stream ? (
+              <Video stream={stream} local label={t('学習データ収集のプレビュー')} />
+            ) : (
+              <p>{t('カメラ OFF')}</p>
+            )}
+          </div>
+          {example && (
+            <figure className="training-example">
+              {example.embed ? (
+                <iframe
+                  key={example.embed}
+                  src={example.embed}
+                  title={t('見本：{text}', { text: t(example.text) })}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              ) : (
+                <p>{t('この表現は、見本のリンク先で動きを確認してください')}</p>
+              )}
+              <figcaption>
+                {t('見本：{text}', { text: t(example.text) })}（
+                <a href={example.url} target="_blank" rel="noopener noreferrer">
+                  {example.source}
+                </a>
+                ）
+              </figcaption>
+            </figure>
           )}
         </div>
         <p role="status">{t(status)}</p>
@@ -398,14 +439,16 @@ export default function TrainingPage() {
           <ul className="training-references">
             {vocabulary.map((p) => (
               <li key={p.id}>
-                <span>{t(p.text)}</span>
-                {p.reference ? (
-                  <a href={p.reference.url} target="_blank" rel="noopener noreferrer">
-                    {p.reference.source}
-                  </a>
-                ) : (
-                  <span>—</span>
-                )}
+                <button
+                  type="button"
+                  className={p.id === example?.id ? 'primary' : 'secondary'}
+                  aria-pressed={p.id === example?.id}
+                  disabled={running || !p.reference}
+                  onClick={() => setShown(p.id)}
+                >
+                  {t(p.text)}
+                </button>
+                <span>{p.reference?.source ?? '—'}</span>
               </li>
             ))}
           </ul>

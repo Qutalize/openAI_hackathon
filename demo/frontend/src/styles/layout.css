@@ -290,6 +290,47 @@
 }
 .training-references li {
   gap: 12px;
+  align-items: center;
+}
+.training-stage.with-example {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px auto;
+}
+.training-stage.with-example .setup-preview {
+  margin: 0;
+  max-width: none;
+}
+.training-example {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.training-example iframe,
+.training-example > p {
+  width: 100%;
+  height: min(40vh, 340px);
+  border: 0;
+  border-radius: 14px;
+  background: var(--stage);
+  color: #d7d8e0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+}
+.training-example figcaption {
+  font-size: 14px;
+}
+@media (max-width: 700px) {
+  .training-stage.with-example {
+    grid-template-columns: 1fr;
+  }
+  .training-example iframe,
+  .training-example > p {
+    height: 28vh;
+  }
 }
 .training-runs {
   grid-template-columns: 1fr !important;
