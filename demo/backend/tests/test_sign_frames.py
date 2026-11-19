@@ -22,6 +22,12 @@ def test_sign_keeps_frames_with_lowered_hands():
     assert mask.sum() == 96
 
 
+def test_sign_frames_arriving_every_150ms_are_interpolated():
+    frames, _ = clip(32, total=32)
+    _, _, ratio = pack_frames(frames, [n * 150.0 for n in range(32)], 96, "sign")
+    assert ratio == 1.0
+
+
 def test_sign_without_hands_is_rejected():
     _, _, ratio = pack_frames(*clip(5), 96, "sign")
     assert ratio == 0.0

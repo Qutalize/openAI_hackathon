@@ -168,7 +168,17 @@ async def upload(sample: TrainingSample, request: Request):
         raise HTTPException(422, str(exc)) from None
     if ratio < cfg.training.min_valid_frame_ratio[kind]:
         reason = rejection_reason(sample.frames, kind)
-        logger.info("training sample rejected (%s, %s): ratio=%.2f %s", kind, sample.label, ratio, reason)
+        gaps = np.diff(sample.timestamps) if len(sample.timestamps) > 1 else np.zeros(1)
+        logger.info(
+            "training sample rejected (%s, %s): ratio=%.2f frames=%d gap_ms median=%.0f max=%.0f %s",
+            kind,
+            sample.label,
+            ratio,
+            len(sample.frames),
+            np.median(gaps),
+            gaps.max(),
+            reason,
+        )
         raise HTTPException(422, f"特徴点が途切れました（{reason}）。もう一度お願いします")
     folder = cfg.path(cfg.training.directory) / kind / sample.subject_id
     if folder.is_dir() and sum(1 for _ in folder.glob("*.json")) >= cfg.training.max_samples_per_subject:

@@ -75,6 +75,9 @@ PREPROCESSING_VERSION = "landmarks-v1"
 
 
 MIN_SIGN_HAND_RATIO = 0.15
+# Longest gap between captured frames that is still interpolated. Sign capture runs face, hand and pose
+# models on every frame, so its frames arrive 100–200 ms apart in a browser.
+MAX_GAP_MS = {"lipread": 100, "sign": 300}
 
 
 def pack_frames(frames, timestamps, max_frames: int, kind: str):
@@ -97,7 +100,7 @@ def pack_frames(frames, timestamps, max_frames: int, kind: str):
         hi = int(np.searchsorted(times, t))
         if hi < len(times) and abs(times[hi] - t) < 0.001:
             frame = source[hi].copy()
-        elif hi == 0 or hi == len(times) or times[hi] - times[hi - 1] > 100:
+        elif hi == 0 or hi == len(times) or times[hi] - times[hi - 1] > MAX_GAP_MS.get(kind, 100):
             continue
         else:
             lo = hi - 1
