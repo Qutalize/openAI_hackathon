@@ -288,8 +288,8 @@ const english: Record<string, string> = {
     'Other movement: keep your mouth closed and blink or tilt your head',
   '対象外の動き：笑う・あくびをする・唇をなめるなど、話す以外の口の動きをしてください':
     'Other movement: smile, yawn or lick your lips, anything but speaking',
-  '対象外の動き：手を下ろしたまま、少し体を動かしてください':
-    'Other movement: keep your hands down and move a little',
+  '対象外の動き：腕を組む、胸の前で手を組むなど、手を画面に映したまま止めてください':
+    'Other movement: fold your arms or clasp your hands in view, and hold still',
   '対象外の動き：頭をかく、髪を触るなど、手話ではない手の動きをしてください':
     'Other movement: scratch your head or touch your hair, anything but signing',
   '対象外の動き：語彙にない手話や身ぶりをしてください': 'Other movement: signs or gestures outside the list',
