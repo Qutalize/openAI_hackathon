@@ -5,7 +5,9 @@ import Video from '../components/Video';
 import { LanguageSelect, useI18n } from '../i18n';
 
 type Kind = 'lipread' | 'sign';
-type Phrase = { id: string; text: string; hint?: string; reference?: { url: string; source: string } };
+// A video showing the phrase; start and end (seconds) frame the one clear, front-facing performance.
+type Reference = { url: string; source: string; start?: number; end?: number };
+type Phrase = { id: string; text: string; hint?: string; reference?: Reference };
 type ModelInfo = {
   available: boolean;
   model_version?: string;
@@ -31,13 +33,16 @@ type Status = Record<Kind, { labels: Record<string, number>; subjects: number; v
   models?: Record<Kind, ModelInfo>;
   runs?: Run[];
 };
-// A muted, looping player for a YouTube video or Short; search-result links have no single video to embed.
-function youtubeEmbed(url: string) {
+// A muted player that plays the reference's segment once from its start.
+function youtubeEmbed({ url, start, end }: Reference) {
   const id = new URL(url).searchParams.get('v') ?? url.match(/youtube\.com\/shorts\/([\w-]+)/)?.[1];
-  return id
-    ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&playsinline=1&rel=0`
-    : undefined;
+  if (!id) return undefined;
+  const range = `${start != null ? `&start=${start}` : ''}${end != null ? `&end=${end}` : ''}`;
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&playsinline=1&rel=0${range}`;
 }
+// How long the pre-recording example takes: the segment plus time for the player to load.
+const EXAMPLE_LOAD_MS = 1500;
+const exampleMs = (r: Reference) => (r.end != null ? (r.end - (r.start ?? 0)) * 1000 + EXAMPLE_LOAD_MS : 0);
 const percent = (x?: number) => (x == null ? '—' : `${Math.round(x * 100)}%`);
 
 const DURATION = { lipread: 3200, sign: 4800 };
@@ -89,6 +94,8 @@ export default function TrainingPage() {
     [counts, setCounts] = useState<Status>(),
     [running, setRunning] = useState(false),
     [shown, setShown] = useState<string>(),
+    [plays, setPlays] = useState(0),
+    [playExample, setPlayExample] = useState(true),
     [prompt, setPrompt] = useState<{
       id: string;
       text: string;
@@ -121,7 +128,7 @@ export default function TrainingPage() {
   // While recording, the example follows the phrase being asked for; otherwise the one picked from the list.
   const exampleOf = (id?: string) => {
     const p = vocabulary.find((x) => x.id === id && x.reference);
-    return p?.reference && { id: p.id, text: p.text, ...p.reference, embed: youtubeEmbed(p.reference.url) };
+    return p?.reference && { id: p.id, text: p.text, ...p.reference, embed: youtubeEmbed(p.reference) };
   };
   const example = running
     ? exampleOf(prompt?.id)
@@ -233,6 +240,12 @@ export default function TrainingPage() {
       let saved = false;
       for (let attempt = 0; attempt < 3 && !saved && !r.cancelled; attempt++) {
         const hint = phrase.hint;
+        // Play the phrase's example right before the countdown, so the movement is fresh when recording starts.
+        if (playExample && phrase.reference && exampleMs(phrase.reference)) {
+          setPrompt({ id: phrase.id, text: phrase.text, hint, phase: '見本', done, total: queue.length });
+          setPlays((n) => n + 1);
+          await wait(exampleMs(phrase.reference));
+        }
         for (let n = COUNTDOWN; n > 0 && !r.cancelled; n--) {
           setPrompt({ id: phrase.id, text: phrase.text, hint, phase: `${n}`, done, total: queue.length });
           await wait(700);
@@ -387,7 +400,7 @@ export default function TrainingPage() {
             <figure className="training-example">
               {example.embed ? (
                 <iframe
-                  key={example.embed}
+                  key={`${example.embed}#${plays}`}
                   src={example.embed}
                   title={t('見本：{text}', { text: t(example.text) })}
                   allow="autoplay; encrypted-media; picture-in-picture"
@@ -436,6 +449,15 @@ export default function TrainingPage() {
         <section className="training-counts" aria-label={t('見本の動画')}>
           <h2>{t('見本の動画')}</h2>
           <p>{t('撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。')}</p>
+          <label className="setting-check">
+            <input
+              type="checkbox"
+              checked={playExample}
+              disabled={running}
+              onChange={(e) => setPlayExample(e.target.checked)}
+            />
+            {t('連続撮影で、毎回の撮影の前に見本を流す')}
+          </label>
           <ul className="training-references">
             {vocabulary.map((p) => (
               <li key={p.id}>
@@ -444,7 +466,10 @@ export default function TrainingPage() {
                   className={p.id === example?.id ? 'primary' : 'secondary'}
                   aria-pressed={p.id === example?.id}
                   disabled={running || !p.reference}
-                  onClick={() => setShown(p.id)}
+                  onClick={() => {
+                    setShown(p.id);
+                    setPlays((n) => n + 1);
+                  }}
                 >
                   {t(p.text)}
                 </button>
