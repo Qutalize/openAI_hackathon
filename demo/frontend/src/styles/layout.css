@@ -1684,3 +1684,86 @@ button,
     height: 42vh;
   }
 }
+
+/* Recognition settings as labelled segmented controls, with the capture button on its own row: four
+   equal buttons in one row read as four actions, though two of them are settings. */
+.capture-setting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.capture-setting-label {
+  flex: 0 0 3.5em;
+  font-size: 12px;
+  color: var(--muted);
+}
+.segmented {
+  flex: 1;
+  display: flex;
+  padding: 2px;
+  border-radius: 10px;
+  background: #e8ebf1;
+  gap: 2px;
+}
+.capture-controls .segmented button {
+  flex: 1;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #4a5161;
+  font-weight: 600;
+  box-shadow: none;
+}
+.capture-controls .segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--blue);
+  box-shadow: 0 1px 3px rgba(20, 30, 60, 0.18);
+}
+.capture-controls .capture-main {
+  width: 100%;
+  min-height: 44px;
+  font-size: 15px;
+}
+.capture-controls .capture-main.recording {
+  background: #d93a3a;
+  border-color: #d93a3a;
+}
+.capture-controls .watch-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 10px;
+  background: #eaf6ee;
+  color: #1d6b3a;
+  font-size: 14px;
+}
+.watch-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2fae5f;
+  animation: watch-pulse 1.4s ease-in-out infinite;
+}
+@keyframes watch-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (max-width: 760px) {
+  .capture-controls > .watch-status {
+    display: flex;
+  }
+  .capture-controls .segmented button {
+    min-height: 34px;
+    font-size: 13px;
+  }
+  .capture-controls .capture-main {
+    min-height: 44px;
+    font-size: 15px;
+  }
+}

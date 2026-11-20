@@ -78,19 +78,48 @@ export default function RecognitionComposer({
       {vision && (
         <div className="capture-controls">
           {choices.length > 1 && (
-            <div className="language-switch" role="group" aria-label={t('認識の言語')}>
-              {choices.map((x) => (
+            <div className="capture-setting">
+              <span className="capture-setting-label" id="recognition-language">
+                {t('言語')}
+              </span>
+              <div className="segmented" role="group" aria-labelledby="recognition-language">
+                {choices.map((x) => (
+                  <button
+                    key={x}
+                    type="button"
+                    aria-pressed={x === language}
+                    disabled={capturing || processing || watching}
+                    onClick={() => void onLanguage(x)}
+                  >
+                    {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {instant && (
+            <div className="capture-setting">
+              <span className="capture-setting-label" id="recognition-trigger">
+                {t('撮り方')}
+              </span>
+              <div className="segmented" role="group" aria-labelledby="recognition-trigger">
                 <button
-                  key={x}
                   type="button"
-                  className={x === language ? 'primary' : 'secondary'}
-                  aria-pressed={x === language}
-                  disabled={capturing || processing || watching}
-                  onClick={() => void onLanguage(x)}
+                  aria-pressed={!watching}
+                  disabled={!connected || capturing || (processing && !watching)}
+                  onClick={() => watching && void onWatch(false)}
                 >
-                  {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
+                  {t('ボタンで撮る')}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  aria-pressed={watching}
+                  disabled={!connected || capturing || (processing && !watching)}
+                  onClick={() => !watching && void onWatch(true)}
+                >
+                  {t('自動で認識')}
+                </button>
+              </div>
             </div>
           )}
           <p>
@@ -98,20 +127,18 @@ export default function RecognitionComposer({
               ? t('口元を明るく、正面から映してください。')
               : t('両手と上半身が映る位置にカメラを置いてください。')}
           </p>
-          {instant && (
+          {watching ? (
+            <p className="watch-status" role="status">
+              <span className="watch-dot" aria-hidden="true" />
+              {t(
+                input === 'lipread'
+                  ? '自動で認識しています。口を動かしてください'
+                  : '自動で認識しています。手話をしてください',
+              )}
+            </p>
+          ) : (
             <button
-              type="button"
-              className={watching ? 'primary watch-toggle on' : 'secondary watch-toggle'}
-              aria-pressed={watching}
-              disabled={!connected || capturing || (processing && !watching)}
-              onClick={() => void onWatch(!watching)}
-            >
-              {watching ? t('自動で認識中（押すと停止）') : t('自動で認識')}
-            </button>
-          )}
-          {!watching && (
-            <button
-              className="primary"
+              className={'primary capture-main' + (capturing ? ' recording' : '')}
               disabled={!connected || processing}
               onClick={() => {
                 void (capturing ? onEnd() : onStart());
