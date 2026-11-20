@@ -118,6 +118,8 @@ def load_model(root: Path, kind: str, c: dict, vocabulary: dict):
 
 
 def process_main(root_string, config, incoming, outgoing):
+    # A spawned process starts without the server's logging setup; keep recognition logs.
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
     root = Path(root_string)
     models, capabilities = {}, {}
     vocabulary = json.loads((root / "config/vocabulary.ja.json").read_text(encoding="utf-8"))
