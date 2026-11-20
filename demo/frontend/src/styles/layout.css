@@ -1672,3 +1672,14 @@ button,
     padding-bottom: 8px;
   }
 }
+
+/* Show the whole camera frame in the setup preview: a phone's portrait video in a wide box otherwise
+   shows only the forehead, which hides whether the mouth and hands are in view. */
+.setup-preview video {
+  object-fit: contain;
+}
+@media (max-width: 760px) {
+  .setup-preview {
+    height: 42vh;
+  }
+}
