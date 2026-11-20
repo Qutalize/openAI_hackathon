@@ -1992,3 +1992,19 @@ button,
     margin: 4px 0;
   }
 }
+
+/* The training link shares the row with "show password", so it costs no height on phones. */
+.join-extras {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.join-extras .show-password {
+  margin-left: auto;
+}
+.training-link {
+  font-size: 13px;
+  color: var(--blue);
+}

@@ -279,10 +279,16 @@ export default function JoinPage({
                   : '作成済みのルームIDとパスワードを入力してください。',
               )}
         </p>
-        <label className="show-password">
-          <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
-          {t('パスワードを表示')}
-        </label>
+        <div className="join-extras">
+          {/* Collecting needs the collection code, so the link is safe to show to everyone. */}
+          <a className="training-link" href="/training">
+            {t('認識の学習データを集める')}
+          </a>
+          <label className="show-password">
+            <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+            {t('パスワードを表示')}
+          </label>
+        </div>
         {created && (
           <p className="notice" role="status">
             {t(
