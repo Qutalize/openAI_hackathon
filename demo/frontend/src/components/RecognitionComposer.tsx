@@ -78,6 +78,111 @@ export default function RecognitionComposer({
       setBusy(false);
     }
   }
+  const controls = vision && (
+    <div className="capture-controls">
+      {choices.length > 1 && (
+        <div className="capture-setting">
+          <span className="capture-setting-label" id="recognition-language">
+            {t('言語')}
+          </span>
+          <div className="segmented" role="group" aria-labelledby="recognition-language">
+            {choices.map((x) => (
+              <button
+                key={x}
+                type="button"
+                aria-pressed={x === language}
+                disabled={capturing || processing || watching}
+                onClick={() => void onLanguage(x)}
+              >
+                {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {instant && input === 'sign' && (
+        <div className="capture-setting">
+          <span className="capture-setting-label" id="recognition-trigger">
+            {t('撮り方')}
+          </span>
+          <div className="segmented" role="group" aria-labelledby="recognition-trigger">
+            <button
+              type="button"
+              aria-pressed={!watching}
+              disabled={!connected || capturing || (processing && !watching)}
+              onClick={() => watching && void onWatch(false)}
+            >
+              {t('ボタンで撮る')}
+            </button>
+            <button
+              type="button"
+              aria-pressed={watching}
+              disabled={!connected || capturing || (processing && !watching)}
+              onClick={() => !watching && void onWatch(true)}
+            >
+              {t('自動で認識')}
+            </button>
+          </div>
+        </div>
+      )}
+      <p>
+        {input === 'lipread'
+          ? t('口元を明るく、正面から映してください。')
+          : t('両手と上半身が映る位置にカメラを置いてください。')}
+      </p>
+      {watching ? (
+        <p className="watch-status" role="status">
+          <span className="watch-dot" aria-hidden="true" />
+          {t(
+            input === 'lipread'
+              ? '自動で認識しています。口を動かしてください'
+              : '自動で認識しています。手話をしてください',
+          )}
+        </p>
+      ) : (
+        <button
+          className={'primary capture-main' + (capturing ? ' recording' : '')}
+          disabled={!connected || processing}
+          onClick={() => {
+            void (capturing ? onEnd() : onStart());
+          }}
+        >
+          {capturing
+            ? t('撮影を終了して認識')
+            : processing
+              ? t('認識しています…')
+              : t(input === 'lipread' ? '読唇の撮影を開始' : '手話の撮影を開始')}
+        </button>
+      )}
+      {(capturing || processing) && (
+        <button className="secondary" onClick={onCancel}>
+          {t('取消')}
+        </button>
+      )}
+      {processing && (
+        <p className="capture-wait">
+          <span role="status">
+            {t(
+              instant
+                ? '登録表現の中から候補を探しています。'
+                : input === 'lipread'
+                  ? '読唇の認識は数秒かかります。'
+                  : '手話の認識は数秒から十数秒かかります。',
+            )}
+          </span>
+          <span aria-hidden="true">{t('{seconds}秒経過', { seconds: elapsed })}</span>
+        </p>
+      )}
+      <details>
+        <summary>{t(cap.language_note ? '対象言語と制約' : '対応する登録表現')}</summary>
+        <p>
+          {cap.language_note
+            ? t(cap.language_note)
+            : cap.vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}
+        </p>
+      </details>
+    </div>
+  );
   return (
     <section className="composer" aria-label={t('発言入力')}>
       {/* While a suggestion waits, it and the send box come first: they are what the speaker acts on next. */}
@@ -131,219 +236,11 @@ export default function RecognitionComposer({
               </button>
             )}
           </form>
-          {vision && (
-            <div className="capture-controls">
-              {choices.length > 1 && (
-                <div className="capture-setting">
-                  <span className="capture-setting-label" id="recognition-language">
-                    {t('言語')}
-                  </span>
-                  <div className="segmented" role="group" aria-labelledby="recognition-language">
-                    {choices.map((x) => (
-                      <button
-                        key={x}
-                        type="button"
-                        aria-pressed={x === language}
-                        disabled={capturing || processing || watching}
-                        onClick={() => void onLanguage(x)}
-                      >
-                        {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {instant && (
-                <div className="capture-setting">
-                  <span className="capture-setting-label" id="recognition-trigger">
-                    {t('撮り方')}
-                  </span>
-                  <div className="segmented" role="group" aria-labelledby="recognition-trigger">
-                    <button
-                      type="button"
-                      aria-pressed={!watching}
-                      disabled={!connected || capturing || (processing && !watching)}
-                      onClick={() => watching && void onWatch(false)}
-                    >
-                      {t('ボタンで撮る')}
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={watching}
-                      disabled={!connected || capturing || (processing && !watching)}
-                      onClick={() => !watching && void onWatch(true)}
-                    >
-                      {t('自動で認識')}
-                    </button>
-                  </div>
-                </div>
-              )}
-              <p>
-                {input === 'lipread'
-                  ? t('口元を明るく、正面から映してください。')
-                  : t('両手と上半身が映る位置にカメラを置いてください。')}
-              </p>
-              {watching ? (
-                <p className="watch-status" role="status">
-                  <span className="watch-dot" aria-hidden="true" />
-                  {t(
-                    input === 'lipread'
-                      ? '自動で認識しています。口を動かしてください'
-                      : '自動で認識しています。手話をしてください',
-                  )}
-                </p>
-              ) : (
-                <button
-                  className={'primary capture-main' + (capturing ? ' recording' : '')}
-                  disabled={!connected || processing}
-                  onClick={() => {
-                    void (capturing ? onEnd() : onStart());
-                  }}
-                >
-                  {capturing
-                    ? t('撮影を終了して認識')
-                    : processing
-                      ? t('認識しています…')
-                      : t(input === 'lipread' ? '読唇の撮影を開始' : '手話の撮影を開始')}
-                </button>
-              )}
-              {(capturing || processing) && (
-                <button className="secondary" onClick={onCancel}>
-                  {t('取消')}
-                </button>
-              )}
-              {processing && (
-                <p className="capture-wait">
-                  <span role="status">
-                    {t(
-                      instant
-                        ? '登録表現の中から候補を探しています。'
-                        : input === 'lipread'
-                          ? '読唇の認識は数秒かかります。'
-                          : '手話の認識は数秒から十数秒かかります。',
-                    )}
-                  </span>
-                  <span aria-hidden="true">{t('{seconds}秒経過', { seconds: elapsed })}</span>
-                </p>
-              )}
-              <details>
-                <summary>{t(cap.language_note ? '対象言語と制約' : '対応する登録表現')}</summary>
-                <p>
-                  {cap.language_note
-                    ? t(cap.language_note)
-                    : cap.vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}
-                </p>
-              </details>
-            </div>
-          )}
+          {controls}
         </>
       ) : (
         <>
-          {vision && (
-            <div className="capture-controls">
-              {choices.length > 1 && (
-                <div className="capture-setting">
-                  <span className="capture-setting-label" id="recognition-language">
-                    {t('言語')}
-                  </span>
-                  <div className="segmented" role="group" aria-labelledby="recognition-language">
-                    {choices.map((x) => (
-                      <button
-                        key={x}
-                        type="button"
-                        aria-pressed={x === language}
-                        disabled={capturing || processing || watching}
-                        onClick={() => void onLanguage(x)}
-                      >
-                        {t(x === 'ja' ? '日本語（定型句）' : '英語（自由文）')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {instant && (
-                <div className="capture-setting">
-                  <span className="capture-setting-label" id="recognition-trigger">
-                    {t('撮り方')}
-                  </span>
-                  <div className="segmented" role="group" aria-labelledby="recognition-trigger">
-                    <button
-                      type="button"
-                      aria-pressed={!watching}
-                      disabled={!connected || capturing || (processing && !watching)}
-                      onClick={() => watching && void onWatch(false)}
-                    >
-                      {t('ボタンで撮る')}
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={watching}
-                      disabled={!connected || capturing || (processing && !watching)}
-                      onClick={() => !watching && void onWatch(true)}
-                    >
-                      {t('自動で認識')}
-                    </button>
-                  </div>
-                </div>
-              )}
-              <p>
-                {input === 'lipread'
-                  ? t('口元を明るく、正面から映してください。')
-                  : t('両手と上半身が映る位置にカメラを置いてください。')}
-              </p>
-              {watching ? (
-                <p className="watch-status" role="status">
-                  <span className="watch-dot" aria-hidden="true" />
-                  {t(
-                    input === 'lipread'
-                      ? '自動で認識しています。口を動かしてください'
-                      : '自動で認識しています。手話をしてください',
-                  )}
-                </p>
-              ) : (
-                <button
-                  className={'primary capture-main' + (capturing ? ' recording' : '')}
-                  disabled={!connected || processing}
-                  onClick={() => {
-                    void (capturing ? onEnd() : onStart());
-                  }}
-                >
-                  {capturing
-                    ? t('撮影を終了して認識')
-                    : processing
-                      ? t('認識しています…')
-                      : t(input === 'lipread' ? '読唇の撮影を開始' : '手話の撮影を開始')}
-                </button>
-              )}
-              {(capturing || processing) && (
-                <button className="secondary" onClick={onCancel}>
-                  {t('取消')}
-                </button>
-              )}
-              {processing && (
-                <p className="capture-wait">
-                  <span role="status">
-                    {t(
-                      instant
-                        ? '登録表現の中から候補を探しています。'
-                        : input === 'lipread'
-                          ? '読唇の認識は数秒かかります。'
-                          : '手話の認識は数秒から十数秒かかります。',
-                    )}
-                  </span>
-                  <span aria-hidden="true">{t('{seconds}秒経過', { seconds: elapsed })}</span>
-                </p>
-              )}
-              <details>
-                <summary>{t(cap.language_note ? '対象言語と制約' : '対応する登録表現')}</summary>
-                <p>
-                  {cap.language_note
-                    ? t(cap.language_note)
-                    : cap.vocabulary.map((x) => x.text).join('、') || t('モデル未導入')}
-                </p>
-              </details>
-            </div>
-          )}
+          {controls}
           <form onSubmit={submit}>
             <label htmlFor="message-input">
               {useCandidate ? t('認識結果を確認・修正') : t('文字で伝える')}

@@ -1792,3 +1792,19 @@ button,
     font-size: 16px;
   }
 }
+
+/* Phones with a speaker video: the default 35% split gave the video so much height on a short screen
+   (Chrome on iOS with its toolbars) that the capture button was cut off below the panel. Cap the video,
+   and let the panel scroll rather than clip whatever still does not fit. */
+@media (max-width: 760px) {
+  .conversation-grid:not(:has(.speaker-stage.no-video)) {
+    grid-template-rows: minmax(0, min(var(--video-share, 35%), 26svh)) 12px minmax(0, 1fr);
+  }
+  .transcript-panel {
+    overflow-y: auto;
+  }
+  .transcript-history {
+    flex: 1 0 72px;
+    min-height: 72px;
+  }
+}
