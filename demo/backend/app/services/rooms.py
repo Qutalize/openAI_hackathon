@@ -433,7 +433,14 @@ class RoomService:
                 "input": kind,
                 "expires_in": 60,
                 "automatic": automatic,
-                "message": "候補を確認して送信してください" if candidates else "認識できませんでした",
+                "low_confidence": bool(result.get("low_confidence")),
+                "message": (
+                    "自信が低い候補です。合っているか確かめてから送信してください"
+                    if candidates and result.get("low_confidence")
+                    else "候補を確認して送信してください"
+                    if candidates
+                    else "認識できませんでした"
+                ),
             },
         )
 
@@ -465,7 +472,9 @@ class RoomService:
                 result = await self.inference.recognize(s.participant_id, model, segment)
                 if s.watch is not w or s.input_epoch != epoch or not s.control:
                     return
-                label = result["candidates"][0]["label"] if result.get("candidates") else None
+                # Watching offers only confident phrases; unsure ones would pop up on every pause.
+                confident = result.get("candidates") and not result.get("low_confidence")
+                label = result["candidates"][0]["label"] if confident else None
                 if label and label == w["last_label"]:
                     w["frames"].clear()
                     w["timestamps"].clear()

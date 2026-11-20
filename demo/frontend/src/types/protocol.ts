@@ -115,6 +115,7 @@ export interface ServerEvent {
 export interface Candidate {
   candidate_id: string;
   candidates: { label: string; text: string }[];
+  low_confidence?: boolean;
   input: InputKind;
   message: string;
   expires_in: number;

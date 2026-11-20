@@ -192,6 +192,8 @@ const english: Record<string, string> = {
     'This suggestion expired. You can still send it as text.',
   候補を確認して送信してください: 'Review the suggestion before sending',
   認識できませんでした: 'Could not recognize this input',
+  '自信が低い候補です。合っているか確かめてから送信してください':
+    'These guesses are unsure. Check that one is right before sending.',
   音声を開始: 'Start audio',
   読み上げ停止: 'Stop reading',
   未読を再生: 'Read unread',
