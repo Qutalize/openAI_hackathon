@@ -1808,3 +1808,130 @@ button,
     min-height: 72px;
   }
 }
+
+/* Phones: fit the whole join form on one screen (390 x 664 and taller) so a visitor sees the join button
+   without scrolling. The vocabulary list and the closing note are shown again inside the room. */
+@media (max-width: 760px) {
+  .join-page {
+    position: relative;
+    padding: 8px 16px 4px;
+  }
+  .credentials label > span small {
+    display: none;
+  }
+  .join-page .page-language {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    margin: 0;
+  }
+  .join-heading .eyebrow {
+    display: none;
+  }
+  .join-heading h1 {
+    font-size: 26px;
+    line-height: 40px;
+  }
+  .join-heading > p:last-child {
+    margin: 0 0 8px;
+    font-size: 12px;
+  }
+  .room-actions {
+    margin-bottom: 8px;
+  }
+  .room-actions button {
+    min-height: 36px;
+    padding: 6px 10px;
+  }
+  .mode-grid {
+    gap: 6px;
+  }
+  .mode-card {
+    gap: 0;
+    padding: 7px 12px;
+    border-width: 1.5px;
+    border-radius: 10px;
+  }
+  .mode-check {
+    top: 8px;
+    width: 20px;
+    height: 20px;
+    font-size: 13px;
+  }
+  .mode-title {
+    margin: 0;
+    font-size: 15px;
+  }
+  .mode-description {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .join-fields {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 8px;
+    margin: 8px 0 2px;
+  }
+  .join-fields .avatar-picker {
+    grid-column: 1 / -1;
+    gap: 8px;
+  }
+  .avatar-picker .profile-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .avatar-picker-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .avatar-picker small {
+    display: none;
+  }
+  .join-field {
+    gap: 2px;
+    font-size: 12px;
+  }
+  .join-field input,
+  .join-field select {
+    min-height: 40px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .join-privacy {
+    font-size: 11px;
+  }
+  .availability {
+    display: none;
+  }
+  .credentials {
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .credentials label > span {
+    min-width: 92px;
+    padding: 2px 10px;
+    font-size: 14px;
+  }
+  .credentials input[name] {
+    min-height: 40px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  #room-guidance {
+    margin: 4px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .show-password {
+    margin: 2px 0;
+    font-size: 13px;
+  }
+  .join-button {
+    min-height: 44px;
+    margin: 4px auto 0;
+  }
+  .join-button ~ .join-footnote {
+    display: none;
+  }
+}
