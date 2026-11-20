@@ -104,6 +104,11 @@ const english: Record<string, string> = {
   登録表現のみ対応: 'Supported phrases only',
   '認識候補を確認して送信します。': 'Review recognition results before sending.',
   '作成済みのルームIDとパスワードを入力してください。': 'Enter the ID and password of an existing room.',
+  'ルームIDは半角の英数字とハイフンで、3〜32文字にしてください。':
+    'Use 3 to 32 letters, digits or hyphens for the room ID.',
+  'パスワードを入力してください。': 'Enter the password.',
+  'パスワードが短すぎます。8文字以上にしてください。':
+    'The password is too short. Use at least 8 characters.',
   'ルームIDは半角英数字・ハイフンの3〜32文字、パスワードは8〜128文字で設定してください。作成後、そのまま参加します。':
     'Use 3–32 letters, numbers or hyphens for the room ID and 8–128 characters for the password. You will join after creation.',
   'ルーム「{room}」を作成しました。有効期限：{date}。参加できない場合は、同じIDとパスワードで再試行してください。':
