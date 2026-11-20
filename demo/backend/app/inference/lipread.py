@@ -1,9 +1,13 @@
 import json
+import logging
 
 import numpy as np
 
 from app.inference.base import Recognizer
 from app.inference.preprocessing import FACE_INDICES, LIP_INDICES, PREPROCESSING_VERSION, pack_frames
+
+
+logger = logging.getLogger(__name__)
 
 
 class TemporalRecognizer(Recognizer):
@@ -84,7 +88,13 @@ class TemporalRecognizer(Recognizer):
             segment["frames"], segment["timestamps"], self.config["max_frames"], self.kind
         )
         result = {"candidates": [], "model_version": self.metadata["model_version"]}
+        times = np.asarray(segment["timestamps"], dtype=np.float64)
+        gaps = np.diff(times) if len(times) > 1 else np.zeros(1)
+        shape = (
+            f"frames={len(times)} gap_ms median={np.median(gaps):.0f} max={gaps.max():.0f} ratio={ratio:.2f}"
+        )
         if ratio < self.config["min_valid_frame_ratio"]:
+            logger.info("%s recognition skipped: %s", self.kind, shape)
             return result
         logits = self.session.run(None, {"features": features, "frame_mask": mask})[0][0]
         if not np.isfinite(logits).all():
@@ -93,6 +103,14 @@ class TemporalRecognizer(Recognizer):
         scores /= scores.sum()
         order = np.argsort(scores)[::-1]
         threshold = max(self.config["candidate_threshold"], self.metadata["thresholds"]["candidate"])
+        logger.info(
+            "%s recognition: %s top=%s %.2f threshold=%.2f",
+            self.kind,
+            shape,
+            self.labels[order[0]],
+            float(scores[order[0]]),
+            threshold,
+        )
         if self.labels[order[0]] == "unknown" or float(scores[order[0]]) < threshold:
             return result
         for i in order[: self.config["top_k"]]:
