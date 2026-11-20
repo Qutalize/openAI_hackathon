@@ -67,6 +67,21 @@ export default function JoinPage({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || avatarBusy) return;
+    // Phone browsers often skip the built-in validation bubble, so say what is wrong next to the button.
+    const problem = !/^[a-zA-Z0-9-]{3,32}$/.test(room.trim())
+      ? ['room', 'ルームIDは半角の英数字とハイフンで、3〜32文字にしてください。']
+      : !password
+        ? ['password', 'パスワードを入力してください。']
+        : action === 'create' && password.length < 8
+          ? ['password', 'パスワードが短すぎます。8文字以上にしてください。']
+          : null;
+    if (problem) {
+      setError(problem[1]);
+      (e.currentTarget as HTMLFormElement)
+        .querySelector<HTMLInputElement>(`input[name="${problem[0]}"]`)
+        ?.focus();
+      return;
+    }
     setError('');
     setBusy(true);
     try {
@@ -121,7 +136,7 @@ export default function JoinPage({
           {t(notice)}
         </p>
       )}
-      <form onSubmit={submit}>
+      <form onSubmit={submit} noValidate>
         <div className="room-actions" role="group" aria-label={t('ルームの操作')}>
           {(['create', 'join'] as const).map((value) => (
             <button
