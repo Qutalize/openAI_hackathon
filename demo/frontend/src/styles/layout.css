@@ -1767,3 +1767,24 @@ button,
     font-size: 15px;
   }
 }
+
+/* A pending suggestion: make it stand out, and on phones drop the settings so it fits without scrolling. */
+.candidate-box {
+  border: 2px solid var(--blue);
+  background: var(--pale);
+}
+.candidate-options button[aria-pressed='true'] {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+@media (max-width: 760px) {
+  .composer:has(.candidate-box) .capture-setting,
+  .composer:has(.candidate-box) .capture-controls details {
+    display: none;
+  }
+  .candidate-options button {
+    min-height: 40px;
+    font-size: 16px;
+  }
+}
