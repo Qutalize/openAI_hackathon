@@ -8,6 +8,9 @@ from app.inference.preprocessing import FACE_INDICES, LIP_INDICES, PREPROCESSING
 
 
 logger = logging.getLogger(__name__)
+# Below the calibrated threshold, phrases this likely are still offered, marked as unsure: the speaker
+# confirms every candidate before it is sent, and a new camera (a phone) lowers the scores.
+LOW_CONFIDENCE = 0.2
 
 
 class TemporalRecognizer(Recognizer):
@@ -112,6 +115,14 @@ class TemporalRecognizer(Recognizer):
             threshold,
         )
         if self.labels[order[0]] == "unknown" or float(scores[order[0]]) < threshold:
+            unsure = [i for i in order if self.labels[i] != "unknown" and float(scores[i]) >= LOW_CONFIDENCE][
+                : self.config["top_k"]
+            ]
+            if unsure:
+                result["low_confidence"] = True
+                result["candidates"] = [
+                    {"label": self.labels[i], "text": self.texts[self.labels[i]]} for i in unsure
+                ]
             return result
         for i in order[: self.config["top_k"]]:
             label = self.labels[i]
