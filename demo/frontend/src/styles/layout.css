@@ -1501,3 +1501,81 @@ button,
 .video-problem {
   color: #ffb4a8 !important;
 }
+
+/* Phones: readable text (16px inputs also stop iOS from zooming in), and when the speaker has no video,
+   drop the empty stage so the transcript gets the room. */
+@media (max-width: 760px) {
+  .conversation-grid:has(.speaker-stage.no-video) {
+    grid-template-rows: auto 12px minmax(0, 1fr);
+  }
+  .speaker-stage.no-video .main-video,
+  .speaker-stage.no-video .participants-divider,
+  .speaker-stage.no-video .speaker-footer {
+    display: none;
+  }
+  .speaker-stage.no-video .participant-strip {
+    height: 76px;
+  }
+  .room-heading {
+    font-size: 12px;
+    min-height: 0;
+  }
+  .room-brand {
+    font-size: 18px;
+  }
+  .room-heading .connection-label {
+    font-size: 12px;
+  }
+  .room-heading .language-select select {
+    font-size: 14px;
+    min-height: 34px;
+  }
+  .tile-heading,
+  .speaker-name,
+  .stage-status {
+    font-size: 12px;
+  }
+  .tile-devices svg {
+    width: 14px;
+    height: 14px;
+  }
+  .participant-activity {
+    font-size: 11px;
+  }
+  .empty-transcript {
+    font-size: 14px;
+  }
+  .utterance p {
+    font-size: 16px;
+  }
+  .compose-row textarea {
+    font-size: 16px;
+    min-height: 44px;
+    max-height: 88px;
+  }
+  .auxiliary-buttons button {
+    font-size: 13px;
+    min-height: 36px;
+  }
+  .setting-check {
+    font-size: 12px;
+  }
+  .conversation-controls button {
+    font-size: 12px;
+    min-height: 50px;
+  }
+  .conversation-controls button svg {
+    width: 20px;
+    height: 20px;
+  }
+  .conversation-controls .control-select,
+  .conversation-controls .playback-select {
+    grid-row: 2;
+    grid-column: span 2;
+    font-size: 12px;
+  }
+  .control-select select {
+    font-size: 15px;
+    min-height: 36px;
+  }
+}

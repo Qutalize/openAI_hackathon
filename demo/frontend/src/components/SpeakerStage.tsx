@@ -36,9 +36,9 @@ export default function SpeakerStage({
   const [height, setHeight] = useState(500);
   const [small, setSmall] = useState(() => matchMedia('(max-width: 760px)').matches);
   const [stripHeight, setStripHeight] = useState(() =>
-    matchMedia('(max-width: 760px)').matches ? 104 : 154,
+    matchMedia('(max-width: 760px)').matches ? 76 : 154,
   );
-  const min = small ? 88 : 112,
+  const min = small ? 64 : 112,
     max = Math.max(min, Math.min(height - 72, small ? 220 : 360));
   const clamp = (value: number) => Math.max(min, Math.min(max, value));
   const dragStart = useRef({ y: 0, height: 0 });
@@ -54,7 +54,7 @@ export default function SpeakerStage({
   return (
     <section
       ref={stage}
-      className="speaker-stage"
+      className={'speaker-stage' + (speaker && status === 'live' && stream ? '' : ' no-video')}
       aria-label={t('発話者映像')}
       style={{ '--participants-height': stripHeight + 'px' } as CSSProperties}
     >
