@@ -1993,18 +1993,108 @@ button,
   }
 }
 
-/* The training link shares the row with "show password", so it costs no height on phones. */
-.join-extras {
-  display: flex;
+/* The training page link sits beside the room buttons, styled like them but quieter. */
+.room-action-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 48px;
+  padding: 12px 22px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
 }
-.join-extras .show-password {
-  margin-left: auto;
-}
-.training-link {
-  font-size: 13px;
+.room-action-link:hover {
+  border-color: var(--blue);
   color: var(--blue);
+}
+@media (min-width: 761px) and (max-height: 900px) {
+  .room-action-link {
+    min-height: 40px;
+    padding: 8px 18px;
+    font-size: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .room-actions {
+    gap: 6px;
+  }
+  .room-actions button,
+  .room-action-link {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 36px;
+    padding: 6px 4px;
+    font-size: 12.5px;
+  }
+}
+
+/* Phones: the collection page fits one screen like the camera check. The form fills the column and the
+   preview takes the height left over; the per-label counts (the status line already reports saves) and
+   the list of sign examples are left off. */
+@media (max-width: 760px) {
+  .training-page h1 {
+    font-size: 16px;
+    line-height: 1.35;
+    margin-top: 10px;
+  }
+  .training-page > p:not(.eyebrow) {
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: left;
+  }
+  .training-page > form {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .training-page .training-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+  }
+  .training-page .training-fields label {
+    gap: 2px;
+    font-size: 11px;
+    min-width: 0;
+  }
+  .training-page .training-fields input,
+  .training-page .training-fields select {
+    width: 100%;
+    min-height: 38px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  .training-page .setting-check {
+    margin: 2px 0;
+    font-size: 12px;
+    text-align: left;
+  }
+  .training-page .training-prompt {
+    margin: 4px 0 0;
+    padding: 6px 10px;
+    gap: 0;
+  }
+  .training-page .training-stage {
+    flex: 1 1 0;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+  }
+  .training-page .training-stage .setup-preview {
+    flex: 1 1 0;
+    margin: 4px 0;
+  }
+  .training-page form > p[role='status'] {
+    margin: 2px 0;
+    font-size: 12px;
+  }
+  .training-page .training-counts {
+    display: none;
+  }
 }
