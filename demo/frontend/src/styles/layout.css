@@ -1676,7 +1676,11 @@ button,
 
 /* Show the whole camera frame in the setup preview: a phone's portrait video in a wide box otherwise
    shows only the forehead, which hides whether the mouth and hands are in view. */
+/* A grid item's percentage height does not resolve here, so the video took its own aspect ratio and a
+   portrait phone camera overflowed the box, showing only the top of the face. Pin it to the box instead. */
 .setup-preview video {
+  position: absolute;
+  inset: 0;
   object-fit: contain;
 }
 @media (max-width: 760px) {
