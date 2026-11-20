@@ -1731,7 +1731,10 @@ button,
   min-height: 44px;
   font-size: 15px;
 }
-.capture-controls .capture-main.recording {
+/* Red while recording, also when hovered: iOS keeps the tapped button in :hover, and the blue hover rule
+   (button.primary:not(:disabled):hover) is more specific, so the button turned blue after a tap. */
+.capture-controls .capture-main.recording,
+.capture-controls button.capture-main.recording:not(:disabled):hover {
   background: #d93a3a;
   border-color: #d93a3a;
 }
@@ -1933,5 +1936,59 @@ button,
   }
   .join-button ~ .join-footnote {
     display: none;
+  }
+}
+
+/* Phones: the camera check fits one screen. The page is a column as tall as the screen and the preview
+   takes whatever height is left, so the start button is always visible without scrolling. */
+@media (max-width: 760px) {
+  .device-setup {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+    padding: 8px 16px 10px;
+  }
+  .device-setup .page-language {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    margin: 0;
+  }
+  .device-setup > .eyebrow {
+    display: none;
+  }
+  .device-setup h1 {
+    margin: 4px 0 2px;
+    padding-right: 116px; /* clear of the language select in the corner */
+    text-align: left;
+    font-size: 20px;
+    line-height: 36px;
+  }
+  .device-setup .name-button {
+    margin: 0 auto;
+  }
+  .device-setup > p {
+    margin: 2px 0;
+    font-size: 13px;
+  }
+  .device-setup .setup-preview {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 140px;
+    width: 100%;
+    margin: 6px 0;
+  }
+  .device-setup .setup-buttons {
+    margin: 4px 0;
+  }
+  .device-setup .setup-buttons button {
+    min-height: 40px;
+  }
+  .device-setup .setup-guidance {
+    font-size: 11px;
+  }
+  .device-setup .setup-output {
+    margin: 4px 0;
   }
 }
