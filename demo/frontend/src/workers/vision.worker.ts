@@ -5,6 +5,10 @@ import { FACE_INDICES, LIP_INDICES, faceFeatures, signFeatures, type Landmark } 
 type Points = { lips?: number[][]; hands?: number[][][]; pose?: (number[] | null)[]; face?: number[][] };
 const xy = (p: Landmark) => [p.x, p.y];
 
+// MediaPipe only creates its own OffscreenCanvas when the user agent looks like Chrome or Safari 17+. Chrome on
+// iOS says neither, so MediaPipe falls back to document.createElement, which does not exist in a worker.
+const canvas = () => (typeof OffscreenCanvas === 'undefined' ? undefined : new OffscreenCanvas(1, 1));
+
 let face: FaceLandmarker | undefined, hands: HandLandmarker | undefined, pose: PoseLandmarker | undefined;
 let kind: 'lipread' | 'sign' = 'lipread';
 let stage: 'init' | 'frame' = 'init';
@@ -17,17 +21,20 @@ self.onmessage = async ({ data }) => {
       const files = await FilesetResolver.forVisionTasks('/models/mediapipe/wasm');
       face = await FaceLandmarker.createFromOptions(files, {
         baseOptions: { modelAssetPath: '/models/mediapipe/face_landmarker.task' },
+        canvas: canvas(),
         runningMode: 'VIDEO',
         numFaces: 2,
       });
       if (kind === 'sign') {
         hands = await HandLandmarker.createFromOptions(files, {
           baseOptions: { modelAssetPath: '/models/mediapipe/hand_landmarker.task' },
+          canvas: canvas(),
           runningMode: 'VIDEO',
           numHands: 2,
         });
         pose = await PoseLandmarker.createFromOptions(files, {
           baseOptions: { modelAssetPath: '/models/mediapipe/pose_landmarker.task' },
+          canvas: canvas(),
           runningMode: 'VIDEO',
           numPoses: 1,
         });
