@@ -56,6 +56,8 @@ export class VisionCapture {
           this.cancelLoading = undefined;
           resolve();
           this.tick();
+        } else if (data.type === 'skipped') {
+          this.busy = false;
         } else if (data.type === 'features') {
           this.busy = false;
           if (!this.stopped) {

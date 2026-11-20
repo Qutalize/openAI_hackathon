@@ -1579,3 +1579,43 @@ button,
     min-height: 36px;
   }
 }
+
+/* Phones with lipreading or signing: the camera controls must not push the transcript off the screen,
+   and with a single speaker video the participant strip only repeats it at a size too small to see. */
+@media (max-width: 760px) {
+  .speaker-stage:not(.no-video) .participant-strip,
+  .speaker-stage:not(.no-video) .participants-divider {
+    display: none;
+  }
+  .transcript-history {
+    min-height: 96px;
+  }
+  .composer {
+    max-height: 60%;
+    overflow-y: auto;
+    padding: 6px 8px;
+  }
+  .capture-controls {
+    margin-bottom: 4px;
+  }
+  .capture-controls > p:not(.capture-wait) {
+    display: none;
+  }
+  .language-switch {
+    justify-content: flex-start;
+    margin-bottom: 0;
+    gap: 6px;
+  }
+  .language-switch button,
+  .capture-controls button {
+    min-height: 36px;
+    font-size: 14px;
+    padding: 4px 10px;
+  }
+  .capture-controls details summary {
+    font-size: 13px;
+  }
+  .composer:has(.capture-controls) .compose-row textarea {
+    min-height: 40px;
+  }
+}

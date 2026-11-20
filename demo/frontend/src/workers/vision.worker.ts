@@ -7,9 +7,12 @@ const xy = (p: Landmark) => [p.x, p.y];
 
 let face: FaceLandmarker | undefined, hands: HandLandmarker | undefined, pose: PoseLandmarker | undefined;
 let kind: 'lipread' | 'sign' = 'lipread';
+let stage: 'init' | 'frame' = 'init';
+let failedFrames = 0;
 self.onmessage = async ({ data }) => {
   try {
     if (data.type === 'init') {
+      stage = 'init';
       kind = data.kind;
       const files = await FilesetResolver.forVisionTasks('/models/mediapipe/wasm');
       face = await FaceLandmarker.createFromOptions(files, {
@@ -31,6 +34,7 @@ self.onmessage = async ({ data }) => {
       }
       self.postMessage({ type: 'ready' });
     } else if (data.type === 'frame' && face) {
+      stage = 'frame';
       const bitmap = data.bitmap as ImageBitmap;
       try {
         const f = face.detectForVideo(bitmap, data.timestamp).faceLandmarks;
@@ -58,15 +62,25 @@ self.onmessage = async ({ data }) => {
           timestamp: data.timestamp,
           points: { ...points, valid, width: bitmap.width, height: bitmap.height },
         });
+        failedFrames = 0;
       } finally {
         bitmap.close();
       }
     }
   } catch (error) {
-    console.error('Vision worker initialization failed:', error);
+    const detail = String((error as Error)?.message ?? error).slice(0, 120);
+    console.error(`Vision worker ${stage} failed:`, error);
+    // One bad frame should not end the capture; give up only when frames keep failing.
+    if (stage === 'frame' && ++failedFrames < 20) {
+      self.postMessage({ type: 'skipped' });
+      return;
+    }
     self.postMessage({
       type: 'error',
-      message: '特徴点モデルを開始できません。モデル準備とカメラを確認してください',
+      message:
+        stage === 'init'
+          ? `特徴点モデルを開始できません（${detail}）`
+          : `カメラの映像から特徴点を取れません（${detail}）`,
     });
   }
 };
