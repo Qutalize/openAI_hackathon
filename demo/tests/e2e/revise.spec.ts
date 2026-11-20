@@ -54,7 +54,8 @@ test("English settings persist and meeting controls fit desktop and mobile scree
       .poll(
         async () => (await page.locator(".video-column").boundingBox())!.height,
       )
-      .toBeGreaterThanOrEqual(119);
+      // On phones, a speaker without video leaves only the participant strip (76px) above the transcript.
+      .toBeGreaterThanOrEqual(width <= 760 ? 76 : 119);
     for (const selector of [
       ".composer",
       ".conversation-controls",
@@ -63,6 +64,7 @@ test("English settings persist and meeting controls fit desktop and mobile scree
     ]) {
       for (const element of await page.locator(selector).all()) {
         const box = await element.boundingBox();
+        if (!box) continue; // hidden on phones (the participant divider without a speaker video)
         expect(box!.y).toBeGreaterThanOrEqual(0);
         expect(box!.y + box!.height).toBeLessThanOrEqual(height + 1);
         expect(box!.x + box!.width).toBeLessThanOrEqual(width + 1);

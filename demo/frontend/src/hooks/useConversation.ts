@@ -90,7 +90,8 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
   useEffect(() => {
     r.tts!.setMode(r.playback);
   }, [r]);
-  if (!r.recording) r.recording = new LocalRecording(setRecordingStatus, setError);
+  if (!r.recording && config.media.record_self)
+    r.recording = new LocalRecording(setRecordingStatus, setError);
   useEffect(() => {
     if (started) void r.recording?.update(devices.stream);
   }, [started, devices.stream, r]);
@@ -700,6 +701,7 @@ export function useConversation(config: PublicConfig, session: Session, onLeave:
     displayName,
     rename,
     recordingStatus,
+    recordSelf: !!config.media.record_self,
     recognition,
     ttsStatus,
     candidate,

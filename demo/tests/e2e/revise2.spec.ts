@@ -132,9 +132,11 @@ test("custom avatar follows the speaker and video labels never cover the image",
       expect(video.y + video.height).toBeLessThanOrEqual(footer.y + 1);
       await expect(tile.locator('[aria-label="マイク OFF"]')).toBeVisible();
       await expect(tile.locator('[aria-label="カメラ ON"]')).toBeVisible();
-      const main = (await page.locator(".main-video").boundingBox())!;
-      const mainFooter = (await page.locator(".speaker-footer").boundingBox())!;
-      expect(main.y + main.height).toBeLessThanOrEqual(mainFooter.y + 1);
+      // On phones the empty stage is hidden while the speaker has no video.
+      const main = await page.locator(".main-video").boundingBox();
+      const mainFooter = await page.locator(".speaker-footer").boundingBox();
+      if (main && mainFooter)
+        expect(main.y + main.height).toBeLessThanOrEqual(mainFooter.y + 1);
       expect(
         await page.evaluate(
           () =>

@@ -20,6 +20,7 @@ if __name__ == "__main__":
         cfg.storage.room_database = str(Path(directory) / "rooms.sqlite3")
         cfg.security.join_attempts_per_minute = 100
         cfg.training.upload_enabled = True
+        cfg.media.record_self = True  # the recording tests exercise the opt-in path
         cfg.training.directory = str(Path(directory) / "training")
         cfg.training_upload_token = "e2e-collection-code"
         repository = RoomRepository(Path(cfg.storage.room_database))

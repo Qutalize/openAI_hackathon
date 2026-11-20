@@ -96,6 +96,7 @@ export interface PublicConfig {
     echo_cancellation: boolean;
     noise_suppression: boolean;
     vision_fps: number;
+    record_self?: boolean;
   };
   output: { tts_lang: string; tts_rate: number; tts_queue_limit: number };
   max_text_chars: number;
