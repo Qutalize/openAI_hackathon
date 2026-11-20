@@ -68,6 +68,9 @@ class MediaConfig(StrictModel):
     vision_fps: Literal[20] = 20
     feature_batch_frames: int = Field(5, ge=1, le=5)
     camera_off_stops_capture: Literal[True] = True
+    # Record one's own camera in the browser and save it on leaving. Off: it slows phones and the server
+    # never needs the video (recognition uses landmarks only).
+    record_self: bool = False
 
 
 class RTCConfig(StrictModel):

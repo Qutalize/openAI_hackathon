@@ -1561,7 +1561,8 @@ button,
     font-size: 12px;
   }
   .conversation-controls button {
-    font-size: 12px;
+    /* 12px fits a 390px phone; the smallest phones (320px) need the labels to shrink to stay on one line. */
+    font-size: clamp(10px, 3.1vw, 12px);
     min-height: 50px;
   }
   .conversation-controls button svg {

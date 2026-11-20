@@ -45,11 +45,13 @@ export default function DeviceSetup({ c, session }: { c: Conversation; session: 
       <div className="setup-output">
         <PlaybackSelect value={c.playback} onChange={(value) => void c.changeOutput(value)} />
       </div>
-      <p className="recording-notice">
-        {t(
-          '会話開始後、カメラがONの間は自分の映像だけを録画します。カメラOFFで録画を停止し、会話終了時に端末へ保存します。',
-        )}
-      </p>
+      {c.recordSelf && (
+        <p className="recording-notice">
+          {t(
+            '会話開始後、カメラがONの間は自分の映像だけを録画します。カメラOFFで録画を停止し、会話終了時に端末へ保存します。',
+          )}
+        </p>
+      )}
       {c.error && (
         <p className="error" role="alert">
           {t(c.error)}

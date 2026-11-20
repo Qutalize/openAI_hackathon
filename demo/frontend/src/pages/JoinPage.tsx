@@ -198,7 +198,7 @@ export default function JoinPage({
         </div>
         <p className="join-privacy">
           {t('音声または特徴点をサーバーで認識します。')}
-          {t('自分のカメラは会話中にこの端末内で録画されます。')}
+          {config.media.record_self && t('自分のカメラは会話中にこの端末内で録画されます。')}
         </p>
         {input === 'text' && (
           <p className="availability">
