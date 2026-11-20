@@ -274,7 +274,7 @@ const english: Record<string, string> = {
   不合格: 'Rejected',
   認識の言語: 'Recognition language',
   自動で認識: 'Recognize automatically',
-  認識の学習データを集める: 'Collect training data for recognition',
+  学習データ収集: 'Training data',
   言語: 'Language',
   撮り方: 'Capture',
   ボタンで撮る: 'With the button',

@@ -154,6 +154,10 @@ export default function JoinPage({
               {value === 'join' ? t('既存ルームに参加') : t('新規ルームを作成')}
             </button>
           ))}
+          {/* Collecting needs the collection code, so the link is safe to show to everyone. */}
+          <a className="room-action-link" href="/training">
+            {t('学習データ収集')}
+          </a>
         </div>
         <fieldset className="mode-grid" disabled={busy}>
           <legend className="sr-only">{t('利用モードを選択')}</legend>
@@ -279,16 +283,10 @@ export default function JoinPage({
                   : '作成済みのルームIDとパスワードを入力してください。',
               )}
         </p>
-        <div className="join-extras">
-          {/* Collecting needs the collection code, so the link is safe to show to everyone. */}
-          <a className="training-link" href="/training">
-            {t('認識の学習データを集める')}
-          </a>
-          <label className="show-password">
-            <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
-            {t('パスワードを表示')}
-          </label>
-        </div>
+        <label className="show-password">
+          <input type="checkbox" checked={show} onChange={(e) => setShow(e.target.checked)} />
+          {t('パスワードを表示')}
+        </label>
         {created && (
           <p className="notice" role="status">
             {t(

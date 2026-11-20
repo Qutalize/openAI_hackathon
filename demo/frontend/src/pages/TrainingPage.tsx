@@ -324,7 +324,7 @@ export default function TrainingPage() {
 
   const mine = counts?.[kind].labels ?? {};
   return (
-    <main className="device-setup">
+    <main className="device-setup training-page">
       <div className="page-language">
         <LanguageSelect />
       </div>
