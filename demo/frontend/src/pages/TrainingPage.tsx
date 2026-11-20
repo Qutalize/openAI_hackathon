@@ -325,8 +325,13 @@ export default function TrainingPage() {
   const mine = counts?.[kind].labels ?? {};
   return (
     <main className="device-setup training-page">
-      <div className="page-language">
-        <LanguageSelect />
+      <div className="training-topbar">
+        <a className="back-button" href="/">
+          <span aria-hidden="true">←</span> {t('入室画面へ戻る')}
+        </a>
+        <div className="page-language">
+          <LanguageSelect />
+        </div>
       </div>
       <p className="eyebrow">{t('学習データ収集 · 会話とは別の操作です')}</p>
       <h1>{t('日本語の読唇・手話の学習データを集める')}</h1>
@@ -479,7 +484,7 @@ export default function TrainingPage() {
         </div>
       </form>
       {vocabulary.some((p) => p.reference) && (
-        <section className="training-counts" aria-label={t('見本の動画')}>
+        <section className="training-counts training-examples" aria-label={t('見本の動画')}>
           <h2>{t('見本の動画')}</h2>
           <p>{t('撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。')}</p>
           <label className="setting-check">
@@ -569,7 +574,6 @@ export default function TrainingPage() {
           )}
         </section>
       )}
-      <a href="/">{t('会話の入室画面へ')}</a>
     </main>
   );
 }

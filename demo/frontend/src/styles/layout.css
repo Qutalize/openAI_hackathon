@@ -2098,3 +2098,112 @@ button,
     display: none;
   }
 }
+
+/* Collection page: a back button and the language select share a top bar. */
+.training-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.training-topbar .page-language {
+  margin: 0;
+}
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.back-button:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+@media (max-width: 760px) {
+  .training-page .training-topbar {
+    margin-bottom: 2px;
+  }
+  .training-page .training-topbar .page-language {
+    position: static;
+  }
+  .training-page .back-button {
+    min-height: 34px;
+    padding: 4px 12px;
+    font-size: 13px;
+  }
+  .training-page h1 {
+    padding-right: 0;
+    margin-top: 2px;
+  }
+  /* Signing: the example plays beside the camera, so both are in view while copying the movement. */
+  .training-page .training-stage.with-example {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+    margin: 4px 0;
+  }
+  .training-page .training-stage.with-example .setup-preview {
+    margin: 0;
+    min-height: 0;
+  }
+  .training-page .training-example {
+    min-height: 0;
+    gap: 2px;
+  }
+  .training-page .training-example iframe,
+  .training-page .training-example > p {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+    border-radius: 10px;
+    font-size: 12px;
+    padding: 4px;
+  }
+  .training-page .training-example figcaption {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* The examples list stays on phones as one scrolling row of chips, with its play-before toggle. */
+  .training-page .training-examples {
+    display: block;
+    flex-shrink: 0;
+    margin: 4px 0 0;
+    padding: 0;
+  }
+  .training-page .training-examples h2,
+  .training-page .training-examples > p {
+    display: none;
+  }
+  .training-page .training-examples .training-references {
+    display: flex !important;
+    gap: 6px;
+    overflow-x: auto;
+    margin: 4px 0 0;
+    padding: 0 0 4px;
+    list-style: none;
+  }
+  .training-page .training-examples .training-references li {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+  }
+  .training-page .training-examples .training-references li > span {
+    display: none;
+  }
+  .training-page .training-examples .training-references button {
+    min-height: 32px;
+    padding: 4px 10px;
+    font-size: 13px;
+  }
+}
