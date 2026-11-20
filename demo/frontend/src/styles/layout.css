@@ -1619,3 +1619,56 @@ button,
     min-height: 40px;
   }
 }
+
+/* Phones (what judges and visitors will use): give the transcript the space. The panel title, the room
+   name and the field label repeat what the layout already shows, so they are hidden on narrow screens. */
+@media (max-width: 760px) {
+  .room-id,
+  .transcript-panel > h2 {
+    display: none;
+  }
+  .transcript-history {
+    min-height: 120px;
+  }
+  .composer {
+    max-height: none;
+    overflow: visible;
+  }
+  .composer:has(.capture-controls) form > label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .language-switch button,
+  .capture-controls button {
+    min-height: 32px;
+    font-size: 13px;
+    padding: 3px 8px;
+  }
+  .capture-controls details summary {
+    font-size: 12px;
+  }
+  .composer:has(.capture-controls) .compose-row textarea {
+    min-height: 38px;
+  }
+  .auxiliary-buttons button {
+    min-height: 32px;
+    font-size: 12px;
+  }
+  .message-bubble {
+    padding: 8px 12px 2px;
+  }
+  .utterance footer {
+    min-height: 0;
+  }
+  .utterance footer:empty {
+    display: none;
+  }
+  .utterance footer:empty + *,
+  .message-bubble:has(> footer:empty) {
+    padding-bottom: 8px;
+  }
+}
