@@ -2053,6 +2053,16 @@ button,
     display: flex;
     flex-direction: column;
   }
+  /* The PC columns dissolve, so the parts stack in the form's single column in their DOM order. */
+  .training-page .training-controls,
+  .training-page .training-camera,
+  .training-page .training-actions,
+  .training-page .training-info {
+    display: contents;
+  }
+  .training-page .training-examples {
+    order: 1;
+  }
   .training-page .training-fields {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2205,5 +2215,215 @@ button,
     min-height: 32px;
     padding: 4px 10px;
     font-size: 13px;
+  }
+}
+
+/* PC: the collection page fits one screen. The camera (and the example beside it while signing) fills
+   the left column at the screen's height; the fields, buttons, examples, counts and model sit in the
+   right column, which scrolls on its own only when a short screen cannot hold them. */
+@media (min-width: 761px) {
+  .training-page {
+    display: flex;
+    flex-direction: column;
+    max-width: 1320px;
+    height: 100vh;
+    height: 100dvh;
+    padding: 10px 24px 14px;
+    text-align: left;
+  }
+  .training-page .training-topbar {
+    margin-bottom: 0;
+  }
+  .training-page > .eyebrow {
+    margin: 0;
+  }
+  .training-page h1 {
+    font-size: 24px;
+    margin: 2px 0 4px;
+  }
+  .training-page > p:not(.eyebrow) {
+    margin: 0 0 8px;
+    max-width: 980px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .training-page > form.training-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 400px);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'camera controls'
+      'camera actions'
+      'camera info'
+      'examples info';
+    gap: 10px 20px;
+  }
+  .training-page .training-camera {
+    grid-area: camera;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .training-page .training-prompt {
+    max-width: none;
+    margin: 0;
+    padding: 8px 14px;
+  }
+  .training-page .training-prompt strong {
+    font-size: 28px;
+  }
+  .training-page .training-stage {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    margin: 0;
+  }
+  .training-page .training-stage .setup-preview {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+    max-width: none;
+    margin: 0;
+  }
+  .training-page .training-stage.with-example {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+    margin: 0;
+  }
+  .training-page .training-example {
+    min-height: 0;
+  }
+  .training-page .training-example iframe,
+  .training-page .training-example > p {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+  }
+  .training-page .training-controls {
+    grid-area: controls;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .training-page .training-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+  }
+  .training-page .training-fields label {
+    gap: 2px;
+    min-width: 0;
+    font-size: 13px;
+  }
+  .training-page .training-fields input,
+  .training-page .training-fields select {
+    width: 100%;
+    min-height: 40px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-size: 15px;
+  }
+  .training-page .setting-check {
+    align-items: flex-start;
+    font-size: 13px;
+  }
+  .training-page .setting-check input[type='checkbox'] {
+    margin-top: 2px;
+  }
+  .training-page .training-actions {
+    grid-area: actions;
+  }
+  .training-page .training-actions p[role='status'] {
+    margin: 0;
+    min-height: 1.4em;
+    font-size: 13px;
+  }
+  .training-page .training-actions .setup-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 0.8fr;
+    gap: 6px;
+    margin: 4px 0 0;
+  }
+  .training-page .training-actions .setup-buttons button {
+    min-height: 42px;
+    padding: 6px 8px;
+    font-size: 15px;
+  }
+  .training-page .training-info {
+    grid-area: info;
+    min-height: 0;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+  }
+  .training-page .training-counts {
+    max-width: none;
+    margin: 8px 0 0;
+    font-size: 13px;
+  }
+  .training-page .training-counts h2 {
+    font-size: 14px;
+    margin: 6px 0 4px;
+  }
+  .training-page .training-counts p {
+    margin: 0 0 4px;
+  }
+  .training-page .training-counts ul {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+    margin: 4px 0;
+  }
+  .training-page .training-counts li {
+    padding: 2px 0;
+  }
+  .training-page .training-counts > button {
+    min-height: 32px;
+    padding: 4px 12px;
+    font-size: 13px;
+  }
+  /* The examples sit under the camera as a wrap of small buttons, with the hint and the play-before
+     toggle on one line above them; the source is named under the playing example. */
+  .training-page .training-examples {
+    grid-area: examples;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 16px;
+    margin: 0;
+  }
+  .training-page .training-examples h2 {
+    display: none;
+  }
+  .training-page .training-examples > p,
+  .training-page .training-examples .setting-check {
+    margin: 0;
+  }
+  .training-page .training-examples .training-references {
+    flex-basis: 100%;
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 2px 0 0;
+  }
+  .training-page .training-examples .training-references li {
+    padding: 0;
+    border: 0;
+  }
+  .training-page .training-examples .training-references li > span {
+    display: none;
+  }
+  .training-page .training-examples .training-references button {
+    min-height: 30px;
+    padding: 2px 10px;
+    font-size: 13px;
+  }
+  .training-page .training-runs {
+    grid-template-columns: 1fr !important;
+  }
+  .training-page .training-runs li {
+    gap: 8px;
   }
 }
