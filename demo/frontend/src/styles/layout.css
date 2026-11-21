@@ -2446,3 +2446,24 @@ button,
     gap: 8px;
   }
 }
+
+/* PC: the join page sits in the middle of the screen instead of hugging the top, with the language
+   select pinned to the top-right corner, so short and tall screens both get even space above and below. */
+@media (min-width: 761px) {
+  .join-page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+  .join-page .page-language {
+    position: absolute;
+    top: 14px;
+    right: 32px;
+    margin: 0;
+  }
+}
