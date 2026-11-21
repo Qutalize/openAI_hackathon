@@ -131,7 +131,7 @@ def test_shared_origin_is_exact_and_ws_requires_session(shared_app):
 
 def test_only_built_frontend_and_known_spa_routes_are_served(shared_app):
     with TestClient(shared_app, base_url=ORIGIN) as client:
-        for path in ("/", "/training", "/rooms/demo-room?layout=vision"):
+        for path in ("/", "/training", "/guide", "/rooms/demo-room?layout=vision"):
             response = client.get(path)
             assert response.status_code == 200
             assert 'id="root"' in response.text

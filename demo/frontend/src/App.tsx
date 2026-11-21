@@ -4,6 +4,7 @@ import { api } from './services/api';
 import JoinPage from './pages/JoinPage';
 import TalkPage from './pages/TalkPage';
 import TrainingPage from './pages/TrainingPage';
+import GuidePage from './pages/GuidePage';
 import { LanguageSelect, useI18n } from './i18n';
 
 export default function App() {
@@ -50,6 +51,8 @@ export default function App() {
       .then(setConfig)
       .catch(() => {});
   }
+  // The guide is static, so it opens even while the server is loading or unreachable.
+  if (location.pathname === '/guide' && !session) return <GuidePage />;
   if (loading)
     return (
       <main className="loading" role="status">

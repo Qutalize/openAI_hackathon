@@ -2,6 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 
 export type Locale = 'ja' | 'en';
 const english: Record<string, string> = {
+  使い方: 'How to use',
+  トップページ: 'Top page',
+  ひとくち: 'Hitokuchi',
   字幕のみ: 'Captions only',
   '字幕＋AI読み上げ': 'Captions + AI voice',
   '字幕＋通常音声': 'Captions + original audio',
