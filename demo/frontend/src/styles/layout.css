@@ -1993,24 +1993,39 @@ button,
   }
 }
 
-/* The training page link sits beside the room buttons, styled like them but quieter. */
+/* The training page link sits beside the room buttons but opens another page, so it is set a little
+   apart from them and drawn as an outlined button in the accent color with an arrow, not as a toggle. */
 .room-action-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 48px;
-  padding: 12px 22px;
-  border: 1px dashed var(--border);
+  margin-left: 12px;
+  padding: 12px 20px;
+  border: 1.5px solid var(--blue);
   border-radius: 8px;
-  color: var(--muted);
+  background: var(--surface);
+  color: var(--blue);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
-.room-action-link:hover {
-  border-color: var(--blue);
-  color: var(--blue);
+.room-action-arrow {
+  transition: transform 0.15s;
+}
+/* A light tint on hover, so it never looks like the selected (filled) room button. */
+.room-action-link:hover,
+.room-action-link:focus-visible {
+  background: rgb(11 92 255 / 10%);
+}
+.room-action-link:hover .room-action-arrow {
+  transform: translateX(3px);
 }
 @media (min-width: 761px) and (max-height: 900px) {
   .room-action-link {
@@ -2030,6 +2045,10 @@ button,
     min-height: 36px;
     padding: 6px 4px;
     font-size: 12.5px;
+  }
+  .room-action-link {
+    gap: 2px;
+    margin-left: 4px;
   }
 }
 

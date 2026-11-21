@@ -157,6 +157,9 @@ export default function JoinPage({
           {/* Collecting needs the collection code, so the link is safe to show to everyone. */}
           <a className="room-action-link" href="/training">
             {t('学習データ収集')}
+            <span className="room-action-arrow" aria-hidden="true">
+              →
+            </span>
           </a>
         </div>
         <fieldset className="mode-grid" disabled={busy}>
