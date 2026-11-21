@@ -12,6 +12,9 @@ from app.inference.worker import InferenceBusy
 from app.models.session import RoomState, Session, uid
 
 
+# Time allowed after the capture limit for the browser to finish and upload the clip.
+SEGMENT_UPLOAD_GRACE_SECONDS = 10
+
 class Connection:
     def __init__(self, ws):
         self.ws = ws
@@ -69,6 +72,11 @@ class RoomService:
         if room_id and session.room_id != room_id:
             raise HTTPException(403, "このルームには参加していません")
         return session
+
+    def segment_limit(self, s) -> float:
+        """Seconds a manual capture may stay open: the model's capture limit plus time to upload the clip."""
+        config = getattr(self.settings.recognition, self.model_kind(s.input, s.language), None)
+        return (config.max_frames * 0.05 if config else 3.2) + SEGMENT_UPLOAD_GRACE_SECONDS
 
     def model_kind(self, kind, language):
         """The worker model serving an input in a recognition language."""
@@ -322,7 +330,7 @@ class RoomService:
                 await s.control.close(4000)
             s.candidates = {k: v for k, v in s.candidates.items() if v["expires_at"] > now}
             s.requests = {k: v for k, v in s.requests.items() if now - v[0] < 60}
-            if s.segment and now - s.segment["started_at"] > 7:
+            if s.segment and now - s.segment["started_at"] > self.segment_limit(s):
                 await self.reset_input(s)
                 await self.private(
                     s,

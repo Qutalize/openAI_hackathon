@@ -89,3 +89,17 @@ def test_open_slots_accept_only_video_models():
     }
     with pytest.raises(ValidationError):
         type(load_settings()).model_validate(data)
+
+
+def test_capture_stays_open_for_the_models_capture_limit():
+    from types import SimpleNamespace
+
+    cfg = load_settings()
+    cfg.recognition.lipread_open = cfg.recognition.lipread.model_copy(
+        update={"provider": "auto_avsr_cli", "max_frames": 200}
+    )
+    service = SimpleNamespace(settings=cfg, model_kind=lambda k, lang: RoomService.model_kind(None, k, lang))
+    english = RoomService.segment_limit(service, SimpleNamespace(input="lipread", language="en"))
+    japanese = RoomService.segment_limit(service, SimpleNamespace(input="lipread", language="ja"))
+    assert english >= 10 + 5
+    assert japanese >= cfg.recognition.lipread.max_frames * 0.05 + 5
