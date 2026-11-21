@@ -2564,3 +2564,100 @@ button,
     font-size: 14px;
   }
 }
+
+/* Guide figures: a real screenshot with numbered outlines, and the numbered steps under it. */
+.guide-page {
+  max-width: 1040px;
+}
+.guide-section > p {
+  margin: 0 0 10px;
+  line-height: 1.7;
+}
+.guide-figures {
+  display: grid;
+  gap: 24px;
+}
+.guide-figures.phones {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.guide-figure {
+  margin: 0;
+}
+.guide-figure figcaption {
+  margin: 4px 0 8px;
+  font-weight: 700;
+}
+.guide-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #e9edf4;
+}
+.guide-figure.phone img {
+  max-width: 340px;
+  margin: 0 auto;
+}
+.guide-steps {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.7;
+}
+.guide-step-number {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: #ff6a00;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.guide-note {
+  margin: 14px 0 0 !important;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--bg, #f5f7fb);
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (max-width: 760px) {
+  .guide-figures.phones {
+    grid-template-columns: 1fr;
+  }
+  .guide-steps li {
+    font-size: 14px;
+  }
+}
+/* A portrait screenshot (the candidate panel) sits beside its steps on a PC instead of filling the width. */
+@media (min-width: 761px) {
+  .guide-figure.side {
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: start;
+  }
+  .guide-figure.side figcaption {
+    grid-column: 1 / -1;
+  }
+  .guide-figure.side .guide-steps {
+    margin-top: 0;
+  }
+}
+@media (max-width: 760px) {
+  .guide-figure.side img {
+    max-width: 340px;
+    margin: 0 auto;
+  }
+}
