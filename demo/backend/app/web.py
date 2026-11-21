@@ -16,7 +16,7 @@ class FrontendFiles(StaticFiles):
     async def get_response(self, path, scope):
         path = path.replace(os.sep, "/")
         # Only known SPA routes fall back to HTML; missing APIs/assets remain 404.
-        if path in (".", "", "training") or re.fullmatch(r"rooms/[a-z0-9-]{3,32}", path):
+        if path in (".", "", "training", "guide") or re.fullmatch(r"rooms/[a-z0-9-]{3,32}", path):
             path = "index.html"
         response = await super().get_response(path, scope)
         if path == "index.html":

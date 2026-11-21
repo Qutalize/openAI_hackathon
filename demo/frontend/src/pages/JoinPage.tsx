@@ -10,6 +10,7 @@ import type { InputKind, Mode, PublicConfig, Session } from '../types/protocol';
 import { inputNames } from '../types/protocol';
 import { api } from '../services/api';
 import ModeCard from '../components/ModeCard';
+import SiteFooter from '../components/SiteFooter';
 import AvatarPicker from '../components/AvatarPicker';
 import { LanguageSelect, useI18n } from '../i18n';
 
@@ -314,6 +315,7 @@ export default function JoinPage({
           {t('参加後、会話画面の「招待リンクをコピー」で相手を呼べます。パスワードは別に伝えてください。')}
         </p>
       </form>
+      <SiteFooter />
     </main>
   );
 }

@@ -2457,13 +2457,110 @@ button,
     justify-content: center;
     min-height: 100vh;
     min-height: 100dvh;
-    padding-top: 28px;
-    padding-bottom: 28px;
+    padding-top: 20px;
+    padding-bottom: 44px;
   }
   .join-page .page-language {
     position: absolute;
     top: 14px;
     right: 32px;
     margin: 0;
+  }
+}
+
+/* Footer under the join and guide pages: the guide link and the copyright, small and quiet.
+   On a PC the join page pins it to the bottom of the screen; elsewhere it follows the content. */
+.site-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 8px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.site-footer a {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+.site-footer a:hover {
+  text-decoration: underline;
+}
+@media (min-width: 761px) {
+  .join-page .site-footer {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    margin: 0;
+    padding: 0;
+  }
+}
+@media (max-width: 760px) {
+  .join-page .site-footer {
+    margin-top: 6px;
+    padding: 4px 0 8px;
+    font-size: 12px;
+  }
+}
+
+/* Guide page: one readable column of short sections, each a list of term and explanation. */
+.guide-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 14px 24px 8px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-break: strict;
+}
+.guide-page h1 {
+  margin: 12px 0 6px;
+  font-size: 28px;
+}
+.guide-lead {
+  margin: 0 0 8px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.guide-section {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.guide-section h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.guide-section dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.guide-section dt {
+  font-weight: 700;
+}
+.guide-section dd {
+  margin: 2px 0 0;
+  line-height: 1.7;
+}
+@media (max-width: 760px) {
+  .guide-page {
+    padding: 8px 16px 4px;
+  }
+  .guide-page h1 {
+    font-size: 22px;
+  }
+  .guide-lead {
+    font-size: 14px;
+  }
+  .guide-section {
+    padding: 12px 14px;
+  }
+  .guide-section dd {
+    font-size: 14px;
   }
 }
