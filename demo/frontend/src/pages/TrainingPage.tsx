@@ -340,240 +340,261 @@ export default function TrainingPage() {
           '画面に出る表現を、合図に合わせて1回ずつ行ってください。映像は送信しません。顔・手・姿勢の特徴点だけを、本人の同意がある場合にサーバーへ保存します。',
         )}
       </p>
+      {/* On a PC the camera fills the left column and everything else sits in the right one, so the
+          page fits one screen; on phones the wrappers dissolve and the parts stack in one column. */}
       <form
+        className="training-layout"
         onSubmit={(e) => {
           e.preventDefault();
           void run();
         }}
       >
-        <div className="training-fields">
-          <label>
-            {t('入力方式')}
-            <select value={kind} disabled={running} onChange={(e) => setKind(e.target.value as Kind)}>
-              <option value="lipread">{t('読唇（声を出さずに口を動かす）')}</option>
-              <option value="sign">{t('日本手話')}</option>
-            </select>
-          </label>
-          <label>
-            {t('人物ID（氏名を使用しない）')}
-            <input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              onBlur={() => void refresh()}
-              pattern={'[a-zA-Z0-9_\\-]{2,40}'}
-              placeholder="person01"
-              required
-              disabled={running}
-            />
-          </label>
-          <label>
-            {t('収集コード')}
-            <input
-              type="password"
-              value={code}
-              autoComplete="off"
-              onChange={(e) => setCode(e.target.value)}
-              onBlur={() => void refresh()}
-              required
-              disabled={running}
-            />
-          </label>
-          <label>
-            {t('1表現あたりの回数')}
-            <select
-              value={repetitions}
-              disabled={running}
-              onChange={(e) => setRepetitions(Number(e.target.value))}
-            >
-              {[1, 3, 5, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <label className="setting-check">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => {
-              setConsent(e.target.checked);
-              if (!e.target.checked) {
-                stopAll('収集を停止しました');
-                r.stream?.getTracks().forEach((track) => track.stop());
-                r.stream = undefined;
-                setStream(undefined);
-              }
-            }}
-          />
-          {t('本人が収集・モデル学習への使用に同意しています')}
-        </label>
-        <label className="setting-check">
-          <input type="checkbox" checked={showPoints} onChange={(e) => setShowPoints(e.target.checked)} />
-          {t('特徴点を表示（緑は学習に使われる映像、赤は使われない映像）')}
-        </label>
-        {prompt && (
-          <div className="training-prompt" aria-live="assertive">
-            <span className="training-progress">
-              {prompt.done + 1} / {prompt.total}
-            </span>
-            <strong>{t(prompt.text)}</strong>
-            {prompt.hint && <small>{t(prompt.hint)}</small>}
-            <span className={prompt.phase === '撮影中' ? 'training-phase recording' : 'training-phase'}>
-              {t(prompt.phase)}
-            </span>
+        <div className="training-controls">
+          <div className="training-fields">
+            <label>
+              {t('入力方式')}
+              <select value={kind} disabled={running} onChange={(e) => setKind(e.target.value as Kind)}>
+                <option value="lipread">{t('読唇（声を出さずに口を動かす）')}</option>
+                <option value="sign">{t('日本手話')}</option>
+              </select>
+            </label>
+            <label>
+              {t('人物ID（氏名を使用しない）')}
+              <input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                onBlur={() => void refresh()}
+                pattern={'[a-zA-Z0-9_\\-]{2,40}'}
+                placeholder="person01"
+                required
+                disabled={running}
+              />
+            </label>
+            <label>
+              {t('収集コード')}
+              <input
+                type="password"
+                value={code}
+                autoComplete="off"
+                onChange={(e) => setCode(e.target.value)}
+                onBlur={() => void refresh()}
+                required
+                disabled={running}
+              />
+            </label>
+            <label>
+              {t('1表現あたりの回数')}
+              <select
+                value={repetitions}
+                disabled={running}
+                onChange={(e) => setRepetitions(Number(e.target.value))}
+              >
+                {[1, 3, 5, 10].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-        )}
-        <div className={example ? 'training-stage with-example' : 'training-stage'}>
-          <div className="setup-preview">
-            {stream ? (
-              <Video stream={stream} local label={t('学習データ収集のプレビュー')} />
-            ) : (
-              <p>{t('カメラ OFF')}</p>
-            )}
-            <canvas ref={overlay} className="landmark-overlay mirrored" aria-hidden="true" />
-          </div>
-          {example && (
-            <figure className="training-example">
-              {example.embed ? (
-                <iframe
-                  key={`${example.embed}#${plays}`}
-                  src={example.embed}
-                  title={t('見本：{text}', { text: t(example.text) })}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                />
-              ) : (
-                <p>{t('この表現は、見本のリンク先で動きを確認してください')}</p>
-              )}
-              <figcaption>
-                {t('見本：{text}', { text: t(example.text) })}（
-                <a href={example.url} target="_blank" rel="noopener noreferrer">
-                  {example.source}
-                </a>
-                ）
-              </figcaption>
-            </figure>
-          )}
-        </div>
-        <p role="status">{t(status)}</p>
-        <div className="setup-buttons">
-          <button
-            type="button"
-            className="secondary"
-            disabled={!consent || running}
-            onClick={() => void prepare()}
-          >
-            {t('カメラをON')}
-          </button>
-          <button
-            className="primary"
-            disabled={!consent || !stream || running || !subjectValid || !code || !vocabulary.length}
-          >
-            {t('連続撮影を開始')}
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={!running}
-            onClick={() => stopAll('中断しました')}
-          >
-            {t('中断')}
-          </button>
-        </div>
-      </form>
-      {vocabulary.some((p) => p.reference) && (
-        <section className="training-counts training-examples" aria-label={t('見本の動画')}>
-          <h2>{t('見本の動画')}</h2>
-          <p>{t('撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。')}</p>
           <label className="setting-check">
             <input
               type="checkbox"
-              checked={playExample}
-              disabled={running}
-              onChange={(e) => setPlayExample(e.target.checked)}
+              checked={consent}
+              onChange={(e) => {
+                setConsent(e.target.checked);
+                if (!e.target.checked) {
+                  stopAll('収集を停止しました');
+                  r.stream?.getTracks().forEach((track) => track.stop());
+                  r.stream = undefined;
+                  setStream(undefined);
+                }
+              }}
             />
-            {t('連続撮影で、毎回の撮影の前に見本を流す')}
+            {t('本人が収集・モデル学習への使用に同意しています')}
           </label>
-          <ul className="training-references">
-            {vocabulary.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  className={p.id === example?.id ? 'primary' : 'secondary'}
-                  aria-pressed={p.id === example?.id}
-                  disabled={running || !p.reference}
-                  onClick={() => {
-                    setShown(p.id);
-                    setPlays((n) => n + 1);
-                  }}
-                >
-                  {t(p.text)}
-                </button>
-                <span>{p.reference?.source ?? '—'}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {counts && (
-        <section className="training-counts" aria-label={t('収録数')}>
-          <h2>
-            {t('この人物IDの収録数')}（{t('全体で{n}人', { n: counts[kind].subjects })}）
-          </h2>
-          <ul>
-            {[...vocabulary, { id: 'unknown', text: '対象外の動き' }].map((p) => (
-              <li key={p.id}>
-                <span>{t(p.text)}</span>
-                <b>{mine[p.id] ?? 0}</b>
-              </li>
-            ))}
-          </ul>
-          <button type="button" className="secondary" disabled={running} onClick={() => void deleteMine()}>
-            {confirmDelete ? t('もう一度押すと削除します') : t('この人物IDの収録を削除')}
-          </button>
-        </section>
-      )}
-      {counts?.models && (
-        <section className="training-counts" aria-label={t('学習と配備')}>
-          <h2>{t('いま会話で使っているモデル')}</h2>
-          {counts.models[kind].available ? (
-            <p>
-              {counts.models[kind].model_version}・
-              {t('{people}人・{recordings}件で学習', {
-                people: counts.models[kind].people ?? '—',
-                recordings: counts.models[kind].recordings ?? '—',
-              })}
-              ・{t('正解率の目安（F1）')} {percent(counts.models[kind].macro_f1_known)}・{t('対象外の誤受理')}{' '}
-              {percent(counts.models[kind].unknown_false_accept_rate)}
-              {counts.models[kind].method === 'within-subject-holdout' && <>（{t('1人分のデータで評価')}）</>}
-            </p>
-          ) : (
-            <p>{t('まだありません。データが集まると自動で学習し、評価に合格したモデルを会話で使います。')}</p>
+          <label className="setting-check">
+            <input type="checkbox" checked={showPoints} onChange={(e) => setShowPoints(e.target.checked)} />
+            {t('特徴点を表示（緑は学習に使われる映像、赤は使われない映像）')}
+          </label>
+        </div>
+        <div className="training-camera">
+          {prompt && (
+            <div className="training-prompt" aria-live="assertive">
+              <span className="training-progress">
+                {prompt.done + 1} / {prompt.total}
+              </span>
+              <strong>{t(prompt.text)}</strong>
+              {prompt.hint && <small>{t(prompt.hint)}</small>}
+              <span className={prompt.phase === '撮影中' ? 'training-phase recording' : 'training-phase'}>
+                {t(prompt.phase)}
+              </span>
+            </div>
           )}
-          {!!counts.runs?.filter((x) => x.modality === kind).length && (
-            <>
-              <h2>{t('最近の学習')}</h2>
-              <ul className="training-runs">
-                {counts.runs
-                  .filter((x) => x.modality === kind)
-                  .map((x) => (
-                    <li key={x.at + (x.version ?? '')}>
-                      <span>{new Date(x.at).toLocaleString()}</span>
-                      <span>
-                        {x.failed
-                          ? t('データ不足で学習せず')
-                          : `${t('{people}人・{recordings}件', { people: x.people ?? '—', recordings: x.recordings ?? '—' })} F1 ${percent(x.macro_f1_known)}`}
-                      </span>
-                      <b>{x.registered ? t('配備') : x.failed ? '—' : t('不合格')}</b>
-                    </li>
-                  ))}
+          <div className={example ? 'training-stage with-example' : 'training-stage'}>
+            <div className="setup-preview">
+              {stream ? (
+                <Video stream={stream} local label={t('学習データ収集のプレビュー')} />
+              ) : (
+                <p>{t('カメラ OFF')}</p>
+              )}
+              <canvas ref={overlay} className="landmark-overlay mirrored" aria-hidden="true" />
+            </div>
+            {example && (
+              <figure className="training-example">
+                {example.embed ? (
+                  <iframe
+                    key={`${example.embed}#${plays}`}
+                    src={example.embed}
+                    title={t('見本：{text}', { text: t(example.text) })}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                ) : (
+                  <p>{t('この表現は、見本のリンク先で動きを確認してください')}</p>
+                )}
+                <figcaption>
+                  {t('見本：{text}', { text: t(example.text) })}（
+                  <a href={example.url} target="_blank" rel="noopener noreferrer">
+                    {example.source}
+                  </a>
+                  ）
+                </figcaption>
+              </figure>
+            )}
+          </div>
+        </div>
+        {/* On a PC the examples sit under the camera; on phones they come last (CSS order). */}
+        {vocabulary.some((p) => p.reference) && (
+          <section className="training-counts training-examples" aria-label={t('見本の動画')}>
+            <h2>{t('見本の動画')}</h2>
+            <p>{t('撮影の前に動きを1つに決め、毎回同じ動きで撮影してください。')}</p>
+            <label className="setting-check">
+              <input
+                type="checkbox"
+                checked={playExample}
+                disabled={running}
+                onChange={(e) => setPlayExample(e.target.checked)}
+              />
+              {t('連続撮影で、毎回の撮影の前に見本を流す')}
+            </label>
+            <ul className="training-references">
+              {vocabulary.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    className={p.id === example?.id ? 'primary' : 'secondary'}
+                    aria-pressed={p.id === example?.id}
+                    disabled={running || !p.reference}
+                    onClick={() => {
+                      setShown(p.id);
+                      setPlays((n) => n + 1);
+                    }}
+                  >
+                    {t(p.text)}
+                  </button>
+                  <span>{p.reference?.source ?? '—'}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <div className="training-actions">
+          <p role="status">{t(status)}</p>
+          <div className="setup-buttons">
+            <button
+              type="button"
+              className="secondary"
+              disabled={!consent || running}
+              onClick={() => void prepare()}
+            >
+              {t('カメラをON')}
+            </button>
+            <button
+              className="primary"
+              disabled={!consent || !stream || running || !subjectValid || !code || !vocabulary.length}
+            >
+              {t('連続撮影を開始')}
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={!running}
+              onClick={() => stopAll('中断しました')}
+            >
+              {t('中断')}
+            </button>
+          </div>
+        </div>
+        <div className="training-info">
+          {counts && (
+            <section className="training-counts" aria-label={t('収録数')}>
+              <h2>
+                {t('この人物IDの収録数')}（{t('全体で{n}人', { n: counts[kind].subjects })}）
+              </h2>
+              <ul>
+                {[...vocabulary, { id: 'unknown', text: '対象外の動き' }].map((p) => (
+                  <li key={p.id}>
+                    <span>{t(p.text)}</span>
+                    <b>{mine[p.id] ?? 0}</b>
+                  </li>
+                ))}
               </ul>
-            </>
+              <button
+                type="button"
+                className="secondary"
+                disabled={running}
+                onClick={() => void deleteMine()}
+              >
+                {confirmDelete ? t('もう一度押すと削除します') : t('この人物IDの収録を削除')}
+              </button>
+            </section>
           )}
-        </section>
-      )}
+          {counts?.models && (
+            <section className="training-counts" aria-label={t('学習と配備')}>
+              <h2>{t('いま会話で使っているモデル')}</h2>
+              {counts.models[kind].available ? (
+                <p>
+                  {counts.models[kind].model_version}・
+                  {t('{people}人・{recordings}件で学習', {
+                    people: counts.models[kind].people ?? '—',
+                    recordings: counts.models[kind].recordings ?? '—',
+                  })}
+                  ・{t('正解率の目安（F1）')} {percent(counts.models[kind].macro_f1_known)}・
+                  {t('対象外の誤受理')} {percent(counts.models[kind].unknown_false_accept_rate)}
+                  {counts.models[kind].method === 'within-subject-holdout' && (
+                    <>（{t('1人分のデータで評価')}）</>
+                  )}
+                </p>
+              ) : (
+                <p>
+                  {t('まだありません。データが集まると自動で学習し、評価に合格したモデルを会話で使います。')}
+                </p>
+              )}
+              {!!counts.runs?.filter((x) => x.modality === kind).length && (
+                <>
+                  <h2>{t('最近の学習')}</h2>
+                  <ul className="training-runs">
+                    {counts.runs
+                      .filter((x) => x.modality === kind)
+                      .map((x) => (
+                        <li key={x.at + (x.version ?? '')}>
+                          <span>{new Date(x.at).toLocaleString()}</span>
+                          <span>
+                            {x.failed
+                              ? t('データ不足で学習せず')
+                              : `${t('{people}人・{recordings}件', { people: x.people ?? '—', recordings: x.recordings ?? '—' })} F1 ${percent(x.macro_f1_known)}`}
+                          </span>
+                          <b>{x.registered ? t('配備') : x.failed ? '—' : t('不合格')}</b>
+                        </li>
+                      ))}
+                  </ul>
+                </>
+              )}
+            </section>
+          )}
+        </div>
+      </form>
     </main>
   );
 }
